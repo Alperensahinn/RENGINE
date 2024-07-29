@@ -1,5 +1,7 @@
 #pragma once
 
+class RVulkan;
+
 struct GLFWwindow;
 
 class App
@@ -18,4 +20,5 @@ private:
 
 private:
 	GLFWwindow* glfwWindow;
+	RVulkan* vulkan;
 };
