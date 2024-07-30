@@ -32,11 +32,15 @@ RVulkan::~RVulkan()
 RVulkan::RVulkan(RVulkan&& other) noexcept
 	: pInstance(other.pInstance),
 	pDebugUtilsMessanger(other.pDebugUtilsMessanger),
-	pPhysicalDevice(other.pPhysicalDevice)
+	pPhysicalDevice(other.pPhysicalDevice),
+	graphicsQueueIndex(other.graphicsQueueIndex),
+	pDevice(other.pDevice)
 {
 	other.pInstance = VK_NULL_HANDLE;
 	other.pDebugUtilsMessanger = VK_NULL_HANDLE;
 	other.pPhysicalDevice = VK_NULL_HANDLE;
+	graphicsQueueIndex = NULL;
+	other.pDevice = VK_NULL_HANDLE;
 }
 
 RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
@@ -51,10 +55,14 @@ RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
 		pInstance = other.pInstance;
 		pDebugUtilsMessanger = other.pDebugUtilsMessanger;
 		pPhysicalDevice = other.pPhysicalDevice;
+		graphicsQueueIndex = other.graphicsQueueIndex;
+		pDevice = other.pDevice;
 
 		other.pInstance = VK_NULL_HANDLE;
 		other.pDebugUtilsMessanger = VK_NULL_HANDLE;
 		other.pPhysicalDevice = VK_NULL_HANDLE;
+		other.graphicsQueueIndex = NULL;
+		other.pDevice = VK_NULL_HANDLE;
 	}
 	return *this;
 }
@@ -64,10 +72,19 @@ void RVulkan::Init()
 	CreateInstance();
 	CreateDebugMessenger();
 	SelectPhysicalDevice();
+	CheckQueueFamilies();
+	CreateDevice();
+	SetQueues();
 }
 
 void RVulkan::CleanUp()
 {
+	if (pDevice != VK_NULL_HANDLE)
+	{
+		vkDestroyDevice(pDevice, nullptr);
+		pDevice = VK_NULL_HANDLE;
+	}
+
 	if (enableValidationLayers) 
 	{
 		DestroyDebugUtilsMessenger();
@@ -131,7 +148,7 @@ void RVulkan::CreateInstance()
 		return;
 	}
 
-	std::cout << "[VULKAN] Vulkan instance created successfully." << std::endl;
+	std::cout << "[VULKAN] Vulkan instance created." << std::endl;
 }
 
 bool RVulkan::CheckValidationLayerSupport()
@@ -235,4 +252,64 @@ void RVulkan::SelectPhysicalDevice()
 	VkPhysicalDeviceProperties physicalDeviceProperties;
 	vkGetPhysicalDeviceProperties(pPhysicalDevice, &physicalDeviceProperties);
 	std::cout << "[VULKAN] Vulkan physical device selected: " << physicalDeviceProperties.deviceName << std::endl;
+}
+
+void RVulkan::CheckQueueFamilies()
+{
+	unsigned int queueFamilyPropertyCount;
+	vkGetPhysicalDeviceQueueFamilyProperties(pPhysicalDevice, &queueFamilyPropertyCount, nullptr);
+
+	if(queueFamilyPropertyCount == 0)
+	{
+		std::cerr << "[VULKAN ERROR] No queue families supported." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] No queue families supported.");
+		return;
+	}
+
+	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyPropertyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties.data());
+
+	for(int i = 0; i < queueFamilyPropertyCount; i++)
+	{
+		if (queueFamilyProperties.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT)
+		{
+			graphicsQueueIndex = i;
+		}
+	}
+
+	std::cout << "[VULKAN] Queue family with graphics bit found. Index: " << graphicsQueueIndex << std::endl;
+}
+
+void RVulkan::CreateDevice()
+{
+	VkDeviceQueueCreateInfo queueCreateInfo = {};
+	queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = graphicsQueueIndex;
+	queueCreateInfo.queueCount = 1;
+
+	float queuePrioritie = 1.0f;
+	queueCreateInfo.pQueuePriorities = &queuePrioritie;
+
+	VkPhysicalDeviceFeatures physicalDeviceFutures = {};
+
+	VkDeviceCreateInfo deviceCreateInfo = {};
+	deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	deviceCreateInfo.queueCreateInfoCount = 1;
+	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
+	deviceCreateInfo.pEnabledFeatures = &physicalDeviceFutures;
+
+	VkResult result = vkCreateDevice(pPhysicalDevice, &deviceCreateInfo, nullptr, &pDevice);
+	if(result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to create device." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to create device.");
+		return;
+	}
+
+	std::cout << "[VULKAN] Logical device created." << std::endl;
+}
+
+void RVulkan::SetQueues()
+{
+	vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &graphicsQueue);
 }

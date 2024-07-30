@@ -27,6 +27,9 @@ private:
     void CreateDebugMessenger();
     void DestroyDebugUtilsMessenger();
     void SelectPhysicalDevice();
+    void CheckQueueFamilies();
+    void CreateDevice();
+    void SetQueues();
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -34,7 +37,10 @@ private:
     std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
     VkDebugUtilsMessengerEXT pDebugUtilsMessanger = VK_NULL_HANDLE;;
 
-    VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;;
+    VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
+    VkDevice pDevice = VK_NULL_HANDLE;
+    unsigned int graphicsQueueIndex;
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
