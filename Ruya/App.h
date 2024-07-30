@@ -9,6 +9,8 @@ class App
 public:
 	void Run();
 
+	GLFWwindow& GetWindow();
+
 private:
 	void InitWindow();
 

@@ -3,6 +3,12 @@
 #include <iostream>
 #include <stdexcept>
 
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include <GLFW/glfw3native.h>
+
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -18,10 +24,9 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 	return VK_FALSE;
 }
 
-
-RVulkan::RVulkan()
+RVulkan::RVulkan(GLFWwindow& window)
 {
-	Init();
+	Init(window);
 }
 
 RVulkan::~RVulkan()
@@ -34,13 +39,15 @@ RVulkan::RVulkan(RVulkan&& other) noexcept
 	pDebugUtilsMessanger(other.pDebugUtilsMessanger),
 	pPhysicalDevice(other.pPhysicalDevice),
 	graphicsQueueIndex(other.graphicsQueueIndex),
-	pDevice(other.pDevice)
+	pDevice(other.pDevice),
+	pSurface(other.pSurface)
 {
 	other.pInstance = VK_NULL_HANDLE;
 	other.pDebugUtilsMessanger = VK_NULL_HANDLE;
 	other.pPhysicalDevice = VK_NULL_HANDLE;
 	graphicsQueueIndex = NULL;
 	other.pDevice = VK_NULL_HANDLE;
+	other.pSurface = VK_NULL_HANDLE;
 }
 
 RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
@@ -57,20 +64,23 @@ RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
 		pPhysicalDevice = other.pPhysicalDevice;
 		graphicsQueueIndex = other.graphicsQueueIndex;
 		pDevice = other.pDevice;
+		pSurface = other.pSurface;
 
 		other.pInstance = VK_NULL_HANDLE;
 		other.pDebugUtilsMessanger = VK_NULL_HANDLE;
 		other.pPhysicalDevice = VK_NULL_HANDLE;
 		other.graphicsQueueIndex = NULL;
 		other.pDevice = VK_NULL_HANDLE;
+		other.pSurface = VK_NULL_HANDLE;
 	}
 	return *this;
 }
 
-void RVulkan::Init()
+void RVulkan::Init(GLFWwindow& window)
 {
 	CreateInstance();
 	CreateDebugMessenger();
+	CreateWindowSurface(window);
 	SelectPhysicalDevice();
 	CheckQueueFamilies();
 	CreateDevice();
@@ -88,6 +98,12 @@ void RVulkan::CleanUp()
 	if (enableValidationLayers) 
 	{
 		DestroyDebugUtilsMessenger();
+	}
+
+	if (pSurface != VK_NULL_HANDLE)
+	{
+		vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
+		pSurface = VK_NULL_HANDLE;
 	}
 
 	if (pInstance != VK_NULL_HANDLE)
@@ -297,6 +313,8 @@ void RVulkan::CreateDevice()
 	deviceCreateInfo.queueCreateInfoCount = 1;
 	deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 	deviceCreateInfo.pEnabledFeatures = &physicalDeviceFutures;
+	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
+	deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
 	VkResult result = vkCreateDevice(pPhysicalDevice, &deviceCreateInfo, nullptr, &pDevice);
 	if(result != VK_SUCCESS)
@@ -311,5 +329,26 @@ void RVulkan::CreateDevice()
 
 void RVulkan::SetQueues()
 {
-	vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &graphicsQueue);
+	vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &pGraphicsQueue);
+	vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &pPresentQueue);
+
+	std::cout << "[VULKAN] Device queues setted." << std::endl;
+}
+
+void RVulkan::CreateWindowSurface(GLFWwindow& window)
+{
+	VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
+	surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	surfaceCreateInfo.hwnd = glfwGetWin32Window(&window);
+	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
+
+	VkResult result = vkCreateWin32SurfaceKHR(pInstance, &surfaceCreateInfo, nullptr, &pSurface);
+	if (result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to create WIN32 surface." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to create WIN32 surface.");
+		return;
+	}
+
+	std::cout << "[VULKAN] Window surface created." << std::endl;
 }
