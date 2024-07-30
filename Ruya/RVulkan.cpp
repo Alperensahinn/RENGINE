@@ -31,9 +31,12 @@ RVulkan::~RVulkan()
 
 RVulkan::RVulkan(RVulkan&& other) noexcept
 	: pInstance(other.pInstance),
-	pDebugUtilsMessanger(other.pDebugUtilsMessanger)
+	pDebugUtilsMessanger(other.pDebugUtilsMessanger),
+	pPhysicalDevice(other.pPhysicalDevice)
 {
 	other.pInstance = VK_NULL_HANDLE;
+	other.pDebugUtilsMessanger = VK_NULL_HANDLE;
+	other.pPhysicalDevice = VK_NULL_HANDLE;
 }
 
 RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
@@ -46,7 +49,12 @@ RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
 		}
 
 		pInstance = other.pInstance;
+		pDebugUtilsMessanger = other.pDebugUtilsMessanger;
+		pPhysicalDevice = other.pPhysicalDevice;
+
 		other.pInstance = VK_NULL_HANDLE;
+		other.pDebugUtilsMessanger = VK_NULL_HANDLE;
+		other.pPhysicalDevice = VK_NULL_HANDLE;
 	}
 	return *this;
 }
@@ -55,6 +63,7 @@ void RVulkan::Init()
 {
 	CreateInstance();
 	CreateDebugMessenger();
+	SelectPhysicalDevice();
 }
 
 void RVulkan::CleanUp()
@@ -186,4 +195,44 @@ void RVulkan::DestroyDebugUtilsMessenger()
 	{
 		func(pInstance, pDebugUtilsMessanger, nullptr);
 	}
+}
+
+void RVulkan::SelectPhysicalDevice()
+{
+	unsigned int physicalDevicesCount;
+	VkResult result = vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, nullptr);
+
+	if (physicalDevicesCount == 0)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to find Vulkan physical device." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to find Vulkan physical device.");
+		return;
+	}
+
+	else if(result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to enumerate physical devices." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to enumerate physical devices.");
+		return;
+	}
+
+	std::vector<VkPhysicalDevice> physicalDevices(physicalDevicesCount);
+	result = vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, physicalDevices.data());
+
+	for (VkPhysicalDevice physicalDevice : physicalDevices)
+	{
+		VkPhysicalDeviceProperties physicalDeviceProperties;
+
+		vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+
+		if (physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+		{
+			pPhysicalDevice = physicalDevice;
+			break;
+		}
+	}
+
+	VkPhysicalDeviceProperties physicalDeviceProperties;
+	vkGetPhysicalDeviceProperties(pPhysicalDevice, &physicalDeviceProperties);
+	std::cout << "[VULKAN] Vulkan physical device selected: " << physicalDeviceProperties.deviceName << std::endl;
 }
