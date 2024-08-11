@@ -35,48 +35,6 @@ RVulkan::~RVulkan()
 	CleanUp();
 }
 
-RVulkan::RVulkan(RVulkan&& other) noexcept
-	: pInstance(other.pInstance),
-	pDebugUtilsMessanger(other.pDebugUtilsMessanger),
-	pPhysicalDevice(other.pPhysicalDevice),
-	graphicsQueueIndex(other.graphicsQueueIndex),
-	pDevice(other.pDevice),
-	pSurface(other.pSurface)
-{
-	other.pInstance = VK_NULL_HANDLE;
-	other.pDebugUtilsMessanger = VK_NULL_HANDLE;
-	other.pPhysicalDevice = VK_NULL_HANDLE;
-	graphicsQueueIndex = NULL;
-	other.pDevice = VK_NULL_HANDLE;
-	other.pSurface = VK_NULL_HANDLE;
-}
-
-RVulkan& RVulkan::operator=(RVulkan&& other) noexcept
-{
-	if (this != &other)
-	{
-		if (pInstance != VK_NULL_HANDLE)
-		{
-			vkDestroyInstance(pInstance, nullptr);
-		}
-
-		pInstance = other.pInstance;
-		pDebugUtilsMessanger = other.pDebugUtilsMessanger;
-		pPhysicalDevice = other.pPhysicalDevice;
-		graphicsQueueIndex = other.graphicsQueueIndex;
-		pDevice = other.pDevice;
-		pSurface = other.pSurface;
-
-		other.pInstance = VK_NULL_HANDLE;
-		other.pDebugUtilsMessanger = VK_NULL_HANDLE;
-		other.pPhysicalDevice = VK_NULL_HANDLE;
-		other.graphicsQueueIndex = NULL;
-		other.pDevice = VK_NULL_HANDLE;
-		other.pSurface = VK_NULL_HANDLE;
-	}
-	return *this;
-}
-
 void RVulkan::Init(GLFWwindow& window)
 {
 	CreateInstance();
@@ -91,6 +49,15 @@ void RVulkan::Init(GLFWwindow& window)
 
 void RVulkan::CleanUp()
 {
+	for(int i = 0; i < swapChainImageViews.size(); i++)
+	{
+		if (swapChainImageViews[i] != VK_NULL_HANDLE)
+		{
+			vkDestroyImageView(pDevice, swapChainImageViews[i], nullptr);
+			swapChainImageViews[i] = VK_NULL_HANDLE;
+		}
+	}
+
 	if (pSwapChain != VK_NULL_HANDLE)
 	{
 		vkDestroySwapchainKHR(pDevice, pSwapChain, nullptr);
@@ -498,6 +465,32 @@ void RVulkan::CreateSwapChain(GLFWwindow& window)
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = actualExtent;
+
+	for (int i = 0; i < swapChainImages.size(); i++) 
+	{
+		VkImageViewCreateInfo imageViewCreateInfo = {};
+		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		imageViewCreateInfo.image = swapChainImages[i];
+		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imageViewCreateInfo.format = swapChainImageFormat;
+		imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+		imageViewCreateInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+		imageViewCreateInfo.subresourceRange.levelCount = 1;
+		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewCreateInfo.subresourceRange.layerCount = 1;
+
+		result = vkCreateImageView(pDevice, &imageViewCreateInfo, nullptr, &swapChainImageViews[i]);
+		if (result != VK_SUCCESS)
+		{
+			std::cerr << "[VULKAN ERROR] Failed to create swap chain image views." << std::endl;
+			throw std::runtime_error("[VULKAN ERROR] Failed to create swap chain image views.");
+			return;
+		}
+	}
 
 	std::cout << "[VULKAN] Swap chain created." << std::endl;
 }

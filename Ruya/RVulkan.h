@@ -20,9 +20,6 @@ public:
     RVulkan(const RVulkan&) = delete;
     RVulkan& operator=(const RVulkan&) = delete;
 
-    RVulkan(RVulkan&& other) noexcept;
-    RVulkan& operator=(RVulkan&& other) noexcept;
-
 public:
 	void Init(GLFWwindow& window);
 
@@ -58,6 +55,7 @@ private:
 
     VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
     std::vector<VkImage> swapChainImages;
+    std::vector<VkImageView> swapChainImageViews;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
 
