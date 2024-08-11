@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
@@ -84,11 +85,18 @@ void RVulkan::Init(GLFWwindow& window)
 	SelectPhysicalDevice();
 	CheckQueueFamilies();
 	CreateDevice();
+	CreateSwapChain(window);
 	SetQueues();
 }
 
 void RVulkan::CleanUp()
 {
+	if (pSwapChain != VK_NULL_HANDLE)
+	{
+		vkDestroySwapchainKHR(pDevice, pSwapChain, nullptr);
+		pSwapChain = VK_NULL_HANDLE;
+	}
+
 	if (pDevice != VK_NULL_HANDLE)
 	{
 		vkDestroyDevice(pDevice, nullptr);
@@ -351,4 +359,145 @@ void RVulkan::CreateWindowSurface(GLFWwindow& window)
 	}
 
 	std::cout << "[VULKAN] Window surface created." << std::endl;
+}
+
+void RVulkan::CreateSwapChain(GLFWwindow& window)
+{
+	VkSurfaceCapabilitiesKHR capabilities;
+	VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pPhysicalDevice, pSurface, &capabilities);
+	if (result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to get Physical Device Surface Capabilities." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to get Physical Device Surface Capabilities.");
+		return;
+	}
+
+	std::vector<VkSurfaceFormatKHR> surfaceFormats;
+	uint32_t surfaceFormatCount;
+
+	result = vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, nullptr);
+	if (result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to get Physical Device Surface Formats." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to get Physical Device Surface Formats.");
+		return;
+	}
+
+	if(surfaceFormatCount > 0)
+	{
+		surfaceFormats.resize(surfaceFormatCount);
+		result = vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, surfaceFormats.data());
+	}
+	
+	std::vector<VkPresentModeKHR> presentModes;
+	uint32_t presentModeCount;
+
+	result = vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, nullptr);
+	if(result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to get Physical Device Surface Present Modes." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to get Physical Device Surface Present Modes.");
+		return;
+	}
+
+	if(presentModeCount > 0)
+	{
+		presentModes.resize(presentModeCount);
+		vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, presentModes.data());
+	}
+
+	if(presentModes.empty() || surfaceFormats.empty())
+	{
+		std::cerr << "[VULKAN ERROR] Device not support swap chain." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Device not support swap chain.");
+		return;
+	}
+
+
+	VkSurfaceFormatKHR surfaceFormat;
+	bool bSRGBAvailable = false;
+
+	for(VkSurfaceFormatKHR format : surfaceFormats)
+	{
+		if(format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR && format.format == VK_FORMAT_B8G8R8A8_SRGB)
+		{
+			surfaceFormat = format;
+			bSRGBAvailable = true;
+		}
+	}
+
+	if(bSRGBAvailable == false)
+	{
+		surfaceFormat = surfaceFormats[0];
+	}
+
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+
+	int width, height;
+	glfwGetFramebufferSize(&window, &width, &height);
+
+	VkExtent2D actualExtent = 
+	{
+		static_cast<uint32_t>(width),
+		static_cast<uint32_t>(height)
+	};
+
+	actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+	actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
+	uint32_t imageCount = capabilities.minImageCount + 1;
+
+	if (capabilities.maxImageCount > 0 && imageCount > capabilities.maxImageCount) 
+	{
+		imageCount = capabilities.maxImageCount;
+	}
+
+	VkSwapchainCreateInfoKHR swapChainCreateInfo = {};
+	swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+	swapChainCreateInfo.surface = pSurface;
+	swapChainCreateInfo.minImageCount = imageCount;
+	swapChainCreateInfo.imageFormat = surfaceFormat.format;
+	swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
+	swapChainCreateInfo.imageExtent = actualExtent;
+	swapChainCreateInfo.imageArrayLayers = 1;
+	swapChainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+	uint32_t queueFamilyIndices[] = {0,0};
+
+	if(pGraphicsQueue == pPresentQueue)
+	{
+		swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		swapChainCreateInfo.queueFamilyIndexCount = 0;
+		swapChainCreateInfo.pQueueFamilyIndices = nullptr;
+	}
+	else
+	{
+		swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+		swapChainCreateInfo.queueFamilyIndexCount = 2;
+		swapChainCreateInfo.pQueueFamilyIndices = queueFamilyIndices;
+	}
+
+	swapChainCreateInfo.preTransform = capabilities.currentTransform;
+	swapChainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+	swapChainCreateInfo.presentMode = presentMode;
+	swapChainCreateInfo.clipped = VK_TRUE;
+	swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+
+	result = vkCreateSwapchainKHR(pDevice, &swapChainCreateInfo, nullptr, &pSwapChain);
+	if (result != VK_SUCCESS)
+	{
+		std::cerr << "[VULKAN ERROR] Failed to create swap chain." << std::endl;
+		throw std::runtime_error("[VULKAN ERROR] Failed to create swap chain.");
+		return;
+	}
+
+	uint32_t swapChainImageCount;
+	vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, nullptr);
+	swapChainImages.resize(swapChainImageCount);
+	vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, swapChainImages.data());
+
+	swapChainImageFormat = surfaceFormat.format;
+	swapChainExtent = actualExtent;
+
+	std::cout << "[VULKAN] Swap chain created." << std::endl;
 }

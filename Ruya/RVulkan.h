@@ -38,6 +38,7 @@ private:
     void CreateDevice();
     void SetQueues();
     void CreateWindowSurface(GLFWwindow& window);
+    void CreateSwapChain(GLFWwindow& window);
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -54,6 +55,11 @@ private:
     unsigned int graphicsQueueIndex;
     VkQueue pGraphicsQueue = VK_NULL_HANDLE;
     VkQueue pPresentQueue = VK_NULL_HANDLE;
+
+    VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
+    std::vector<VkImage> swapChainImages;
+    VkFormat swapChainImageFormat;
+    VkExtent2D swapChainExtent;
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
