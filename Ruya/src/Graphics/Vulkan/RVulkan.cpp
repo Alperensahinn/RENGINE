@@ -47,12 +47,30 @@ void RVulkan::Init(GLFWwindow& window)
 	CreateDevice();
 	CreateSwapChain(window);
 	SetQueues();
-
+	CreateRenderPass();
 	CreateGraphicsPipeline();
 }
 
 void RVulkan::CleanUp()
 {
+	if (pGraphicsPipeline != VK_NULL_HANDLE)
+	{
+		vkDestroyPipeline(pDevice, pGraphicsPipeline, nullptr);
+		pGraphicsPipeline = VK_NULL_HANDLE;
+	}
+
+	if (pPipelineLayout != VK_NULL_HANDLE)
+	{
+		vkDestroyPipelineLayout(pDevice, pPipelineLayout, nullptr);
+		pPipelineLayout = VK_NULL_HANDLE;
+	}
+
+	if (pRenderPass != VK_NULL_HANDLE)
+	{
+		vkDestroyRenderPass(pDevice, pRenderPass, nullptr);
+		pRenderPass = VK_NULL_HANDLE;
+	}
+
 	for(int i = 0; i < swapChainImageViews.size(); i++)
 	{
 		if (swapChainImageViews[i] != VK_NULL_HANDLE)
@@ -442,8 +460,11 @@ void RVulkan::CreateGraphicsPipeline()
 	VkShaderModule vertexShaderModule;
 	VkShaderModule fragmentShaderModule;
 
-	CreateShaderModule(vertexShaderModule);
-	CreateShaderModule(fragmentShaderModule);
+	std::vector<char> vertexShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/vert.spv");
+	std::vector<char> fragmentShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/frag.spv");
+
+	vertexShaderModule = CreateShaderModule(vertexShaderCode);
+	fragmentShaderModule = CreateShaderModule(fragmentShaderCode);
 
 	VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {};
 	vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -495,27 +516,105 @@ void RVulkan::CreateGraphicsPipeline()
 
 
 	VkPipelineRasterizationStateCreateInfo rasterizationCreateInfo = {};
+	rasterizationCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+	rasterizationCreateInfo.depthClampEnable = VK_FALSE;
+	rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+	rasterizationCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+	rasterizationCreateInfo.lineWidth = 1.0f;
+	rasterizationCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
+	rasterizationCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
+	rasterizationCreateInfo.depthBiasEnable = VK_FALSE;
 
 
+	VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = {};
+	multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+	multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+	multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
 
 
+	VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
+	colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	colorBlendAttachmentState.blendEnable = VK_FALSE;
+
+
+	VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
+	colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+	colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
+	colorBlendStateCreateInfo.attachmentCount = 1;
+	colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
+
+
+	VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
+	pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+	CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &pPipelineLayout));
+
+	VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
+	graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+	graphicsPipelineCreateInfo.stageCount = 2;
+	graphicsPipelineCreateInfo.pStages = shaderStageCreateInfos;
+	graphicsPipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
+	graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
+	graphicsPipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
+	graphicsPipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
+	graphicsPipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
+	graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
+	graphicsPipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
+	graphicsPipelineCreateInfo.layout = pPipelineLayout;
+	graphicsPipelineCreateInfo.renderPass = pRenderPass;
+	graphicsPipelineCreateInfo.subpass = 0;
+
+	CHECK_VKRESULT(vkCreateGraphicsPipelines(pDevice, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &pGraphicsPipeline));
+
+	RLOG("[VULKAN] Graphics pipeline created.")
 
 	vkDestroyShaderModule(pDevice, vertexShaderModule, nullptr);
 	vkDestroyShaderModule(pDevice, fragmentShaderModule, nullptr);
-
-
-	RLOG("[VULKAN] Graphics pipeline created.")
 }
 
-void RVulkan::CreateShaderModule(VkShaderModule& shaderModule)
+VkShaderModule RVulkan::CreateShaderModule(std::vector<char>& shaderCode)
 {
-	std::vector<char> vertShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/vert.spv");
-	std::vector<char> fragShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/frag.spv");
+	VkShaderModule shaderModule;
 
 	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
 	shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-	shaderModuleCreateInfo.codeSize = vertShaderCode.size();
-	shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vertShaderCode.data());
+	shaderModuleCreateInfo.codeSize = shaderCode.size();
+	shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
 
 	CHECK_VKRESULT(vkCreateShaderModule(pDevice, &shaderModuleCreateInfo, nullptr, &shaderModule));
+
+	return shaderModule;
+}
+
+void RVulkan::CreateRenderPass()
+{
+	VkAttachmentDescription attachmentDescription = {};
+	attachmentDescription.format = swapChainImageFormat;
+	attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
+	attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference attachmentReference = {};
+	attachmentReference.attachment = 0;
+	attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpassDescription = {};
+	subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpassDescription.colorAttachmentCount = 1;
+	subpassDescription.pColorAttachments = &attachmentReference;
+
+	VkRenderPassCreateInfo renderPassCreateInfo = {};
+	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassCreateInfo.attachmentCount = 1;
+	renderPassCreateInfo.pAttachments = &attachmentDescription;
+	renderPassCreateInfo.subpassCount = 1;
+	renderPassCreateInfo.pSubpasses = &subpassDescription;
+
+	CHECK_VKRESULT(vkCreateRenderPass(pDevice, &renderPassCreateInfo, nullptr, &pRenderPass));
+
+	RLOG("[VULKAN] Render pass created.")
 }

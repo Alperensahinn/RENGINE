@@ -32,7 +32,8 @@ private:
     void CreateWindowSurface(GLFWwindow& window);
     void CreateSwapChain(GLFWwindow& window);
     void CreateGraphicsPipeline();
-    void CreateShaderModule(VkShaderModule& shaderModule);
+    VkShaderModule CreateShaderModule(std::vector<char>& shaderCode);
+    void CreateRenderPass();
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -55,6 +56,10 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+
+    VkRenderPass pRenderPass = VK_NULL_HANDLE;
+    VkPipelineLayout pPipelineLayout = VK_NULL_HANDLE;
+    VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;

@@ -1,5 +1,6 @@
 #include "FileSystem.h"
 #include <fstream>
+#include "../Log/RLog.h"
 
 
 namespace Ruya 
@@ -8,8 +9,9 @@ namespace Ruya
     {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
-        if (!file.is_open()) {
-            throw std::runtime_error("[File System] Failed to open file.");
+        if (!file.is_open()) 
+        {
+            RERRLOG("[File System] Failed to open file.")
         }
 
         size_t fileSize = (size_t)file.tellg();
