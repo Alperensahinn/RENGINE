@@ -2,7 +2,7 @@
 #include <stdexcept>
 #include <cstdlib>
 
-#include "App.h"
+#include "App/App.h"
 
 int main() 
 {

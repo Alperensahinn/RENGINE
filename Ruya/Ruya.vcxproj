@@ -135,13 +135,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="App.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="RVulkan.cpp" />
+    <ClCompile Include="src\App\App.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
+    <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="App.h" />
-    <ClInclude Include="RVulkan.h" />
+    <ClInclude Include="src\App\App.h" />
+    <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
+    <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
+    <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
+    <ClInclude Include="src\Utilities\Log\RLog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Graphics\Shaders\FragmentShader.frag" />
+    <None Include="Graphics\Shaders\VertexShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

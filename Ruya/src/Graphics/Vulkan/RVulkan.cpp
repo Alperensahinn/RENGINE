@@ -1,4 +1,6 @@
 #include "RVulkan.h"
+#include "../../Utilities/FileSystem/FileSystem.h"
+#include "../../Utilities/Log/RLog.h"
 
 #include <iostream>
 #include <stdexcept>
@@ -19,7 +21,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 {
 	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) 
 	{
-		std::cerr << "[VULKAN VAlIDATION LAYER] " << pCallbackData->pMessage << std::endl;
+		RERRLOG("[VULKAN VAlIDATION LAYER]" << pCallbackData->pMessage)
 	}
 
 	return VK_FALSE;
@@ -45,6 +47,8 @@ void RVulkan::Init(GLFWwindow& window)
 	CreateDevice();
 	CreateSwapChain(window);
 	SetQueues();
+
+	CreateGraphicsPipeline();
 }
 
 void RVulkan::CleanUp()
@@ -103,8 +107,7 @@ void RVulkan::CreateInstance()
 
 	if (enableValidationLayers && !CheckValidationLayerSupport())
 	{
-		std::cerr << "[VULKAN ERROR] Validation layers requested, but not available." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Validation layers requested, but not available.");
+		RERRLOG("[VULKAN ERROR] Validation layers requested, but not available.")
 	}
 
 	if (enableValidationLayers && CheckValidationLayerSupport()) 
@@ -122,7 +125,7 @@ void RVulkan::CreateInstance()
 
 		createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 
-		std::cout << "[VULKAN] Validation layers enabled." << std::endl;
+		RLOG("[VULKAN] Validation layers enabled.");
 	}
 	else 
 	{
@@ -130,24 +133,17 @@ void RVulkan::CreateInstance()
 		createInfo.pNext = nullptr;
 	}
 
-	VkResult result = vkCreateInstance(&createInfo, nullptr, &pInstance);
+	CHECK_VKRESULT(vkCreateInstance(&createInfo, nullptr, &pInstance));
 
-	if (result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to create Vulkan instance." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to create Vulkan instance.");
-		return;
-	}
-
-	std::cout << "[VULKAN] Vulkan instance created." << std::endl;
+	RLOG("[VULKAN] Vulkan instance created.")
 }
 
 bool RVulkan::CheckValidationLayerSupport()
 {
 	uint32_t layerCount;
-	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+	CHECK_VKRESULT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
 	std::vector<VkLayerProperties> availableLayers(layerCount);
-	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+	CHECK_VKRESULT(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data()));
 
 	for (const char* layerName : validationLayers) 
 	{
@@ -185,14 +181,12 @@ void RVulkan::CreateDebugMessenger()
 	if (func != nullptr) {
 		if(func(pInstance, &debugCreateInfo, nullptr, &pDebugUtilsMessanger) != VK_SUCCESS)
 		{
-			std::cerr << "[VULKAN ERROR] Failed to set up debug messenger." << std::endl;
-			throw std::runtime_error("[VULKAN ERROR] Failed to set up debug messenger.");
+			RERRLOG("[VULKAN ERROR] Failed to set up debug messenger.")
 		}
 	}
 	else 
 	{
-		std::cerr << "[VULKAN ERROR] Failed to find vkCreateDebugUtilsMessengerEXT." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to find vkCreateDebugUtilsMessengerEXT.");
+		RERRLOG("[VULKAN ERROR] Failed to find vkCreateDebugUtilsMessengerEXT.")
 	}
 }
 
@@ -208,24 +202,15 @@ void RVulkan::DestroyDebugUtilsMessenger()
 void RVulkan::SelectPhysicalDevice()
 {
 	unsigned int physicalDevicesCount;
-	VkResult result = vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, nullptr);
+	CHECK_VKRESULT(vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, nullptr));
 
 	if (physicalDevicesCount == 0)
 	{
-		std::cerr << "[VULKAN ERROR] Failed to find Vulkan physical device." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to find Vulkan physical device.");
-		return;
-	}
-
-	else if(result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to enumerate physical devices." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to enumerate physical devices.");
-		return;
+		RERRLOG("[VULKAN ERROR] Failed to find Vulkan physical device.")
 	}
 
 	std::vector<VkPhysicalDevice> physicalDevices(physicalDevicesCount);
-	result = vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, physicalDevices.data());
+	CHECK_VKRESULT(vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, physicalDevices.data()));
 
 	for (VkPhysicalDevice physicalDevice : physicalDevices)
 	{
@@ -242,7 +227,7 @@ void RVulkan::SelectPhysicalDevice()
 
 	VkPhysicalDeviceProperties physicalDeviceProperties;
 	vkGetPhysicalDeviceProperties(pPhysicalDevice, &physicalDeviceProperties);
-	std::cout << "[VULKAN] Vulkan physical device selected: " << physicalDeviceProperties.deviceName << std::endl;
+	RLOG("[VULKAN] Vulkan physical device selected: " << physicalDeviceProperties.deviceName)
 }
 
 void RVulkan::CheckQueueFamilies()
@@ -252,9 +237,7 @@ void RVulkan::CheckQueueFamilies()
 
 	if(queueFamilyPropertyCount == 0)
 	{
-		std::cerr << "[VULKAN ERROR] No queue families supported." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] No queue families supported.");
-		return;
+		RERRLOG("[VULKAN ERROR] No queue families supported.")
 	}
 
 	std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyPropertyCount);
@@ -268,7 +251,7 @@ void RVulkan::CheckQueueFamilies()
 		}
 	}
 
-	std::cout << "[VULKAN] Queue family with graphics bit found. Index: " << graphicsQueueIndex << std::endl;
+	RLOG("[VULKAN] Queue family with graphics bit found. Index: " << graphicsQueueIndex)
 }
 
 void RVulkan::CreateDevice()
@@ -291,15 +274,9 @@ void RVulkan::CreateDevice()
 	deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
 	deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-	VkResult result = vkCreateDevice(pPhysicalDevice, &deviceCreateInfo, nullptr, &pDevice);
-	if(result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to create device." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to create device.");
-		return;
-	}
+	CHECK_VKRESULT(vkCreateDevice(pPhysicalDevice, &deviceCreateInfo, nullptr, &pDevice));
 
-	std::cout << "[VULKAN] Logical device created." << std::endl;
+	RLOG("[VULKAN] Logical device created.");
 }
 
 void RVulkan::SetQueues()
@@ -307,7 +284,7 @@ void RVulkan::SetQueues()
 	vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &pGraphicsQueue);
 	vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &pPresentQueue);
 
-	std::cout << "[VULKAN] Device queues setted." << std::endl;
+	RLOG("[VULKAN] Device queues setted.");
 }
 
 void RVulkan::CreateWindowSurface(GLFWwindow& window)
@@ -317,60 +294,36 @@ void RVulkan::CreateWindowSurface(GLFWwindow& window)
 	surfaceCreateInfo.hwnd = glfwGetWin32Window(&window);
 	surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 
-	VkResult result = vkCreateWin32SurfaceKHR(pInstance, &surfaceCreateInfo, nullptr, &pSurface);
-	if (result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to create WIN32 surface." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to create WIN32 surface.");
-		return;
-	}
+	CHECK_VKRESULT(vkCreateWin32SurfaceKHR(pInstance, &surfaceCreateInfo, nullptr, &pSurface));
 
-	std::cout << "[VULKAN] Window surface created." << std::endl;
+	RLOG("[VULKAN] Window surface created.")
 }
 
 void RVulkan::CreateSwapChain(GLFWwindow& window)
 {
 	VkSurfaceCapabilitiesKHR capabilities;
-	VkResult result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pPhysicalDevice, pSurface, &capabilities);
-	if (result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to get Physical Device Surface Capabilities." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to get Physical Device Surface Capabilities.");
-		return;
-	}
+	CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pPhysicalDevice, pSurface, &capabilities))
 
 	std::vector<VkSurfaceFormatKHR> surfaceFormats;
 	uint32_t surfaceFormatCount;
 
-	result = vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, nullptr);
-	if (result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to get Physical Device Surface Formats." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to get Physical Device Surface Formats.");
-		return;
-	}
+	CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, nullptr))
 
 	if(surfaceFormatCount > 0)
 	{
 		surfaceFormats.resize(surfaceFormatCount);
-		result = vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, surfaceFormats.data());
+		CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, surfaceFormats.data()))
 	}
 	
 	std::vector<VkPresentModeKHR> presentModes;
 	uint32_t presentModeCount;
 
-	result = vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, nullptr);
-	if(result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to get Physical Device Surface Present Modes." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to get Physical Device Surface Present Modes.");
-		return;
-	}
+	CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, nullptr))
 
 	if(presentModeCount > 0)
 	{
 		presentModes.resize(presentModeCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, presentModes.data());
+		CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, presentModes.data()))
 	}
 
 	if(presentModes.empty() || surfaceFormats.empty())
@@ -450,18 +403,13 @@ void RVulkan::CreateSwapChain(GLFWwindow& window)
 	swapChainCreateInfo.clipped = VK_TRUE;
 	swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
-	result = vkCreateSwapchainKHR(pDevice, &swapChainCreateInfo, nullptr, &pSwapChain);
-	if (result != VK_SUCCESS)
-	{
-		std::cerr << "[VULKAN ERROR] Failed to create swap chain." << std::endl;
-		throw std::runtime_error("[VULKAN ERROR] Failed to create swap chain.");
-		return;
-	}
+	CHECK_VKRESULT(vkCreateSwapchainKHR(pDevice, &swapChainCreateInfo, nullptr, &pSwapChain));
 
 	uint32_t swapChainImageCount;
-	vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, nullptr);
+	CHECK_VKRESULT(vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, nullptr));
 	swapChainImages.resize(swapChainImageCount);
-	vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, swapChainImages.data());
+	swapChainImageViews.resize(swapChainImageCount);
+	CHECK_VKRESULT(vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, swapChainImages.data()));
 
 	swapChainImageFormat = surfaceFormat.format;
 	swapChainExtent = actualExtent;
@@ -470,7 +418,7 @@ void RVulkan::CreateSwapChain(GLFWwindow& window)
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = {};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		imageViewCreateInfo.image = swapChainImages[i];
+		imageViewCreateInfo.image = swapChainImages.data()[i];
 		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		imageViewCreateInfo.format = swapChainImageFormat;
 		imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -483,14 +431,91 @@ void RVulkan::CreateSwapChain(GLFWwindow& window)
 		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 		imageViewCreateInfo.subresourceRange.layerCount = 1;
 
-		result = vkCreateImageView(pDevice, &imageViewCreateInfo, nullptr, &swapChainImageViews[i]);
-		if (result != VK_SUCCESS)
-		{
-			std::cerr << "[VULKAN ERROR] Failed to create swap chain image views." << std::endl;
-			throw std::runtime_error("[VULKAN ERROR] Failed to create swap chain image views.");
-			return;
-		}
+		CHECK_VKRESULT(vkCreateImageView(pDevice, &imageViewCreateInfo, nullptr, &swapChainImageViews.data()[i]));
 	}
 
-	std::cout << "[VULKAN] Swap chain created." << std::endl;
+	RLOG("[VULKAN] Swap chain created.")
+}
+
+void RVulkan::CreateGraphicsPipeline()
+{
+	VkShaderModule vertexShaderModule;
+	VkShaderModule fragmentShaderModule;
+
+	CreateShaderModule(vertexShaderModule);
+	CreateShaderModule(fragmentShaderModule);
+
+	VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {};
+	vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	vertexShaderStageCreateInfo.module = vertexShaderModule;
+	vertexShaderStageCreateInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo = {};
+	fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+	fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	fragmentShaderStageCreateInfo.module = fragmentShaderModule;
+	fragmentShaderStageCreateInfo.pName = "main";
+
+	VkPipelineShaderStageCreateInfo shaderStageCreateInfos[] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
+
+
+	VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
+	vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+	vertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
+	vertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
+	vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
+	vertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
+
+
+	VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo = {};
+	inputAssemblyCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+	inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+
+	VkViewport viewport = {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)swapChainExtent.width;
+	viewport.height = (float)swapChainExtent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+
+	VkRect2D scissor = {};
+	scissor.offset = { 0, 0 };
+	scissor.extent = swapChainExtent;
+
+	VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
+	viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+	viewportStateCreateInfo.viewportCount = 1;
+	viewportStateCreateInfo.pViewports = &viewport;
+	viewportStateCreateInfo.scissorCount = 1;
+	viewportStateCreateInfo.pScissors = &scissor;
+
+
+	VkPipelineRasterizationStateCreateInfo rasterizationCreateInfo = {};
+
+
+
+
+
+	vkDestroyShaderModule(pDevice, vertexShaderModule, nullptr);
+	vkDestroyShaderModule(pDevice, fragmentShaderModule, nullptr);
+
+
+	RLOG("[VULKAN] Graphics pipeline created.")
+}
+
+void RVulkan::CreateShaderModule(VkShaderModule& shaderModule)
+{
+	std::vector<char> vertShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/vert.spv");
+	std::vector<char> fragShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/frag.spv");
+
+	VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
+	shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	shaderModuleCreateInfo.codeSize = vertShaderCode.size();
+	shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(vertShaderCode.data());
+
+	CHECK_VKRESULT(vkCreateShaderModule(pDevice, &shaderModuleCreateInfo, nullptr, &shaderModule));
 }

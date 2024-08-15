@@ -1,13 +1,8 @@
 #pragma once
 
+#include "RVulkanConfig.h"
+
 #include <vector>
-
-#if defined(_WIN32)
-    #define VK_USE_PLATFORM_WIN32_KHR
-    #include <vulkan/vulkan.h>
-#endif
-
-
 
 struct GLFWwindow;
 
@@ -36,6 +31,8 @@ private:
     void SetQueues();
     void CreateWindowSurface(GLFWwindow& window);
     void CreateSwapChain(GLFWwindow& window);
+    void CreateGraphicsPipeline();
+    void CreateShaderModule(VkShaderModule& shaderModule);
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
