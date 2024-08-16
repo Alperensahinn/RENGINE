@@ -51,10 +51,30 @@ void RVulkan::Init(GLFWwindow& window)
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
 	CreateCommandPool();
+	CreateCommandBuffer();
+	CreateSynchronizationObjects();
 }
 
 void RVulkan::CleanUp()
 {
+	if (semSwapChainBufferAvailable != VK_NULL_HANDLE)
+	{
+		vkDestroySemaphore(pDevice, semSwapChainBufferAvailable, nullptr);
+		semSwapChainBufferAvailable = VK_NULL_HANDLE;
+	}
+
+	if (smpRenderFinished != VK_NULL_HANDLE)
+	{
+		vkDestroySemaphore(pDevice, smpRenderFinished, nullptr);
+		smpRenderFinished = VK_NULL_HANDLE;
+	}
+	
+	if (fencePresentationFinished != VK_NULL_HANDLE)
+	{
+		vkDestroyFence(pDevice, fencePresentationFinished, nullptr);
+		fencePresentationFinished = VK_NULL_HANDLE;
+	}
+
 	if (pCommandPool != VK_NULL_HANDLE)
 	{
 		vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
@@ -125,6 +145,49 @@ void RVulkan::CleanUp()
 		vkDestroyInstance(pInstance, nullptr);
 		pInstance = VK_NULL_HANDLE;
 	}
+}
+
+void RVulkan::DrawFrame()
+{
+	vkWaitForFences(pDevice, 1, &fencePresentationFinished, VK_TRUE, UINT64_MAX);
+	vkResetFences(pDevice, 1, &fencePresentationFinished);
+	
+	uint32_t imageIndex;
+	CHECK_VKRESULT_DEBUG(vkAcquireNextImageKHR(pDevice, pSwapChain, UINT64_MAX, semSwapChainBufferAvailable, VK_NULL_HANDLE, &imageIndex));
+
+	CHECK_VKRESULT_DEBUG(vkResetCommandBuffer(pCommandBuffer, 0));
+
+	RecordCommandBuffer(pCommandBuffer, imageIndex);
+	
+	VkSemaphore waitSemaphores[] = {semSwapChainBufferAvailable};
+	VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+	VkSemaphore signalSemaphores[] = {smpRenderFinished};
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &pCommandBuffer;
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	CHECK_VKRESULT_DEBUG(vkQueueSubmit(pGraphicsQueue, 1, &submitInfo, fencePresentationFinished));
+
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.waitSemaphoreCount = 1;
+	presentInfo.pWaitSemaphores = signalSemaphores;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &pSwapChain;
+	presentInfo.pImageIndices = &imageIndex;
+
+	CHECK_VKRESULT_DEBUG(vkQueuePresentKHR(pPresentQueue, &presentInfo));
+}
+
+void RVulkan::WaitVulkanDevice()
+{
+	vkDeviceWaitIdle(pDevice);
 }
 
 void RVulkan::CreateInstance()
@@ -624,12 +687,22 @@ void RVulkan::CreateRenderPass()
 	subpassDescription.colorAttachmentCount = 1;
 	subpassDescription.pColorAttachments = &attachmentReference;
 
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
 	VkRenderPassCreateInfo renderPassCreateInfo = {};
 	renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 	renderPassCreateInfo.attachmentCount = 1;
 	renderPassCreateInfo.pAttachments = &attachmentDescription;
 	renderPassCreateInfo.subpassCount = 1;
 	renderPassCreateInfo.pSubpasses = &subpassDescription;
+	renderPassCreateInfo.dependencyCount = 1;
+	renderPassCreateInfo.pDependencies = &dependency;
 
 	CHECK_VKRESULT(vkCreateRenderPass(pDevice, &renderPassCreateInfo, nullptr, &pRenderPass));
 
@@ -708,7 +781,23 @@ void RVulkan::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameB
 
 	vkCmdEndRenderPass(commandBuffer);
 
-	CHECK_VKRESULT(vkEndCommandBuffer(commandBuffer));
+	CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(commandBuffer));
+}
 
-	RLOG("[VULKAN] Command buffer record begins.")
+void RVulkan::CreateSynchronizationObjects()
+{
+	VkSemaphoreCreateInfo semaphoreCreateInfo1 = {};
+	semaphoreCreateInfo1.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	CHECK_VKRESULT(vkCreateSemaphore(pDevice, &semaphoreCreateInfo1, nullptr, &semSwapChainBufferAvailable));
+
+	VkSemaphoreCreateInfo semaphoreCreateInfo2 = {};
+	semaphoreCreateInfo2.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+	CHECK_VKRESULT(vkCreateSemaphore(pDevice, &semaphoreCreateInfo2, nullptr, &smpRenderFinished));
+
+	VkFenceCreateInfo fenceCreateInfo = {};
+	fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+	fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+	CHECK_VKRESULT(vkCreateFence(pDevice, &fenceCreateInfo, nullptr, &fencePresentationFinished));
+
+	RLOG("[VULKAN] Synchronization objects created.")
 }

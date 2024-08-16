@@ -17,9 +17,10 @@ public:
 
 public:
 	void Init(GLFWwindow& window);
-
 	void CleanUp();
 
+    void DrawFrame();
+    void WaitVulkanDevice();
 private:
 	void CreateInstance();
     bool CheckValidationLayerSupport();
@@ -38,6 +39,7 @@ private:
     void CreateCommandPool();
     void CreateCommandBuffer();
     void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
+    void CreateSynchronizationObjects();
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -68,6 +70,10 @@ private:
 
     VkCommandPool pCommandPool = VK_NULL_HANDLE;
     VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
+
+    VkSemaphore semSwapChainBufferAvailable;
+    VkSemaphore smpRenderFinished;
+    VkFence fencePresentationFinished;
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;

@@ -13,6 +13,7 @@ Renderer::~Renderer()
 
 void Renderer::DrawFrame()
 {
+	pRVulkan->DrawFrame();
 }
 
 void Renderer::CleanUp()
