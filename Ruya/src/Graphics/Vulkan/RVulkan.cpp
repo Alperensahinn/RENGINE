@@ -49,10 +49,20 @@ void RVulkan::Init(GLFWwindow& window)
 	SetQueues();
 	CreateRenderPass();
 	CreateGraphicsPipeline();
+	CreateFrameBuffers();
 }
 
 void RVulkan::CleanUp()
 {
+	for (int i = 0; i < swapChainFramebuffers.size(); i++)
+	{
+		if (swapChainFramebuffers[i] != VK_NULL_HANDLE)
+		{
+			vkDestroyFramebuffer(pDevice, swapChainFramebuffers[i], nullptr);
+			swapChainFramebuffers[i] = VK_NULL_HANDLE;
+		}
+	}
+
 	if (pGraphicsPipeline != VK_NULL_HANDLE)
 	{
 		vkDestroyPipeline(pDevice, pGraphicsPipeline, nullptr);
@@ -617,4 +627,25 @@ void RVulkan::CreateRenderPass()
 	CHECK_VKRESULT(vkCreateRenderPass(pDevice, &renderPassCreateInfo, nullptr, &pRenderPass));
 
 	RLOG("[VULKAN] Render pass created.")
+}
+
+void RVulkan::CreateFrameBuffers()
+{
+	swapChainFramebuffers.resize(swapChainImageViews.size());
+
+	for(int i = 0; i < swapChainImageViews.size(); i++)
+	{
+		VkFramebufferCreateInfo frameBufferCreateInfo = {};
+		frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		frameBufferCreateInfo.renderPass = pRenderPass;
+		frameBufferCreateInfo.pAttachments = &swapChainImageViews[i];
+		frameBufferCreateInfo.attachmentCount = 1;
+		frameBufferCreateInfo.width = swapChainExtent.width;
+		frameBufferCreateInfo.height = swapChainExtent.height;
+		frameBufferCreateInfo.layers = 1;
+
+		CHECK_VKRESULT(vkCreateFramebuffer(pDevice, &frameBufferCreateInfo, nullptr, &swapChainFramebuffers[i]));
+	}
+
+	RLOG("[VULKAN] Frame buffers created.")
 }

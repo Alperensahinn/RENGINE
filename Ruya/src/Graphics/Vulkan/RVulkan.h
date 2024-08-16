@@ -34,6 +34,7 @@ private:
     void CreateGraphicsPipeline();
     VkShaderModule CreateShaderModule(std::vector<char>& shaderCode);
     void CreateRenderPass();
+    void CreateFrameBuffers();
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -56,6 +57,7 @@ private:
     std::vector<VkImageView> swapChainImageViews;
     VkFormat swapChainImageFormat;
     VkExtent2D swapChainExtent;
+    std::vector<VkFramebuffer> swapChainFramebuffers;
 
     VkRenderPass pRenderPass = VK_NULL_HANDLE;
     VkPipelineLayout pPipelineLayout = VK_NULL_HANDLE;
