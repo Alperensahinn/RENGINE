@@ -50,10 +50,17 @@ void RVulkan::Init(GLFWwindow& window)
 	CreateRenderPass();
 	CreateGraphicsPipeline();
 	CreateFrameBuffers();
+	CreateCommandPool();
 }
 
 void RVulkan::CleanUp()
 {
+	if (pCommandPool != VK_NULL_HANDLE)
+	{
+		vkDestroyCommandPool(pDevice, pCommandPool, nullptr);
+		pCommandPool = VK_NULL_HANDLE;
+	}
+
 	for (int i = 0; i < swapChainFramebuffers.size(); i++)
 	{
 		if (swapChainFramebuffers[i] != VK_NULL_HANDLE)
@@ -648,4 +655,60 @@ void RVulkan::CreateFrameBuffers()
 	}
 
 	RLOG("[VULKAN] Frame buffers created.")
+}
+
+void RVulkan::CreateCommandPool()
+{
+	VkCommandPoolCreateInfo commandPoolCreateInfo = {};
+	commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+	commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+	commandPoolCreateInfo.queueFamilyIndex = graphicsQueueIndex;
+
+	CHECK_VKRESULT(vkCreateCommandPool(pDevice, &commandPoolCreateInfo, nullptr, &pCommandPool));
+
+	RLOG("[VULKAN] Command pool created.")
+}
+
+void RVulkan::CreateCommandBuffer()
+{
+	VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
+	commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	commandBufferAllocateInfo.commandPool = pCommandPool;
+	commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	commandBufferAllocateInfo.commandBufferCount = 1;
+
+	CHECK_VKRESULT(vkAllocateCommandBuffers(pDevice, &commandBufferAllocateInfo, &pCommandBuffer));
+
+	RLOG("[VULKAN] Command buffer created.")
+}
+
+void RVulkan::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex)
+{
+	VkCommandBufferBeginInfo commandBufferBeginInfo = {};
+	commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+	CHECK_VKRESULT(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
+
+	VkRenderPassBeginInfo renderPassBeginInfo = {};
+	renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	renderPassBeginInfo.renderPass = pRenderPass;
+	renderPassBeginInfo.framebuffer = swapChainFramebuffers[frameBufferIndex];
+	renderPassBeginInfo.renderArea.offset = { 0,0 };
+	renderPassBeginInfo.renderArea.extent = swapChainExtent;
+	renderPassBeginInfo.clearValueCount = 1;
+
+	VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
+	renderPassBeginInfo.pClearValues = &clearColor;
+
+	vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+	vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
+
+	vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+	vkCmdEndRenderPass(commandBuffer);
+
+	CHECK_VKRESULT(vkEndCommandBuffer(commandBuffer));
+
+	RLOG("[VULKAN] Command buffer record begins.")
 }

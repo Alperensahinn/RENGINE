@@ -1,63 +1,33 @@
 #include "App.h"
-
-#include "../Graphics/Vulkan/RVulkan.h"
-
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include "../Window/RWindow.h"
+#include "../Graphics/Renderer/Renderer.h"
 
 #include <iostream>
 
 void App::Run()
 {
-	InitWindow();
-	InitRenderer();
+	Init();
 	MainLoop();
 	CleanUp();
 }
 
-GLFWwindow& App::GetWindow()
+void App::Init()
 {
-	return *glfwWindow;
-}
-
-void App::InitWindow()
-{
-	//init glfw
-	glfwInit();
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindow = glfwCreateWindow(1600, 900, "Ruya", nullptr, nullptr);
-
-	unsigned int requiredExtensionsCount;
-	const char** requiredExtensions = glfwGetRequiredInstanceExtensions(&requiredExtensionsCount);
-	
-	std::cout << "[GLFW] Vulkan required extension:" << std::endl;
-
-	for (unsigned int i = 0; i < requiredExtensionsCount; ++i) 
-	{
-		std::cout << "\t" << requiredExtensions[i] << std::endl;
-	}
-}
-
-void App::InitRenderer()
-{
-	//init vulkan
-	vulkan = new RVulkan(GetWindow());
+	pWindow = new RWindow();
+	pRenderer = new Renderer(pWindow->GetWindow());
 }
 
 void App::MainLoop()
 {
-	while (!glfwWindowShouldClose(glfwWindow))
+	while (!pWindow->RWindowShouldClose())
 	{
-		glfwPollEvents();
+		pWindow->PoolEvents();
+		pRenderer->DrawFrame();
 	}
 }
 
 void App::CleanUp()
 {
-	//destroy glfw
-	glfwDestroyWindow(glfwWindow);
-	glfwTerminate();
-
-	//destroy vulkan
-	delete vulkan;
+	delete pWindow;
+	delete pRenderer;
 }

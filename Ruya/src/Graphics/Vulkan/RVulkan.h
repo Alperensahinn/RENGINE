@@ -35,6 +35,9 @@ private:
     VkShaderModule CreateShaderModule(std::vector<char>& shaderCode);
     void CreateRenderPass();
     void CreateFrameBuffers();
+    void CreateCommandPool();
+    void CreateCommandBuffer();
+    void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -62,6 +65,9 @@ private:
     VkRenderPass pRenderPass = VK_NULL_HANDLE;
     VkPipelineLayout pPipelineLayout = VK_NULL_HANDLE;
     VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
+
+    VkCommandPool pCommandPool = VK_NULL_HANDLE;
+    VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;

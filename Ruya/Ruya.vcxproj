@@ -136,16 +136,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\App\App.cpp" />
+    <ClCompile Include="src\Graphics\Renderer\Renderer.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
     <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
+    <ClCompile Include="src\Window\RWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\App.h" />
+    <ClInclude Include="src\Graphics\Renderer\Renderer.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
     <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="src\Utilities\Log\RLog.h" />
+    <ClInclude Include="src\Window\RWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics\Shaders\FragmentShader.frag" />

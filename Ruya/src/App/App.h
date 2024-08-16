@@ -1,26 +1,22 @@
 #pragma once
 
-class RVulkan;
+class RWindow;
+class Renderer;
 
-struct GLFWwindow;
 
 class App
 {
 public:
 	void Run();
 
-	GLFWwindow& GetWindow();
-
 private:
-	void InitWindow();
-
-	void InitRenderer();
+	void Init();
 
 	void MainLoop();
 
 	void CleanUp();
 
 private:
-	GLFWwindow* glfwWindow;
-	RVulkan* vulkan;
+	RWindow* pWindow;
+	Renderer* pRenderer;
 };
