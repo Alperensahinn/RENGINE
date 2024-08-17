@@ -6,82 +6,99 @@
 
 struct GLFWwindow;
 
+
+struct VKFrameData
+{
+	VkCommandPool commandPool = VK_NULL_HANDLE;
+	VkCommandBuffer mainCommandBuffer = VK_NULL_HANDLE;
+
+	VkSemaphore swapchainSemaphore;
+	VkSemaphore renderSemaphore;
+	VkFence renderFence;
+};
+
+constexpr uint32_t frameOverlap = 2;
+
 class RVulkan
 {
 public:
-    RVulkan(GLFWwindow& window);
-    ~RVulkan();
+	RVulkan(GLFWwindow& window);
+	~RVulkan();
 
-    RVulkan(const RVulkan&) = delete;
-    RVulkan& operator=(const RVulkan&) = delete;
+	RVulkan(const RVulkan&) = delete;
+	RVulkan& operator=(const RVulkan&) = delete;
 
 public:
 	void Init(GLFWwindow& window);
 	void CleanUp();
 
-    void DrawFrame();
-    void WaitVulkanDevice();
+	void Draw();
+	void WaitVulkanDevice();
 private:
 	void CreateInstance();
-    bool CheckValidationLayerSupport();
-    void CreateDebugMessenger();
-    void DestroyDebugUtilsMessenger();
-    void SelectPhysicalDevice();
-    void CheckQueueFamilies();
-    void CreateDevice();
-    void SetQueues();
-    void CreateWindowSurface(GLFWwindow& window);
-    void CreateSwapChain(GLFWwindow& window);
-    void CreateGraphicsPipeline();
-    VkShaderModule CreateShaderModule(std::vector<char>& shaderCode);
-    void CreateRenderPass();
-    void CreateFrameBuffers();
-    void CreateCommandPool();
-    void CreateCommandBuffer();
-    void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
-    void CreateSynchronizationObjects();
-    void CreateVulkanMemoryAllocator();
-    void CreateBuffer();
+	bool CheckValidationLayerSupport();
+	void CreateDebugMessenger();
+	void DestroyDebugUtilsMessenger();
+	void SelectPhysicalDevice();
+	void CheckQueueFamilies();
+	void CreateDevice();
+	void SetQueues();
+	void CreateWindowSurface(GLFWwindow& window);
+	void CreateSwapChain(GLFWwindow& window);
+	void CreateGraphicsPipeline();
+	VkShaderModule CreateShaderModule(std::vector<char>& shaderCode);
+	void CreateRenderPass();
+	void CreateFrameBuffers();
+	void CreateCommandPool();
+	void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
+	void CreateSynchronizationObjects();
+	void CreateVulkanMemoryAllocator();
+	void CreateBuffer();
+	VkCommandBufferBeginInfo CommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
+	VKFrameData& GetCurrentFrame();
+	void TransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
+	VkImageSubresourceRange ImageSubresourceRange(VkImageAspectFlags aspectMask);
+	VkCommandBufferSubmitInfo CommandBufferSubmitInfo(VkCommandBuffer cmdBuffer);
+	VkSemaphoreSubmitInfo SemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
+	VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
-    std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
-    std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-    VkDebugUtilsMessengerEXT pDebugUtilsMessanger = VK_NULL_HANDLE;;
+	std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+	std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+	VkDebugUtilsMessengerEXT pDebugUtilsMessanger = VK_NULL_HANDLE;;
 
-    VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
-    VkDevice pDevice = VK_NULL_HANDLE;
-    std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	VkPhysicalDevice pPhysicalDevice = VK_NULL_HANDLE;
+	VkDevice pDevice = VK_NULL_HANDLE;
+	std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-    VkSurfaceKHR pSurface = VK_NULL_HANDLE;
+	VkSurfaceKHR pSurface = VK_NULL_HANDLE;
 
-    unsigned int graphicsQueueIndex;
-    VkQueue pGraphicsQueue = VK_NULL_HANDLE;
-    VkQueue pPresentQueue = VK_NULL_HANDLE;
+	unsigned int graphicsQueueIndex;
+	VkQueue pGraphicsQueue = VK_NULL_HANDLE;
+	VkQueue pPresentQueue = VK_NULL_HANDLE;
 
-    VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
-    std::vector<VkImage> swapChainImages;
-    std::vector<VkImageView> swapChainImageViews;
-    VkFormat swapChainImageFormat;
-    VkExtent2D swapChainExtent;
-    std::vector<VkFramebuffer> swapChainFramebuffers;
+	VkSwapchainKHR pSwapChain = VK_NULL_HANDLE;
+	std::vector<VkImage> swapChainImages;
+	std::vector<VkImageView> swapChainImageViews;
+	VkFormat swapChainImageFormat;
+	VkExtent2D swapChainExtent;
+	std::vector<VkFramebuffer> swapChainFramebuffers;
 
-    VkRenderPass pRenderPass = VK_NULL_HANDLE;
-    VkPipelineLayout pPipelineLayout = VK_NULL_HANDLE;
-    VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
+	VkRenderPass pRenderPass = VK_NULL_HANDLE;
+	VkPipelineLayout pPipelineLayout = VK_NULL_HANDLE;
+	VkPipeline pGraphicsPipeline = VK_NULL_HANDLE;
 
-    VkCommandPool pCommandPool = VK_NULL_HANDLE;
-    VkCommandBuffer pCommandBuffer = VK_NULL_HANDLE;
+	VmaAllocator vmaAllocator = nullptr;
 
-    VkSemaphore semSwapChainBufferAvailable;
-    VkSemaphore smpRenderFinished;
-    VkFence fencePresentationFinished;
-
-    VmaAllocator vmaAllocator = nullptr;
+public:
+	VKFrameData frames[frameOverlap];
+	uint32_t frameNumber = 0;
 
 #ifdef NDEBUG
-    const bool enableValidationLayers = false;
+	const bool enableValidationLayers = false;
 #else
-    const bool enableValidationLayers = true;
+	const bool enableValidationLayers = true;
 #endif
 };
+
