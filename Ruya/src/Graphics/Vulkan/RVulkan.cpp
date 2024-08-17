@@ -13,20 +13,6 @@
 #include <GLFW/glfw3native.h>
 
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-	VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-	VkDebugUtilsMessageTypeFlagsEXT messageType,
-	const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-	void* pUserData)
-{
-	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) 
-	{
-		RERRLOG("[VULKAN VAlIDATION LAYER]" << pCallbackData->pMessage)
-	}
-
-	return VK_FALSE;
-}
-
 RVulkan::RVulkan(GLFWwindow& window)
 {
 	Init(window);
@@ -53,10 +39,17 @@ void RVulkan::Init(GLFWwindow& window)
 	CreateCommandPool();
 	CreateCommandBuffer();
 	CreateSynchronizationObjects();
+	CreateVulkanMemoryAllocator();
 }
 
 void RVulkan::CleanUp()
 {
+	if(vmaAllocator != nullptr)
+	{
+		vmaDestroyAllocator(vmaAllocator);
+		vmaAllocator = nullptr;
+	}
+
 	if (semSwapChainBufferAvailable != VK_NULL_HANDLE)
 	{
 		vkDestroySemaphore(pDevice, semSwapChainBufferAvailable, nullptr);
@@ -449,7 +442,7 @@ void RVulkan::CreateSwapChain(GLFWwindow& window)
 		surfaceFormat = surfaceFormats[0];
 	}
 
-	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR;
+	VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
 
 	int width, height;
 	glfwGetFramebufferSize(&window, &width, &height);
@@ -800,4 +793,36 @@ void RVulkan::CreateSynchronizationObjects()
 	CHECK_VKRESULT(vkCreateFence(pDevice, &fenceCreateInfo, nullptr, &fencePresentationFinished));
 
 	RLOG("[VULKAN] Synchronization objects created.")
+}
+
+void RVulkan::CreateVulkanMemoryAllocator()
+{
+	VmaVulkanFunctions vulkanFunctions = {};
+	vulkanFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+	vulkanFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
+#if VMA_VULKAN_VERSION >= 1003000
+	vulkanFunctions.vkGetDeviceBufferMemoryRequirements = vkGetDeviceBufferMemoryRequirements;
+	vulkanFunctions.vkGetDeviceImageMemoryRequirements = vkGetDeviceImageMemoryRequirements;
+#endif
+
+	VmaAllocatorCreateInfo allocatorCreateInfo = {};
+	allocatorCreateInfo.device = pDevice;
+	allocatorCreateInfo.instance = pInstance;
+	allocatorCreateInfo.physicalDevice = pPhysicalDevice;
+	allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+	allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
+
+	CHECK_VKRESULT(vmaCreateAllocator(&allocatorCreateInfo, &vmaAllocator));
+
+	RLOG("[VULKAN] Vulkan memory allocator created.")
+}
+
+void RVulkan::CreateBuffer()
+{
+	VkBufferCreateInfo bufferCreateInfo = {};
+	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+
+
+	//vmaCreateBuffer(vmaAllocator, );
 }

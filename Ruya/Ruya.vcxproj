@@ -137,6 +137,7 @@
   <ItemGroup>
     <ClCompile Include="src\App\App.cpp" />
     <ClCompile Include="src\Graphics\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
     <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="src\Graphics\Renderer\Renderer.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
+    <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h" />
     <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="src\Utilities\Log\RLog.h" />
     <ClInclude Include="src\Window\RWindow.h" />

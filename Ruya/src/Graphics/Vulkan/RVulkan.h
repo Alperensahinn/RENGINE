@@ -40,6 +40,8 @@ private:
     void CreateCommandBuffer();
     void RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
     void CreateSynchronizationObjects();
+    void CreateVulkanMemoryAllocator();
+    void CreateBuffer();
 
 private:
 	VkInstance pInstance = VK_NULL_HANDLE;;
@@ -74,6 +76,8 @@ private:
     VkSemaphore semSwapChainBufferAvailable;
     VkSemaphore smpRenderFinished;
     VkFence fencePresentationFinished;
+
+    VmaAllocator vmaAllocator = nullptr;
 
 #ifdef NDEBUG
     const bool enableValidationLayers = false;
