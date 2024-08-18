@@ -6,7 +6,7 @@
 
 int main() 
 {
-    App app;
+    Ruya::App app;
 
     try
     {

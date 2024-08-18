@@ -1,23 +1,27 @@
 #pragma once
 
-class RVulkan;
 struct GLFWwindow;
 
-class Renderer
+namespace Ruya
 {
-public:
-	Renderer(GLFWwindow& window);
-	~Renderer();
+	class RVulkan;
 
-	Renderer(const Renderer&) = delete;
-	Renderer& operator=(const Renderer&) = delete;
+	class Renderer
+	{
+	public:
+		Renderer(GLFWwindow& window);
+		~Renderer();
 
-public:
-	void DrawFrame();
+		Renderer(const Renderer&) = delete;
+		Renderer& operator=(const Renderer&) = delete;
 
-private:
-	void CleanUp();
+	public:
+		void DrawFrame();
 
-private:
-	RVulkan* pRVulkan;
-};
+	private:
+		void CleanUp();
+
+	private:
+		RVulkan* pRVulkan;
+	};
+}

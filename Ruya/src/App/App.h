@@ -1,22 +1,24 @@
 #pragma once
 
-class RWindow;
-class Renderer;
-
-
-class App
+namespace Ruya
 {
-public:
-	void Run();
+	class RWindow;
+	class Renderer;
 
-private:
-	void Init();
+	class App
+	{
+	public:
+		void Run();
 
-	void MainLoop();
+	private:
+		void Init();
 
-	void CleanUp();
+		void MainLoop();
 
-private:
-	RWindow* pWindow;
-	Renderer* pRenderer;
-};
+		void CleanUp();
+
+	private:
+		RWindow* pWindow;
+		Renderer* pRenderer;
+	};
+}

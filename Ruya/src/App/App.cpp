@@ -4,30 +4,33 @@
 
 #include <iostream>
 
-void App::Run()
+namespace Ruya
 {
-	Init();
-	MainLoop();
-	CleanUp();
-}
-
-void App::Init()
-{
-	pWindow = new RWindow();
-	pRenderer = new Renderer(pWindow->GetWindow());
-}
-
-void App::MainLoop()
-{
-	while (!pWindow->RWindowShouldClose())
+	void App::Run()
 	{
-		pWindow->PoolEvents();
-		pRenderer->DrawFrame();
+		Init();
+		MainLoop();
+		CleanUp();
 	}
-}
 
-void App::CleanUp()
-{
-	delete pWindow;
-	delete pRenderer;
+	void App::Init()
+	{
+		pWindow = new RWindow();
+		pRenderer = new Renderer(pWindow->GetWindow());
+	}
+
+	void App::MainLoop()
+	{
+		while (!pWindow->RWindowShouldClose())
+		{
+			pWindow->PoolEvents();
+			pRenderer->DrawFrame();
+		}
+	}
+
+	void App::CleanUp()
+	{
+		delete pWindow;
+		delete pRenderer;
+	}
 }
