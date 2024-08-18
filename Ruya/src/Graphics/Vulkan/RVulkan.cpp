@@ -27,27 +27,27 @@ namespace Ruya
 
 	void RVulkan::Init(GLFWwindow& window)
 	{
-		CreateInstance();
-		CreateDebugMessenger();
-		CreateWindowSurface(window);
-		SelectPhysicalDevice();
-		CheckQueueFamilies();
-		CreateDevice();
-		CreateSwapChain(window);
-		SetQueues();
-		CreateRenderPass();
-		CreateGraphicsPipeline();
-		CreateFrameBuffers();
-		CreateCommandPool();
-		CreateSynchronizationObjects();
-		CreateVulkanMemoryAllocator();
+		rVk::CreateInstance(this);
+		rVk::CreateDebugMessenger(this);
+		rVk::CreateWindowSurface(this, window);
+		rVk::SelectPhysicalDevice(this);
+		rVk::CheckQueueFamilies(this);
+		rVk::CreateDevice(this);
+		rVk::CreateSwapChain(this, window);
+		rVk::SetQueues(this);
+		rVk::CreateRenderPass(this);
+		rVk::CreateGraphicsPipeline(this);
+		rVk::CreateFrameBuffers(this);
+		rVk::CreateCommandPool(this);
+		rVk::CreateSynchronizationObjects(this);
+		rVk::CreateVulkanMemoryAllocator(this);
 	}
 
 	void RVulkan::CleanUp()
 	{
-		vkDeviceWaitIdle(pDevice);
-
 		mainDeletionQueue.flush();
+
+		vkDeviceWaitIdle(pDevice);
 
 		for (int i = 0; i < frameOverlap; i++)
 		{
@@ -126,7 +126,7 @@ namespace Ruya
 
 		if (enableValidationLayers)
 		{
-			DestroyDebugUtilsMessenger();
+			rVk::DestroyDebugUtilsMessenger(this);
 		}
 
 		if (pSurface != VK_NULL_HANDLE)
@@ -153,28 +153,28 @@ namespace Ruya
 		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 		CHECK_VKRESULT_DEBUG(vkResetCommandBuffer(cmdBuffer, 0));
 
-		VkCommandBufferBeginInfo cmdBufferbeginInfo = CommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		VkCommandBufferBeginInfo cmdBufferbeginInfo = rVk::CommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
 		CHECK_VKRESULT_DEBUG(vkBeginCommandBuffer(cmdBuffer, &cmdBufferbeginInfo));
 
-		TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		rVk::TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		VkClearColorValue clearValue;
 		float flash = std::abs(std::sin(frameNumber / 120.f));
 		clearValue = { { 0.0f, 0.0f, flash, 1.0f } };
 
-		VkImageSubresourceRange clearRange = ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+		VkImageSubresourceRange clearRange = rVk::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
 
 		vkCmdClearColorImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 
-		TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		rVk::TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(cmdBuffer));
 
-		VkCommandBufferSubmitInfo cmdBufferSubmitInfo = CommandBufferSubmitInfo(cmdBuffer);
-		VkSemaphoreSubmitInfo waitSempSubmitInfo = SemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, GetCurrentFrame().swapchainSemaphore);
-		VkSemaphoreSubmitInfo signalSempSubmitInfo = SemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, GetCurrentFrame().renderSemaphore);
-		VkSubmitInfo2 submitInfo = SubmitInfo(&cmdBufferSubmitInfo, &signalSempSubmitInfo, &waitSempSubmitInfo);
+		VkCommandBufferSubmitInfo cmdBufferSubmitInfo = rVk::CommandBufferSubmitInfo(cmdBuffer);
+		VkSemaphoreSubmitInfo waitSempSubmitInfo = rVk::SemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, GetCurrentFrame().swapchainSemaphore);
+		VkSemaphoreSubmitInfo signalSempSubmitInfo = rVk::SemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, GetCurrentFrame().renderSemaphore);
+		VkSubmitInfo2 submitInfo = rVk::SubmitInfo(&cmdBufferSubmitInfo, &signalSempSubmitInfo, &waitSempSubmitInfo);
 
 		CHECK_VKRESULT_DEBUG(vkQueueSubmit2(pGraphicsQueue, 1, &submitInfo, GetCurrentFrame().renderFence));
 
@@ -196,7 +196,12 @@ namespace Ruya
 		GetCurrentFrame().deletionQueue.flush();
 	}
 
-	void RVulkan::CreateInstance()
+	VKFrameData& RVulkan::GetCurrentFrame()
+	{
+		return frames[frameNumber % frameOverlap];
+	}
+
+	void rVk::CreateInstance(RVulkan* pRVulkan)
 	{
 		VkApplicationInfo applicationInfo = {};
 		applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -209,23 +214,23 @@ namespace Ruya
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
 
 
-		if (enableValidationLayers && !CheckValidationLayerSupport())
+		if (pRVulkan->enableValidationLayers && !CheckValidationLayerSupport(pRVulkan))
 		{
 			RERRLOG("[VULKAN ERROR] Validation layers requested, but not available.")
 		}
 
-		if (enableValidationLayers && CheckValidationLayerSupport())
+		if (pRVulkan->enableValidationLayers && CheckValidationLayerSupport(pRVulkan))
 		{
 			debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
 			debugCreateInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
 			debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 			debugCreateInfo.pfnUserCallback = debugCallback;
 
-			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			createInfo.ppEnabledLayerNames = validationLayers.data();
+			createInfo.enabledLayerCount = static_cast<uint32_t>(pRVulkan->validationLayers.size());
+			createInfo.ppEnabledLayerNames = pRVulkan->validationLayers.data();
 
-			createInfo.enabledExtensionCount = static_cast<uint32_t>(instanceExtensions.size());
-			createInfo.ppEnabledExtensionNames = instanceExtensions.data();
+			createInfo.enabledExtensionCount = static_cast<uint32_t>(pRVulkan->instanceExtensions.size());
+			createInfo.ppEnabledExtensionNames = pRVulkan->instanceExtensions.data();
 
 			createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 
@@ -237,19 +242,19 @@ namespace Ruya
 			createInfo.pNext = nullptr;
 		}
 
-		CHECK_VKRESULT(vkCreateInstance(&createInfo, nullptr, &pInstance));
+		CHECK_VKRESULT(vkCreateInstance(&createInfo, nullptr, &(pRVulkan->pInstance)));
 
 		RLOG("[VULKAN] Vulkan instance created.")
 	}
 
-	bool RVulkan::CheckValidationLayerSupport()
+	bool rVk::CheckValidationLayerSupport(RVulkan* pRVulkan)
 	{
 		uint32_t layerCount;
 		CHECK_VKRESULT(vkEnumerateInstanceLayerProperties(&layerCount, nullptr));
 		std::vector<VkLayerProperties> availableLayers(layerCount);
 		CHECK_VKRESULT(vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data()));
 
-		for (const char* layerName : validationLayers)
+		for (const char* layerName : pRVulkan->validationLayers)
 		{
 			bool layerFound = false;
 
@@ -271,9 +276,9 @@ namespace Ruya
 	}
 
 
-	void RVulkan::CreateDebugMessenger()
+	void rVk::CreateDebugMessenger(RVulkan* pRVulkan)
 	{
-		if (!enableValidationLayers) return;
+		if (!pRVulkan->enableValidationLayers) return;
 
 		VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo = {};
 		debugCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -281,9 +286,9 @@ namespace Ruya
 		debugCreateInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
 		debugCreateInfo.pfnUserCallback = debugCallback;
 
-		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(pInstance, "vkCreateDebugUtilsMessengerEXT");
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(pRVulkan->pInstance, "vkCreateDebugUtilsMessengerEXT");
 		if (func != nullptr) {
-			if (func(pInstance, &debugCreateInfo, nullptr, &pDebugUtilsMessanger) != VK_SUCCESS)
+			if (func((pRVulkan->pInstance), &debugCreateInfo, nullptr, &(pRVulkan->pDebugUtilsMessanger)) != VK_SUCCESS)
 			{
 				RERRLOG("[VULKAN ERROR] Failed to set up debug messenger.")
 			}
@@ -294,19 +299,19 @@ namespace Ruya
 		}
 	}
 
-	void RVulkan::DestroyDebugUtilsMessenger()
+	void rVk::DestroyDebugUtilsMessenger(RVulkan* pRVulkan)
 	{
-		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(pInstance, "vkDestroyDebugUtilsMessengerEXT");
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(pRVulkan->pInstance, "vkDestroyDebugUtilsMessengerEXT");
 		if (func != nullptr)
 		{
-			func(pInstance, pDebugUtilsMessanger, nullptr);
+			func(pRVulkan->pInstance, pRVulkan->pDebugUtilsMessanger, nullptr);
 		}
 	}
 
-	void RVulkan::SelectPhysicalDevice()
+	void rVk::SelectPhysicalDevice(RVulkan* pRVulkan)
 	{
 		unsigned int physicalDevicesCount;
-		CHECK_VKRESULT(vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, nullptr));
+		CHECK_VKRESULT(vkEnumeratePhysicalDevices(pRVulkan->pInstance, &physicalDevicesCount, nullptr));
 
 		if (physicalDevicesCount == 0)
 		{
@@ -314,7 +319,7 @@ namespace Ruya
 		}
 
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDevicesCount);
-		CHECK_VKRESULT(vkEnumeratePhysicalDevices(pInstance, &physicalDevicesCount, physicalDevices.data()));
+		CHECK_VKRESULT(vkEnumeratePhysicalDevices(pRVulkan->pInstance, &physicalDevicesCount, physicalDevices.data()));
 
 		for (VkPhysicalDevice physicalDevice : physicalDevices)
 		{
@@ -324,20 +329,20 @@ namespace Ruya
 
 			if (physicalDeviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			{
-				pPhysicalDevice = physicalDevice;
+				pRVulkan->pPhysicalDevice = physicalDevice;
 				break;
 			}
 		}
 
 		VkPhysicalDeviceProperties physicalDeviceProperties;
-		vkGetPhysicalDeviceProperties(pPhysicalDevice, &physicalDeviceProperties);
+		vkGetPhysicalDeviceProperties(pRVulkan->pPhysicalDevice, &physicalDeviceProperties);
 		RLOG("[VULKAN] Vulkan physical device selected: " << physicalDeviceProperties.deviceName)
 	}
 
-	void RVulkan::CheckQueueFamilies()
+	void rVk::CheckQueueFamilies(RVulkan* pRVulkan)
 	{
 		unsigned int queueFamilyPropertyCount;
-		vkGetPhysicalDeviceQueueFamilyProperties(pPhysicalDevice, &queueFamilyPropertyCount, nullptr);
+		vkGetPhysicalDeviceQueueFamilyProperties(pRVulkan->pPhysicalDevice, &queueFamilyPropertyCount, nullptr);
 
 		if (queueFamilyPropertyCount == 0)
 		{
@@ -345,24 +350,24 @@ namespace Ruya
 		}
 
 		std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyPropertyCount);
-		vkGetPhysicalDeviceQueueFamilyProperties(pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties.data());
+		vkGetPhysicalDeviceQueueFamilyProperties(pRVulkan->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties.data());
 
 		for (int i = 0; i < queueFamilyPropertyCount; i++)
 		{
 			if (queueFamilyProperties.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			{
-				graphicsQueueIndex = i;
+				pRVulkan->graphicsQueueIndex = i;
 			}
 		}
 
-		RLOG("[VULKAN] Queue family with graphics bit found. Index: " << graphicsQueueIndex)
+		RLOG("[VULKAN] Queue family with graphics bit found. Index: " << pRVulkan->graphicsQueueIndex)
 	}
 
-	void RVulkan::CreateDevice()
+	void rVk::CreateDevice(RVulkan* pRVulkan)
 	{
 		VkDeviceQueueCreateInfo queueCreateInfo = {};
 		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queueCreateInfo.queueFamilyIndex = graphicsQueueIndex;
+		queueCreateInfo.queueFamilyIndex = pRVulkan->graphicsQueueIndex;
 		queueCreateInfo.queueCount = 1;
 
 		float queuePrioritie = 1.0f;
@@ -386,59 +391,59 @@ namespace Ruya
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pQueueCreateInfos = &queueCreateInfo;
 		deviceCreateInfo.pEnabledFeatures = nullptr;
-		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
-		deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+		deviceCreateInfo.enabledExtensionCount = static_cast<uint32_t>(pRVulkan->deviceExtensions.size());
+		deviceCreateInfo.ppEnabledExtensionNames = pRVulkan->deviceExtensions.data();
 
-		CHECK_VKRESULT(vkCreateDevice(pPhysicalDevice, &deviceCreateInfo, nullptr, &pDevice));
+		CHECK_VKRESULT(vkCreateDevice(pRVulkan->pPhysicalDevice, &deviceCreateInfo, nullptr, &(pRVulkan->pDevice)));
 
 		RLOG("[VULKAN] Logical device created.");
 	}
 
-	void RVulkan::SetQueues()
+	void rVk::SetQueues(RVulkan* pRVulkan)
 	{
-		vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &pGraphicsQueue);
-		vkGetDeviceQueue(pDevice, graphicsQueueIndex, 0, &pPresentQueue);
+		vkGetDeviceQueue(pRVulkan->pDevice, pRVulkan->graphicsQueueIndex, 0, &(pRVulkan->pGraphicsQueue));
+		vkGetDeviceQueue(pRVulkan->pDevice, pRVulkan->graphicsQueueIndex, 0, &(pRVulkan->pPresentQueue));
 
 		RLOG("[VULKAN] Device queues setted.");
 	}
 
-	void RVulkan::CreateWindowSurface(GLFWwindow& window)
+	void rVk::CreateWindowSurface(RVulkan* pRVulkan, GLFWwindow& window)
 	{
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 		surfaceCreateInfo.hwnd = glfwGetWin32Window(&window);
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 
-		CHECK_VKRESULT(vkCreateWin32SurfaceKHR(pInstance, &surfaceCreateInfo, nullptr, &pSurface));
+		CHECK_VKRESULT(vkCreateWin32SurfaceKHR(pRVulkan->pInstance, &surfaceCreateInfo, nullptr, &(pRVulkan->pSurface)));
 
 		RLOG("[VULKAN] Window surface created.")
 	}
 
-	void RVulkan::CreateSwapChain(GLFWwindow& window)
+	void rVk::CreateSwapChain(RVulkan* pRVulkan, GLFWwindow& window)
 	{
 		VkSurfaceCapabilitiesKHR capabilities;
-		CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pPhysicalDevice, pSurface, &capabilities))
+		CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pRVulkan->pPhysicalDevice, pRVulkan->pSurface, &capabilities))
 
 			std::vector<VkSurfaceFormatKHR> surfaceFormats;
 		uint32_t surfaceFormatCount;
 
-		CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, nullptr))
+		CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(pRVulkan->pPhysicalDevice, pRVulkan->pSurface, &surfaceFormatCount, nullptr))
 
 			if (surfaceFormatCount > 0)
 			{
 				surfaceFormats.resize(surfaceFormatCount);
-				CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(pPhysicalDevice, pSurface, &surfaceFormatCount, surfaceFormats.data()))
+				CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(pRVulkan->pPhysicalDevice, pRVulkan->pSurface, &surfaceFormatCount, surfaceFormats.data()))
 			}
 
 		std::vector<VkPresentModeKHR> presentModes;
 		uint32_t presentModeCount;
 
-		CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, nullptr))
+		CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(pRVulkan->pPhysicalDevice, pRVulkan->pSurface, &presentModeCount, nullptr))
 
 			if (presentModeCount > 0)
 			{
 				presentModes.resize(presentModeCount);
-				CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(pPhysicalDevice, pSurface, &presentModeCount, presentModes.data()))
+				CHECK_VKRESULT(vkGetPhysicalDeviceSurfacePresentModesKHR(pRVulkan->pPhysicalDevice, pRVulkan->pSurface, &presentModeCount, presentModes.data()))
 			}
 
 		if (presentModes.empty() || surfaceFormats.empty())
@@ -489,7 +494,7 @@ namespace Ruya
 
 		VkSwapchainCreateInfoKHR swapChainCreateInfo = {};
 		swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		swapChainCreateInfo.surface = pSurface;
+		swapChainCreateInfo.surface = pRVulkan->pSurface;
 		swapChainCreateInfo.minImageCount = imageCount;
 		swapChainCreateInfo.imageFormat = surfaceFormat.format;
 		swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -499,7 +504,7 @@ namespace Ruya
 
 		uint32_t queueFamilyIndices[] = { 0,0 };
 
-		if (pGraphicsQueue == pPresentQueue)
+		if (pRVulkan->pGraphicsQueue == pRVulkan->pPresentQueue)
 		{
 			swapChainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			swapChainCreateInfo.queueFamilyIndexCount = 0;
@@ -518,24 +523,24 @@ namespace Ruya
 		swapChainCreateInfo.clipped = VK_TRUE;
 		swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 
-		CHECK_VKRESULT(vkCreateSwapchainKHR(pDevice, &swapChainCreateInfo, nullptr, &pSwapChain));
+		CHECK_VKRESULT(vkCreateSwapchainKHR(pRVulkan->pDevice, &swapChainCreateInfo, nullptr, &(pRVulkan->pSwapChain)));
 
 		uint32_t swapChainImageCount;
-		CHECK_VKRESULT(vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, nullptr));
-		swapChainImages.resize(swapChainImageCount);
-		swapChainImageViews.resize(swapChainImageCount);
-		CHECK_VKRESULT(vkGetSwapchainImagesKHR(pDevice, pSwapChain, &swapChainImageCount, swapChainImages.data()));
+		CHECK_VKRESULT(vkGetSwapchainImagesKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, &swapChainImageCount, nullptr));
+		pRVulkan->swapChainImages.resize(swapChainImageCount);
+		pRVulkan->swapChainImageViews.resize(swapChainImageCount);
+		CHECK_VKRESULT(vkGetSwapchainImagesKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, &swapChainImageCount, pRVulkan->swapChainImages.data()));
 
-		swapChainImageFormat = surfaceFormat.format;
-		swapChainExtent = actualExtent;
+		pRVulkan->swapChainImageFormat = surfaceFormat.format;
+		pRVulkan->swapChainExtent = actualExtent;
 
-		for (int i = 0; i < swapChainImages.size(); i++)
+		for (int i = 0; i < pRVulkan->swapChainImages.size(); i++)
 		{
 			VkImageViewCreateInfo imageViewCreateInfo = {};
 			imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			imageViewCreateInfo.image = swapChainImages.data()[i];
+			imageViewCreateInfo.image = pRVulkan->swapChainImages.data()[i];
 			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			imageViewCreateInfo.format = swapChainImageFormat;
+			imageViewCreateInfo.format = pRVulkan->swapChainImageFormat;
 			imageViewCreateInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 			imageViewCreateInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			imageViewCreateInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -546,13 +551,13 @@ namespace Ruya
 			imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
 			imageViewCreateInfo.subresourceRange.layerCount = 1;
 
-			CHECK_VKRESULT(vkCreateImageView(pDevice, &imageViewCreateInfo, nullptr, &swapChainImageViews.data()[i]));
+			CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo, nullptr, &(pRVulkan->swapChainImageViews.data()[i])));
 		}
 
 		RLOG("[VULKAN] Swap chain created.")
 	}
 
-	void RVulkan::CreateGraphicsPipeline()
+	void rVk::CreateGraphicsPipeline(RVulkan* pRVulkan)
 	{
 		VkShaderModule vertexShaderModule;
 		VkShaderModule fragmentShaderModule;
@@ -560,8 +565,8 @@ namespace Ruya
 		std::vector<char> vertexShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/vert.spv");
 		std::vector<char> fragmentShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/frag.spv");
 
-		vertexShaderModule = CreateShaderModule(vertexShaderCode);
-		fragmentShaderModule = CreateShaderModule(fragmentShaderCode);
+		vertexShaderModule = CreateShaderModule(pRVulkan, vertexShaderCode);
+		fragmentShaderModule = CreateShaderModule(pRVulkan, fragmentShaderCode);
 
 		VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {};
 		vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -595,14 +600,14 @@ namespace Ruya
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
 		viewport.y = 0.0f;
-		viewport.width = (float)swapChainExtent.width;
-		viewport.height = (float)swapChainExtent.height;
+		viewport.width = (float)pRVulkan->swapChainExtent.width;
+		viewport.height = (float)pRVulkan->swapChainExtent.height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 
 		VkRect2D scissor = {};
 		scissor.offset = { 0, 0 };
-		scissor.extent = swapChainExtent;
+		scissor.extent = pRVulkan->swapChainExtent;
 
 		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
 		viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -644,7 +649,7 @@ namespace Ruya
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-		CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &pPipelineLayout));
+		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &pipelineLayoutCreateInfo, nullptr, &(pRVulkan->pPipelineLayout)));
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
 		graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -657,19 +662,19 @@ namespace Ruya
 		graphicsPipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
 		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
 		graphicsPipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-		graphicsPipelineCreateInfo.layout = pPipelineLayout;
-		graphicsPipelineCreateInfo.renderPass = pRenderPass;
+		graphicsPipelineCreateInfo.layout = pRVulkan->pPipelineLayout;
+		graphicsPipelineCreateInfo.renderPass = pRVulkan->pRenderPass;
 		graphicsPipelineCreateInfo.subpass = 0;
 
-		CHECK_VKRESULT(vkCreateGraphicsPipelines(pDevice, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &pGraphicsPipeline));
+		CHECK_VKRESULT(vkCreateGraphicsPipelines(pRVulkan->pDevice, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &(pRVulkan->pGraphicsPipeline)));
 
 		RLOG("[VULKAN] Graphics pipeline created.")
 
-			vkDestroyShaderModule(pDevice, vertexShaderModule, nullptr);
-		vkDestroyShaderModule(pDevice, fragmentShaderModule, nullptr);
+		vkDestroyShaderModule(pRVulkan->pDevice, vertexShaderModule, nullptr);
+		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShaderModule, nullptr);
 	}
 
-	VkShaderModule RVulkan::CreateShaderModule(std::vector<char>& shaderCode)
+	VkShaderModule rVk::CreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode)
 	{
 		VkShaderModule shaderModule;
 
@@ -678,15 +683,15 @@ namespace Ruya
 		shaderModuleCreateInfo.codeSize = shaderCode.size();
 		shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
 
-		CHECK_VKRESULT(vkCreateShaderModule(pDevice, &shaderModuleCreateInfo, nullptr, &shaderModule));
+		CHECK_VKRESULT(vkCreateShaderModule(pRVulkan->pDevice, &shaderModuleCreateInfo, nullptr, &shaderModule));
 
 		return shaderModule;
 	}
 
-	void RVulkan::CreateRenderPass()
+	void rVk::CreateRenderPass(RVulkan* pRVulkan)
 	{
 		VkAttachmentDescription attachmentDescription = {};
-		attachmentDescription.format = swapChainImageFormat;
+		attachmentDescription.format = pRVulkan->swapChainImageFormat;
 		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
 		attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -721,56 +726,56 @@ namespace Ruya
 		renderPassCreateInfo.dependencyCount = 1;
 		renderPassCreateInfo.pDependencies = &dependency;
 
-		CHECK_VKRESULT(vkCreateRenderPass(pDevice, &renderPassCreateInfo, nullptr, &pRenderPass));
+		CHECK_VKRESULT(vkCreateRenderPass(pRVulkan->pDevice, &renderPassCreateInfo, nullptr, &(pRVulkan->pRenderPass)));
 
 		RLOG("[VULKAN] Render pass created.")
 	}
 
-	void RVulkan::CreateFrameBuffers()
+	void rVk::CreateFrameBuffers(RVulkan* pRVulkan)
 	{
-		swapChainFramebuffers.resize(swapChainImageViews.size());
+		pRVulkan->swapChainFramebuffers.resize(pRVulkan->swapChainImageViews.size());
 
-		for (int i = 0; i < swapChainImageViews.size(); i++)
+		for (int i = 0; i < pRVulkan->swapChainImageViews.size(); i++)
 		{
 			VkFramebufferCreateInfo frameBufferCreateInfo = {};
 			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.renderPass = pRenderPass;
-			frameBufferCreateInfo.pAttachments = &swapChainImageViews[i];
+			frameBufferCreateInfo.renderPass = pRVulkan->pRenderPass;
+			frameBufferCreateInfo.pAttachments = &(pRVulkan->swapChainImageViews[i]);
 			frameBufferCreateInfo.attachmentCount = 1;
-			frameBufferCreateInfo.width = swapChainExtent.width;
-			frameBufferCreateInfo.height = swapChainExtent.height;
+			frameBufferCreateInfo.width = pRVulkan->swapChainExtent.width;
+			frameBufferCreateInfo.height = pRVulkan->swapChainExtent.height;
 			frameBufferCreateInfo.layers = 1;
 
-			CHECK_VKRESULT(vkCreateFramebuffer(pDevice, &frameBufferCreateInfo, nullptr, &swapChainFramebuffers[i]));
+			CHECK_VKRESULT(vkCreateFramebuffer(pRVulkan->pDevice, &frameBufferCreateInfo, nullptr, &(pRVulkan->swapChainFramebuffers[i])));
 		}
 
 		RLOG("[VULKAN] Frame buffers created.")
 	}
 
-	void RVulkan::CreateCommandPool()
+	void rVk::CreateCommandPool(RVulkan* pRVulkan)
 	{
 		VkCommandPoolCreateInfo commandPoolCreateInfo = {};
 		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		commandPoolCreateInfo.queueFamilyIndex = graphicsQueueIndex;
+		commandPoolCreateInfo.queueFamilyIndex = pRVulkan->graphicsQueueIndex;
 
 		for (int i = 0; i < frameOverlap; i++)
 		{
-			CHECK_VKRESULT(vkCreateCommandPool(pDevice, &commandPoolCreateInfo, nullptr, &frames[i].commandPool));
+			CHECK_VKRESULT(vkCreateCommandPool(pRVulkan->pDevice, &commandPoolCreateInfo, nullptr, &(pRVulkan->frames[i].commandPool)));
 
 			VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
 			commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			commandBufferAllocateInfo.commandPool = frames[i].commandPool;
+			commandBufferAllocateInfo.commandPool = pRVulkan->frames[i].commandPool;
 			commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 			commandBufferAllocateInfo.commandBufferCount = 1;
 
-			CHECK_VKRESULT(vkAllocateCommandBuffers(pDevice, &commandBufferAllocateInfo, &frames[i].mainCommandBuffer));
+			CHECK_VKRESULT(vkAllocateCommandBuffers(pRVulkan->pDevice, &commandBufferAllocateInfo, &(pRVulkan->frames[i].mainCommandBuffer)));
 		}
 
 		RLOG("[VULKAN] Command pools and buffers created.")
 	}
 
-	void RVulkan::RecordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t frameBufferIndex)
+	void rVk::RecordCommandBuffer(RVulkan* pRVulkan, VkCommandBuffer commandBuffer, uint32_t frameBufferIndex)
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = {};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -779,10 +784,10 @@ namespace Ruya
 
 		VkRenderPassBeginInfo renderPassBeginInfo = {};
 		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassBeginInfo.renderPass = pRenderPass;
-		renderPassBeginInfo.framebuffer = swapChainFramebuffers[frameBufferIndex];
+		renderPassBeginInfo.renderPass = pRVulkan->pRenderPass;
+		renderPassBeginInfo.framebuffer = pRVulkan->swapChainFramebuffers[frameBufferIndex];
 		renderPassBeginInfo.renderArea.offset = { 0,0 };
-		renderPassBeginInfo.renderArea.extent = swapChainExtent;
+		renderPassBeginInfo.renderArea.extent = pRVulkan->swapChainExtent;
 		renderPassBeginInfo.clearValueCount = 1;
 
 		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
@@ -790,7 +795,7 @@ namespace Ruya
 
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pGraphicsPipeline);
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pRVulkan->pGraphicsPipeline);
 
 		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
@@ -799,27 +804,27 @@ namespace Ruya
 		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(commandBuffer));
 	}
 
-	void RVulkan::CreateSynchronizationObjects()
+	void rVk::CreateSynchronizationObjects(RVulkan* pRVulkan)
 	{
 		for (int i = 0; i < frameOverlap; i++)
 		{
 			VkSemaphoreCreateInfo semaphoreCreateInfo = {};
 			semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-			CHECK_VKRESULT(vkCreateSemaphore(pDevice, &semaphoreCreateInfo, nullptr, &frames[i].swapchainSemaphore));
-			CHECK_VKRESULT(vkCreateSemaphore(pDevice, &semaphoreCreateInfo, nullptr, &frames[i].renderSemaphore));
+			CHECK_VKRESULT(vkCreateSemaphore(pRVulkan->pDevice, &semaphoreCreateInfo, nullptr, &(pRVulkan->frames[i].swapchainSemaphore)));
+			CHECK_VKRESULT(vkCreateSemaphore(pRVulkan->pDevice, &semaphoreCreateInfo, nullptr, &(pRVulkan->frames[i].renderSemaphore)));
 
 			VkFenceCreateInfo fenceCreateInfo = {};
 			fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-			CHECK_VKRESULT(vkCreateFence(pDevice, &fenceCreateInfo, nullptr, &frames[i].renderFence));
+			CHECK_VKRESULT(vkCreateFence(pRVulkan->pDevice, &fenceCreateInfo, nullptr, &(pRVulkan->frames[i].renderFence)));
 		}
 
 		RLOG("[VULKAN] Synchronization objects created.")
 	}
 
-	void RVulkan::CreateVulkanMemoryAllocator()
+	void rVk::CreateVulkanMemoryAllocator(RVulkan* pRVulkan)
 	{
 		VmaVulkanFunctions vulkanFunctions = {};
 		vulkanFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
@@ -831,21 +836,21 @@ namespace Ruya
 #endif
 
 		VmaAllocatorCreateInfo allocatorCreateInfo = {};
-		allocatorCreateInfo.device = pDevice;
-		allocatorCreateInfo.instance = pInstance;
-		allocatorCreateInfo.physicalDevice = pPhysicalDevice;
+		allocatorCreateInfo.device = pRVulkan->pDevice;
+		allocatorCreateInfo.instance = pRVulkan->pInstance;
+		allocatorCreateInfo.physicalDevice = pRVulkan->pPhysicalDevice;
 		allocatorCreateInfo.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT;
 		allocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
 		allocatorCreateInfo.pVulkanFunctions = &vulkanFunctions;
 
-		CHECK_VKRESULT(vmaCreateAllocator(&allocatorCreateInfo, &vmaAllocator));
+		CHECK_VKRESULT(vmaCreateAllocator(&allocatorCreateInfo, &(pRVulkan->vmaAllocator)));
 
-		mainDeletionQueue.PushFunction([&]() {vmaDestroyAllocator(vmaAllocator); });
+		pRVulkan->mainDeletionQueue.PushFunction([vmaAllocator = pRVulkan->vmaAllocator]() {vmaDestroyAllocator(vmaAllocator);});
 
 		RLOG("[VULKAN] Vulkan memory allocator created.")
 	}
 
-	void RVulkan::CreateBuffer()
+	void rVk::CreateBuffer()
 	{
 		VkBufferCreateInfo bufferCreateInfo = {};
 		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -854,7 +859,7 @@ namespace Ruya
 		//vmaCreateBuffer(vmaAllocator, );
 	}
 
-	VkCommandBufferBeginInfo RVulkan::CommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
+	VkCommandBufferBeginInfo rVk::CommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = {};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -862,12 +867,8 @@ namespace Ruya
 		return commandBufferBeginInfo;
 	}
 
-	VKFrameData& RVulkan::GetCurrentFrame()
-	{
-		return frames[frameNumber % frameOverlap];
-	}
 
-	void RVulkan::TransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout)
+	void rVk::TransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout)
 	{
 		VkImageMemoryBarrier2 imageBarrier = {};
 		imageBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;
@@ -892,7 +893,7 @@ namespace Ruya
 		vkCmdPipelineBarrier2(cmdBuffer, &depInfo);
 	}
 
-	VkImageSubresourceRange RVulkan::ImageSubresourceRange(VkImageAspectFlags aspectMask)
+	VkImageSubresourceRange rVk::ImageSubresourceRange(VkImageAspectFlags aspectMask)
 	{
 		VkImageSubresourceRange subImage = {};
 		subImage.aspectMask = aspectMask;
@@ -904,7 +905,7 @@ namespace Ruya
 		return subImage;
 	}
 
-	VkCommandBufferSubmitInfo RVulkan::CommandBufferSubmitInfo(VkCommandBuffer cmdBuffer)
+	VkCommandBufferSubmitInfo rVk::CommandBufferSubmitInfo(VkCommandBuffer cmdBuffer)
 	{
 		VkCommandBufferSubmitInfo cmdBufferSubmitInfo = {};
 		cmdBufferSubmitInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO;
@@ -914,7 +915,7 @@ namespace Ruya
 		return cmdBufferSubmitInfo;
 	}
 
-	VkSemaphoreSubmitInfo RVulkan::SemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore)
+	VkSemaphoreSubmitInfo rVk::SemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore)
 	{
 		VkSemaphoreSubmitInfo semaphoreSubmitInfo = {};
 		semaphoreSubmitInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO;
@@ -927,7 +928,7 @@ namespace Ruya
 		return semaphoreSubmitInfo;
 	}
 
-	VkSubmitInfo2 RVulkan::SubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo)
+	VkSubmitInfo2 rVk::SubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo)
 	{
 		VkSubmitInfo2 submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
@@ -941,7 +942,7 @@ namespace Ruya
 		return submitInfo;
 	}
 
-	VkImageCreateInfo RVulkan::ImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent)
+	VkImageCreateInfo rVk::ImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent)
 	{
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -958,7 +959,7 @@ namespace Ruya
 		return imageCreateInfo;
 	}
 
-	VkImageViewCreateInfo RVulkan::ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags)
+	VkImageViewCreateInfo rVk::ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags)
 	{
 		VkImageViewCreateInfo imageViewCreateInfo = {};
 		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
