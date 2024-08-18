@@ -33,6 +33,7 @@ namespace Ruya
 		rVk::SelectPhysicalDevice(this);
 		rVk::CheckQueueFamilies(this);
 		rVk::CreateDevice(this);
+		rVk::CreateVulkanMemoryAllocator(this);
 		rVk::CreateSwapChain(this, window);
 		rVk::SetQueues(this);
 		rVk::CreateRenderPass(this);
@@ -40,106 +41,46 @@ namespace Ruya
 		rVk::CreateFrameBuffers(this);
 		rVk::CreateCommandPool(this);
 		rVk::CreateSynchronizationObjects(this);
-		rVk::CreateVulkanMemoryAllocator(this);
 	}
 
 	void RVulkan::CleanUp()
 	{
-		mainDeletionQueue.flush();
-
 		vkDeviceWaitIdle(pDevice);
+
+		mainDeletionQueue.flush();
 
 		for (int i = 0; i < frameOverlap; i++)
 		{
-			if (frames[i].commandPool != VK_NULL_HANDLE)
-			{
-				vkDestroyCommandPool(pDevice, frames[i].commandPool, nullptr);
-				frames[i].commandPool = VK_NULL_HANDLE;
-			}
-
-			if (frames[i].swapchainSemaphore != VK_NULL_HANDLE)
-			{
-				vkDestroySemaphore(pDevice, frames[i].swapchainSemaphore, nullptr);
-				frames[i].swapchainSemaphore = VK_NULL_HANDLE;
-			}
-
-			if (frames[i].renderSemaphore != VK_NULL_HANDLE)
-			{
-				vkDestroySemaphore(pDevice, frames[i].renderSemaphore, nullptr);
-				frames[i].renderSemaphore = VK_NULL_HANDLE;
-			}
-
-			if (frames[i].renderFence != VK_NULL_HANDLE)
-			{
-				vkDestroyFence(pDevice, frames[i].renderFence, nullptr);
-				frames[i].renderFence = VK_NULL_HANDLE;
-			}
+			vkDestroyCommandPool(pDevice, frames[i].commandPool, nullptr);
+			vkDestroySemaphore(pDevice, frames[i].swapchainSemaphore, nullptr);
+			vkDestroySemaphore(pDevice, frames[i].renderSemaphore, nullptr);
+			vkDestroyFence(pDevice, frames[i].renderFence, nullptr);
 		}
 
 		for (int i = 0; i < swapChainFramebuffers.size(); i++)
 		{
-			if (swapChainFramebuffers[i] != VK_NULL_HANDLE)
-			{
-				vkDestroyFramebuffer(pDevice, swapChainFramebuffers[i], nullptr);
-				swapChainFramebuffers[i] = VK_NULL_HANDLE;
-			}
+			vkDestroyFramebuffer(pDevice, swapChainFramebuffers[i], nullptr);
 		}
 
-		if (pGraphicsPipeline != VK_NULL_HANDLE)
-		{
-			vkDestroyPipeline(pDevice, pGraphicsPipeline, nullptr);
-			pGraphicsPipeline = VK_NULL_HANDLE;
-		}
-
-		if (pPipelineLayout != VK_NULL_HANDLE)
-		{
-			vkDestroyPipelineLayout(pDevice, pPipelineLayout, nullptr);
-			pPipelineLayout = VK_NULL_HANDLE;
-		}
-
-		if (pRenderPass != VK_NULL_HANDLE)
-		{
-			vkDestroyRenderPass(pDevice, pRenderPass, nullptr);
-			pRenderPass = VK_NULL_HANDLE;
-		}
+		vkDestroyPipeline(pDevice, pGraphicsPipeline, nullptr);
+		vkDestroyPipelineLayout(pDevice, pPipelineLayout, nullptr);
+		vkDestroyRenderPass(pDevice, pRenderPass, nullptr);
 
 		for (int i = 0; i < swapChainImageViews.size(); i++)
 		{
-			if (swapChainImageViews[i] != VK_NULL_HANDLE)
-			{
-				vkDestroyImageView(pDevice, swapChainImageViews[i], nullptr);
-				swapChainImageViews[i] = VK_NULL_HANDLE;
-			}
+			vkDestroyImageView(pDevice, swapChainImageViews[i], nullptr);
 		}
 
-		if (pSwapChain != VK_NULL_HANDLE)
-		{
-			vkDestroySwapchainKHR(pDevice, pSwapChain, nullptr);
-			pSwapChain = VK_NULL_HANDLE;
-		}
-
-		if (pDevice != VK_NULL_HANDLE)
-		{
-			vkDestroyDevice(pDevice, nullptr);
-			pDevice = VK_NULL_HANDLE;
-		}
+		vkDestroySwapchainKHR(pDevice, pSwapChain, nullptr);
+		vkDestroyDevice(pDevice, nullptr);
 
 		if (enableValidationLayers)
 		{
 			rVk::DestroyDebugUtilsMessenger(this);
 		}
 
-		if (pSurface != VK_NULL_HANDLE)
-		{
-			vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
-			pSurface = VK_NULL_HANDLE;
-		}
-
-		if (pInstance != VK_NULL_HANDLE)
-		{
-			vkDestroyInstance(pInstance, nullptr);
-			pInstance = VK_NULL_HANDLE;
-		}
+		vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
+		vkDestroyInstance(pInstance, nullptr);
 	}
 
 	void RVulkan::Draw()
@@ -155,9 +96,13 @@ namespace Ruya
 
 		VkCommandBufferBeginInfo cmdBufferbeginInfo = rVk::CommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
+
+		drawExtent.width = drawImage.imageExtent.width;
+		drawExtent.height = drawImage.imageExtent.height;
+
 		CHECK_VKRESULT_DEBUG(vkBeginCommandBuffer(cmdBuffer, &cmdBufferbeginInfo));
 
-		rVk::TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		rVk::TransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		VkClearColorValue clearValue;
 		float flash = std::abs(std::sin(frameNumber / 120.f));
@@ -165,9 +110,14 @@ namespace Ruya
 
 		VkImageSubresourceRange clearRange = rVk::ImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
 
-		vkCmdClearColorImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		vkCmdClearColorImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 
-		rVk::TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		rVk::TransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		rVk::TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+		rVk::CopyImageToImage(cmdBuffer, drawImage.image, swapChainImages[imageIndex], drawExtent, swapChainExtent);
+
+		rVk::TransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(cmdBuffer));
 
@@ -196,7 +146,7 @@ namespace Ruya
 		GetCurrentFrame().deletionQueue.flush();
 	}
 
-	VKFrameData& RVulkan::GetCurrentFrame()
+	RVkFrameData& RVulkan::GetCurrentFrame()
 	{
 		return frames[frameNumber % frameOverlap];
 	}
@@ -554,7 +504,41 @@ namespace Ruya
 			CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo, nullptr, &(pRVulkan->swapChainImageViews.data()[i])));
 		}
 
-		RLOG("[VULKAN] Swap chain created.")
+
+		VkExtent3D drawImageExtent = {
+			actualExtent.width,
+			actualExtent.height,
+			1
+		};
+
+		pRVulkan->drawImage.imageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+		pRVulkan->drawImage.imageExtent = drawImageExtent;
+
+		VkImageUsageFlags drawImageUsageFlags = {};
+		drawImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+		drawImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		drawImageUsageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+		drawImageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+		VkImageCreateInfo renderImageCreateInfo = ImageCreateInfo(pRVulkan->drawImage.imageFormat, drawImageUsageFlags, pRVulkan->drawImage.imageExtent);
+
+		VmaAllocationCreateInfo rimgAllocCreateInfo = {};
+		rimgAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		rimgAllocCreateInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &renderImageCreateInfo, &rimgAllocCreateInfo, &(pRVulkan->drawImage.image), &(pRVulkan->drawImage.allocation), nullptr));
+
+		VkImageViewCreateInfo rimgCreateInfo = ImageViewCreateInfo(pRVulkan->drawImage.imageFormat, pRVulkan->drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
+
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &rimgCreateInfo, nullptr, &(pRVulkan->drawImage.imageView)));
+
+		pRVulkan->mainDeletionQueue.PushFunction([=]()
+			{
+				vmaDestroyImage(pRVulkan->vmaAllocator, pRVulkan->drawImage.image, pRVulkan->drawImage.allocation);
+				vkDestroyImageView(pRVulkan->pDevice, pRVulkan->drawImage.imageView, nullptr);
+			});
+
+		RLOG("[VULKAN] Swap chain created.");
 	}
 
 	void rVk::CreateGraphicsPipeline(RVulkan* pRVulkan)
@@ -974,5 +958,37 @@ namespace Ruya
 		imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
 
 		return imageViewCreateInfo;
+	}
+
+	void rVk::CopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize)
+	{
+		VkImageBlit2 blitRegion = {};
+		blitRegion.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2;
+		blitRegion.srcOffsets[1].x = srcSize.width;
+		blitRegion.srcOffsets[1].y = srcSize.height;
+		blitRegion.srcOffsets[1].z = 1;
+		blitRegion.dstOffsets[1].x = dstSize.width;
+		blitRegion.dstOffsets[1].y = dstSize.height;
+		blitRegion.dstOffsets[1].z = 1;
+		blitRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blitRegion.srcSubresource.baseArrayLayer = 0;
+		blitRegion.srcSubresource.layerCount = 1;
+		blitRegion.srcSubresource.mipLevel = 0;
+		blitRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blitRegion.dstSubresource.baseArrayLayer = 0;
+		blitRegion.dstSubresource.layerCount = 1;
+		blitRegion.dstSubresource.mipLevel = 0;
+
+		VkBlitImageInfo2 blitInfo = {};
+		blitInfo.sType = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2;
+		blitInfo.dstImage = destination;
+		blitInfo.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		blitInfo.srcImage = source;
+		blitInfo.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		blitInfo.filter = VK_FILTER_LINEAR;
+		blitInfo.regionCount = 1;
+		blitInfo.pRegions = &blitRegion;
+
+		vkCmdBlitImage2(cmd, &blitInfo);
 	}
 }

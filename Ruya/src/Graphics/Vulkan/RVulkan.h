@@ -10,7 +10,7 @@ struct GLFWwindow;
 
 namespace Ruya
 {
-	struct VKDeletionQueue
+	struct RVkDeletionQueue
 	{
 		std::deque<std::function<void()>> deletors;
 
@@ -26,7 +26,7 @@ namespace Ruya
 		}
 	};
 
-	struct VKFrameData
+	struct RVkFrameData
 	{
 		VkCommandPool commandPool = VK_NULL_HANDLE;
 		VkCommandBuffer mainCommandBuffer = VK_NULL_HANDLE;
@@ -35,10 +35,10 @@ namespace Ruya
 		VkSemaphore renderSemaphore = VK_NULL_HANDLE;;
 		VkFence renderFence = VK_NULL_HANDLE;;
 
-		VKDeletionQueue deletionQueue;
+		RVkDeletionQueue deletionQueue;
 	};
 
-	struct VKAllocatedImage
+	struct RVkAllocatedImage
 	{
 		VkImage image;
 		VkImageView imageView;
@@ -74,16 +74,16 @@ namespace Ruya
 		VkRenderPass pRenderPass;
 		VkPipelineLayout pPipelineLayout;
 		VkPipeline pGraphicsPipeline;
-		VKAllocatedImage drawImage;
+		RVkAllocatedImage drawImage;
 		VkExtent2D drawExtent;
-		VKDeletionQueue mainDeletionQueue;
+		RVkDeletionQueue mainDeletionQueue;
 		VmaAllocator vmaAllocator;
 
 		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 		std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
-		VKFrameData frames[frameOverlap];
+		RVkFrameData frames[frameOverlap];
 		uint32_t frameNumber = 0;
 
 	public:
@@ -98,7 +98,7 @@ namespace Ruya
 		void CleanUp();
 
 		void Draw();
-		VKFrameData& GetCurrentFrame();
+		RVkFrameData& GetCurrentFrame();
 	};
 
 	namespace rVk
@@ -130,6 +130,7 @@ namespace Ruya
 		VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
 		VkImageCreateInfo ImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
 		VkImageViewCreateInfo ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
+		void CopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
 	}
 }
 
