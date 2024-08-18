@@ -196,11 +196,6 @@ namespace Ruya
 		GetCurrentFrame().deletionQueue.flush();
 	}
 
-	void RVulkan::WaitVulkanDevice()
-	{
-		vkDeviceWaitIdle(pDevice);
-	}
-
 	void RVulkan::CreateInstance()
 	{
 		VkApplicationInfo applicationInfo = {};
@@ -944,5 +939,39 @@ namespace Ruya
 		submitInfo.pSignalSemaphoreInfos = signalSemaphoreInfo;
 
 		return submitInfo;
+	}
+
+	VkImageCreateInfo RVulkan::ImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent)
+	{
+		VkImageCreateInfo imageCreateInfo = {};
+		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		imageCreateInfo.pNext = nullptr;
+		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageCreateInfo.format = format;
+		imageCreateInfo.extent = extent;
+		imageCreateInfo.mipLevels = 1;
+		imageCreateInfo.arrayLayers = 1;
+		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+		imageCreateInfo.usage = imageUsageFlags;
+
+		return imageCreateInfo;
+	}
+
+	VkImageViewCreateInfo RVulkan::ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags)
+	{
+		VkImageViewCreateInfo imageViewCreateInfo = {};
+		imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		imageViewCreateInfo.pNext = nullptr;
+		imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		imageViewCreateInfo.image = image;
+		imageViewCreateInfo.format = format;
+		imageViewCreateInfo.subresourceRange.baseMipLevel = 0;
+		imageViewCreateInfo.subresourceRange.levelCount = 1;
+		imageViewCreateInfo.subresourceRange.baseArrayLayer = 0;
+		imageViewCreateInfo.subresourceRange.layerCount = 1;
+		imageViewCreateInfo.subresourceRange.aspectMask = aspectFlags;
+
+		return imageViewCreateInfo;
 	}
 }

@@ -10,6 +10,47 @@ struct GLFWwindow;
 
 namespace Ruya
 {
+	/*
+	struct RVulkan
+	{
+	private:
+		VkInstance	pInstance;
+		VkPhysicalDevice pPhysicalDevice;
+		VkDevice pDevice;
+		VkSurfaceKHR pSurface;
+		VkDebugUtilsMessengerEXT pDebugUtilsMessanger;
+		uint32_t graphicsQueueIndex;
+		VkQueue pGraphicsQueue;
+		VkQueue pPresentQueue;
+		VkSwapchainKHR pSwapChain;
+		std::vector<VkImage> swapChainImages;
+		std::vector<VkImageView> swapChainImageViews;
+		VkFormat swapChainImageFormat;
+		VkExtent2D swapChainExtent;
+		std::vector<VkFramebuffer> swapChainFramebuffers;
+		VkRenderPass pRenderPass;
+		VkPipelineLayout pPipelineLayout;
+		VkPipeline pGraphicsPipeline;
+		VKAllocatedImage drawImage;
+		VkExtent2D drawExtent;
+		VKDeletionQueue mainDeletionQueue;
+		VmaAllocator vmaAllocator;
+
+	private:
+		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+		std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
+
+	private:
+		VKFrameData frames[frameOverlap];
+		uint32_t frameNumber = 0;
+
+	public:
+		RVulkan(GLFWwindow& window);
+		~RVulkan();
+	};
+	*/
+
+
 	struct VKDeletionQueue
 	{
 		std::deque<std::function<void()>> deletors;
@@ -57,13 +98,11 @@ namespace Ruya
 
 		RVulkan(const RVulkan&) = delete;
 		RVulkan& operator=(const RVulkan&) = delete;
-
 	public:
 		void Init(GLFWwindow& window);
 		void CleanUp();
 
 		void Draw();
-		void WaitVulkanDevice();
 	private:
 		void CreateInstance();
 		bool CheckValidationLayerSupport();
@@ -91,6 +130,8 @@ namespace Ruya
 		VkCommandBufferSubmitInfo CommandBufferSubmitInfo(VkCommandBuffer cmdBuffer);
 		VkSemaphoreSubmitInfo SemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
 		VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
+		VkImageCreateInfo ImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
+		VkImageViewCreateInfo ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
 
 	private:
 		VkInstance pInstance = VK_NULL_HANDLE;;
@@ -126,7 +167,6 @@ namespace Ruya
 
 		VmaAllocator vmaAllocator = nullptr;
 
-	public:
 		VKFrameData frames[frameOverlap];
 		uint32_t frameNumber = 0;
 
