@@ -47,6 +47,14 @@ namespace Ruya
 		VkFormat imageFormat;
 	};
 
+	struct RVkDescriptorLayoutBuilder
+	{
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+		void AddBinding();
+		void Clear();
+	};
+
 	constexpr uint32_t frameOverlap = 2;
 
 	struct RVulkan
@@ -101,37 +109,34 @@ namespace Ruya
 		RVkFrameData& GetCurrentFrame();
 	};
 
-	namespace rVk
-	{
-		void CreateInstance(RVulkan* pRVulkan);
-		bool CheckValidationLayerSupport(RVulkan* pRVulkan);
-		void CreateDebugMessenger(RVulkan* pRVulkan);
-		void DestroyDebugUtilsMessenger(RVulkan* pRVulkan);
-		void SelectPhysicalDevice(RVulkan* pRVulkan);
-		void CheckQueueFamilies(RVulkan* pRVulkan);
-		void CreateDevice(RVulkan* pRVulkan);
-		void SetQueues(RVulkan* pRVulkan);
-		void CreateWindowSurface(RVulkan* pRVulkan, GLFWwindow& window);
-		void CreateSwapChain(RVulkan* pRVulkan, GLFWwindow& window);
-		void CreateGraphicsPipeline(RVulkan* pRVulkan);
-		VkShaderModule CreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode);
-		void CreateRenderPass(RVulkan* pRVulkan);
-		void CreateFrameBuffers(RVulkan* pRVulkan);
-		void CreateCommandPool(RVulkan* pRVulkan);
-		void RecordCommandBuffer(RVulkan* pRVulkan, VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
-		void CreateSynchronizationObjects(RVulkan* pRVulkan);
-		void CreateVulkanMemoryAllocator(RVulkan* pRVulkan);
-		void CreateBuffer();
-		VkCommandBufferBeginInfo CommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
-		void TransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
-		VkImageSubresourceRange ImageSubresourceRange(VkImageAspectFlags aspectMask);
-		VkCommandBufferSubmitInfo CommandBufferSubmitInfo(VkCommandBuffer cmdBuffer);
-		VkSemaphoreSubmitInfo SemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
-		VkSubmitInfo2 SubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
-		VkImageCreateInfo ImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
-		VkImageViewCreateInfo ImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
-		void CopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
-	}
+	void rvkCreateInstance(RVulkan* pRVulkan);
+	bool rvkCheckValidationLayerSupport(RVulkan* pRVulkan);
+	void rvkCreateDebugMessenger(RVulkan* pRVulkan);
+	void rvkDestroyDebugUtilsMessenger(RVulkan* pRVulkan);
+	void rvkSelectPhysicalDevice(RVulkan* pRVulkan);
+	void rvkCheckQueueFamilies(RVulkan* pRVulkan);
+	void rvkCreateDevice(RVulkan* pRVulkan);
+	void rvkSetQueues(RVulkan* pRVulkan);
+	void rvkCreateWindowSurface(RVulkan* pRVulkan, GLFWwindow& window);
+	void rvkCreateSwapChain(RVulkan* pRVulkan, GLFWwindow& window);
+	void rvkCreateGraphicsPipeline(RVulkan* pRVulkan);
+	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode);
+	void rvkCreateRenderPass(RVulkan* pRVulkan);
+	void rvkCreateFrameBuffers(RVulkan* pRVulkan);
+	void rvkCreateCommandPool(RVulkan* pRVulkan);
+	void rvkRecordCommandBuffer(RVulkan* pRVulkan, VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
+	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
+	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
+	void rvkCreateBuffer();
+	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
+	void rvkTransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
+	VkImageSubresourceRange rvkImageSubresourceRange(VkImageAspectFlags aspectMask);
+	VkCommandBufferSubmitInfo rvkCommandBufferSubmitInfo(VkCommandBuffer cmdBuffer);
+	VkSemaphoreSubmitInfo rvkSemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
+	VkSubmitInfo2 rvkSubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
+	VkImageCreateInfo rvkImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
+	VkImageViewCreateInfo rvkImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
+	void rvkCopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
 }
 
 
