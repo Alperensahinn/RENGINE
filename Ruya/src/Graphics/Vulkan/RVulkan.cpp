@@ -37,7 +37,8 @@ namespace Ruya
 		rvkCreateSwapChain(this, window);
 		rvkSetQueues(this);
 		rvkCreateRenderPass(this);
-		rvkCreateGraphicsPipeline(this);
+		rvkCreateDescriptors(this);
+		rvkCreatePipelines(this);
 		rvkCreateFrameBuffers(this);
 		rvkCreateCommandPool(this);
 		rvkCreateSynchronizationObjects(this);
@@ -63,7 +64,7 @@ namespace Ruya
 		}
 
 		vkDestroyPipeline(pDevice, pGraphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(pDevice, pPipelineLayout, nullptr);
+		vkDestroyPipelineLayout(pDevice, pGraphicsPipelineLayout, nullptr);
 		vkDestroyRenderPass(pDevice, pRenderPass, nullptr);
 
 		for (int i = 0; i < swapChainImageViews.size(); i++)
@@ -104,13 +105,11 @@ namespace Ruya
 
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-		VkClearColorValue clearValue;
-		float flash = std::abs(std::sin(frameNumber / 120.f));
-		clearValue = { { 0.0f, 0.0f, flash, 1.0f } };
+		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputePipeline);
 
-		VkImageSubresourceRange clearRange = rvkImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputePipelineLayout, 0, 1, &drawImageDescriptors, 0, nullptr);
 
-		vkCmdClearColorImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		vkCmdDispatch(cmdBuffer, std::ceil(drawExtent.width / 16.0), std::ceil(drawExtent.height / 16.0), 1);
 
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -302,7 +301,7 @@ namespace Ruya
 		std::vector<VkQueueFamilyProperties> queueFamilyProperties(queueFamilyPropertyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(pRVulkan->pPhysicalDevice, &queueFamilyPropertyCount, queueFamilyProperties.data());
 
-		for (int i = 0; i < queueFamilyPropertyCount; i++)
+		for (uint32_t i = 0; i < queueFamilyPropertyCount; i++)
 		{
 			if (queueFamilyProperties.at(i).queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			{
@@ -541,8 +540,9 @@ namespace Ruya
 		RLOG("[VULKAN] Swap chain created.");
 	}
 
-	void rvkCreateGraphicsPipeline(RVulkan* pRVulkan)
+	void rvkCreatePipelines(RVulkan* pRVulkan)
 	{
+		//Graphics pipelines
 		VkShaderModule vertexShaderModule;
 		VkShaderModule fragmentShaderModule;
 
@@ -633,7 +633,7 @@ namespace Ruya
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &pipelineLayoutCreateInfo, nullptr, &(pRVulkan->pPipelineLayout)));
+		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &pipelineLayoutCreateInfo, nullptr, &(pRVulkan->pGraphicsPipelineLayout)));
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
 		graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -646,16 +646,50 @@ namespace Ruya
 		graphicsPipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
 		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
 		graphicsPipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-		graphicsPipelineCreateInfo.layout = pRVulkan->pPipelineLayout;
+		graphicsPipelineCreateInfo.layout = pRVulkan->pGraphicsPipelineLayout;
 		graphicsPipelineCreateInfo.renderPass = pRVulkan->pRenderPass;
 		graphicsPipelineCreateInfo.subpass = 0;
 
 		CHECK_VKRESULT(vkCreateGraphicsPipelines(pRVulkan->pDevice, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &(pRVulkan->pGraphicsPipeline)));
 
-		RLOG("[VULKAN] Graphics pipeline created.")
-
 		vkDestroyShaderModule(pRVulkan->pDevice, vertexShaderModule, nullptr);
 		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShaderModule, nullptr);
+
+		//Compute pipelines
+		VkPipelineLayoutCreateInfo computePipelineLayoutCreateInfo = {};
+		computePipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		computePipelineLayoutCreateInfo.pSetLayouts = &pRVulkan->drawImageDescriptorLayout;
+		computePipelineLayoutCreateInfo.setLayoutCount = 1;
+
+		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &computePipelineLayoutCreateInfo, nullptr, &(pRVulkan->pComputePipelineLayout)));
+
+		VkShaderModule computeShaderModule;
+
+		std::vector<char> computeShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ComputeTest.spv");
+		computeShaderModule = rvkCreateShaderModule(pRVulkan, computeShaderCode);
+
+		VkPipelineShaderStageCreateInfo stageCreateInfo = {};
+		stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+		stageCreateInfo.module = computeShaderModule;
+		stageCreateInfo.pName = "main";
+
+		VkComputePipelineCreateInfo computePipelineCreateInfo = {};
+		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+		computePipelineCreateInfo.layout = pRVulkan->pComputePipelineLayout;
+		computePipelineCreateInfo.stage = stageCreateInfo;
+
+		CHECK_VKRESULT(vkCreateComputePipelines(pRVulkan->pDevice, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &(pRVulkan->pComputePipeline)));
+
+		vkDestroyShaderModule(pRVulkan->pDevice, computeShaderModule, nullptr);
+
+		pRVulkan->mainDeletionQueue.PushFunction([=]()
+			{
+				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pComputePipeline, nullptr);
+				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pComputePipelineLayout, nullptr);
+			});
+
+		RLOG("[VULKAN] Pipelines created.")
 	}
 
 	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode)
@@ -668,6 +702,8 @@ namespace Ruya
 		shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(shaderCode.data());
 
 		CHECK_VKRESULT(vkCreateShaderModule(pRVulkan->pDevice, &shaderModuleCreateInfo, nullptr, &shaderModule));
+
+		RLOG("[VULKAN] Shader module created.")
 
 		return shaderModule;
 	}
@@ -843,6 +879,47 @@ namespace Ruya
 		//vmaCreateBuffer(vmaAllocator, );
 	}
 
+	void rvkCreateDescriptors(RVulkan* pRVulkan)
+	{
+		std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
+		{
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
+		};
+
+		pRVulkan->globalDescriptorAllocator.InitPool(pRVulkan, 10, sizes);
+
+		{
+			RVkDescriptorLayoutBuilder builder;
+			builder.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+			pRVulkan->drawImageDescriptorLayout = builder.Build(pRVulkan, VK_SHADER_STAGE_COMPUTE_BIT);
+		}
+
+		pRVulkan->drawImageDescriptors = pRVulkan->globalDescriptorAllocator.Allocate(pRVulkan, pRVulkan->drawImageDescriptorLayout);
+
+		VkDescriptorImageInfo dscImageInfo = {};
+		dscImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		dscImageInfo.imageView = pRVulkan->drawImage.imageView;
+
+		VkWriteDescriptorSet writeDescriptorSet = {};
+		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescriptorSet.dstSet = pRVulkan->drawImageDescriptors;
+		writeDescriptorSet.dstBinding = 0;
+		writeDescriptorSet.descriptorCount = 1;
+		writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+		writeDescriptorSet.pImageInfo = &dscImageInfo;
+
+		vkUpdateDescriptorSets(pRVulkan->pDevice, 1, &writeDescriptorSet, 0, nullptr);
+
+		pRVulkan->mainDeletionQueue.PushFunction([=]()
+			{
+				pRVulkan->globalDescriptorAllocator.DestroyPool(pRVulkan);
+				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->drawImageDescriptorLayout, nullptr);
+
+			});
+
+		RLOG("[VULKAN] Descriptor sets created.");
+	}
+
 	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = {};
@@ -990,5 +1067,87 @@ namespace Ruya
 		blitInfo.pRegions = &blitRegion;
 
 		vkCmdBlitImage2(cmd, &blitInfo);
+	}
+
+	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
+	{
+		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
+		descriptorSetLayoutBinding.binding = binding;
+		descriptorSetLayoutBinding.descriptorType = descriptorType;
+		descriptorSetLayoutBinding.descriptorCount = 1;
+
+		bindings.push_back(descriptorSetLayoutBinding);
+	}
+
+	void RVkDescriptorLayoutBuilder::Clear()
+	{
+		bindings.clear();
+	}
+
+	VkDescriptorSetLayout RVkDescriptorLayoutBuilder::Build(RVulkan* pRVulkan, VkShaderStageFlags shaderStageFlags, void* pNext, VkDescriptorSetLayoutCreateFlags dcsSetLayoutCreateflags)
+	{
+		for(int i = 0; i < bindings.size(); i++)
+		{
+			bindings[i].stageFlags |= shaderStageFlags;
+		}
+
+		VkDescriptorSetLayoutCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		createInfo.pNext = pNext;
+		createInfo.flags = dcsSetLayoutCreateflags;
+		createInfo.bindingCount = (uint32_t)bindings.size();
+		createInfo.pBindings = bindings.data();
+
+		VkDescriptorSetLayout setLayout;
+
+		CHECK_VKRESULT(vkCreateDescriptorSetLayout(pRVulkan->pDevice, &createInfo, nullptr, &setLayout));
+
+		return setLayout;
+	}
+
+	void DescriptorAllocator::InitPool(RVulkan* pRVulkan, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+	{
+		std::vector<VkDescriptorPoolSize> poolSizes;
+		for (int i = 0; i < poolRatios.size(); i++)
+		{
+			VkDescriptorPoolSize dscPoolSize = {};
+			dscPoolSize.type = poolRatios[i].descriptorType;
+			dscPoolSize.descriptorCount = uint32_t(poolRatios[i].ratio * maxSets);
+			
+			poolSizes.push_back(dscPoolSize);
+		}
+
+		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descriptorPoolCreateInfo.flags = 0;
+		descriptorPoolCreateInfo.maxSets = maxSets;
+		descriptorPoolCreateInfo.poolSizeCount = (uint32_t)poolSizes.size();
+		descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
+		
+		CHECK_VKRESULT(vkCreateDescriptorPool(pRVulkan->pDevice, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+	}
+
+	void DescriptorAllocator::ClearDescriptors(RVulkan* pRVulkan)
+	{
+		CHECK_VKRESULT(vkResetDescriptorPool(pRVulkan->pDevice, descriptorPool, 0));
+	}
+
+	void DescriptorAllocator::DestroyPool(RVulkan* pRVulkan)
+	{
+		vkDestroyDescriptorPool(pRVulkan->pDevice, descriptorPool, nullptr);
+	}
+
+	VkDescriptorSet DescriptorAllocator::Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout)
+	{
+		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
+		descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		descriptorSetAllocateInfo.descriptorPool = descriptorPool;
+		descriptorSetAllocateInfo.descriptorSetCount = 1;
+		descriptorSetAllocateInfo.pSetLayouts = &layout;
+
+		VkDescriptorSet descriptorSet;
+		vkAllocateDescriptorSets(pRVulkan->pDevice, &descriptorSetAllocateInfo, &descriptorSet);
+
+		return descriptorSet;
 	}
 }

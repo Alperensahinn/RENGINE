@@ -5,11 +5,14 @@
 #include <vector>
 #include <deque>
 #include <functional>
+#include <span>
 
 struct GLFWwindow;
 
 namespace Ruya
 {
+	struct RVulkan;
+
 	struct RVkDeletionQueue
 	{
 		std::deque<std::function<void()>> deletors;
@@ -51,8 +54,26 @@ namespace Ruya
 	{
 		std::vector<VkDescriptorSetLayoutBinding> bindings;
 
-		void AddBinding();
+		void AddBinding(uint32_t binding, VkDescriptorType descriptorType);
 		void Clear();
+		VkDescriptorSetLayout Build(RVulkan* pRVulkan, VkShaderStageFlags shaderStageFlags, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags dcsSetLayoutCreateflags = 0);
+	};
+
+	struct DescriptorAllocator
+	{
+		struct PoolSizeRatio
+		{
+			VkDescriptorType descriptorType;
+			float ratio;
+		};
+
+		VkDescriptorPool descriptorPool;
+
+		void InitPool(RVulkan* pRVulkan, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios);
+		void ClearDescriptors(RVulkan* pRVulkan);
+		void DestroyPool(RVulkan* pRVulkan);
+
+		VkDescriptorSet Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout);
 	};
 
 	constexpr uint32_t frameOverlap = 2;
@@ -69,23 +90,38 @@ namespace Ruya
 		VkPhysicalDevice pPhysicalDevice;
 		VkDevice pDevice;
 		VkSurfaceKHR pSurface;
+
 		VkDebugUtilsMessengerEXT pDebugUtilsMessanger;
+
 		uint32_t graphicsQueueIndex;
 		VkQueue pGraphicsQueue;
 		VkQueue pPresentQueue;
+
 		VkSwapchainKHR pSwapChain;
 		std::vector<VkImage> swapChainImages;
 		std::vector<VkImageView> swapChainImageViews;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 		std::vector<VkFramebuffer> swapChainFramebuffers;
+
 		VkRenderPass pRenderPass;
-		VkPipelineLayout pPipelineLayout;
+
 		VkPipeline pGraphicsPipeline;
+		VkPipelineLayout pGraphicsPipelineLayout;
+
+		VkPipeline pComputePipeline;
+		VkPipelineLayout pComputePipelineLayout;
+
 		RVkAllocatedImage drawImage;
+		VkDescriptorSet drawImageDescriptors;
+		VkDescriptorSetLayout drawImageDescriptorLayout;
 		VkExtent2D drawExtent;
-		RVkDeletionQueue mainDeletionQueue;
+
 		VmaAllocator vmaAllocator;
+		RVkDeletionQueue mainDeletionQueue;
+	
+		DescriptorAllocator globalDescriptorAllocator;
+
 
 		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 		std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
@@ -119,7 +155,7 @@ namespace Ruya
 	void rvkSetQueues(RVulkan* pRVulkan);
 	void rvkCreateWindowSurface(RVulkan* pRVulkan, GLFWwindow& window);
 	void rvkCreateSwapChain(RVulkan* pRVulkan, GLFWwindow& window);
-	void rvkCreateGraphicsPipeline(RVulkan* pRVulkan);
+	void rvkCreatePipelines(RVulkan* pRVulkan);
 	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode);
 	void rvkCreateRenderPass(RVulkan* pRVulkan);
 	void rvkCreateFrameBuffers(RVulkan* pRVulkan);
@@ -128,6 +164,7 @@ namespace Ruya
 	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
 	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
 	void rvkCreateBuffer();
+	void rvkCreateDescriptors(RVulkan* pRVulkan);
 	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
 	void rvkTransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
 	VkImageSubresourceRange rvkImageSubresourceRange(VkImageAspectFlags aspectMask);
