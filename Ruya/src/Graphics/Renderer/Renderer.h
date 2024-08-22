@@ -1,4 +1,8 @@
 #pragma once
+#include "../Vulkan/RVulkan.h"
+#include "../../EngineUI/EngineUI.h"
+
+#include "../../Collections/RDeletionQueue.h"
 
 struct GLFWwindow;
 
@@ -17,11 +21,17 @@ namespace Ruya
 
 	public:
 		void DrawFrame();
+		RVulkan* GetRendererBackend();
 
 	private:
+		void Init(GLFWwindow& window);
 		void CleanUp();
+
+	public:
+		RDeletionQueue deletionQueue;
 
 	private:
 		RVulkan* pRVulkan;
+		EngineUI* pEngineUI;
 	};
 }

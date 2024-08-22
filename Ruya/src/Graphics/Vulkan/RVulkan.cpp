@@ -1,17 +1,18 @@
 #include "RVulkan.h"
 #include "../../Utilities/FileSystem/FileSystem.h"
 #include "../../Utilities/Log/RLog.h"
-
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-#include <cmath>
+#include "../../EngineUI/EngineUI.h"
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+
+#include <iostream>
+#include <stdexcept>
+#include <algorithm>
+#include <cmath>
 
 namespace Ruya 
 {
@@ -39,6 +40,7 @@ namespace Ruya
 		rvkCreateRenderPass(this);
 		rvkCreateDescriptors(this);
 		rvkCreatePipelines(this);
+		rvkCreateEngineUIDescriptorPool(this);
 		rvkCreateFrameBuffers(this);
 		rvkCreateCommandPool(this);
 		rvkCreateSynchronizationObjects(this);
@@ -48,7 +50,7 @@ namespace Ruya
 	{
 		vkDeviceWaitIdle(pDevice);
 
-		mainDeletionQueue.flush();
+		deletionQueue.flush();
 
 		for (int i = 0; i < frameOverlap; i++)
 		{
@@ -63,8 +65,6 @@ namespace Ruya
 			vkDestroyFramebuffer(pDevice, swapChainFramebuffers[i], nullptr);
 		}
 
-		vkDestroyPipeline(pDevice, pGraphicsPipeline, nullptr);
-		vkDestroyPipelineLayout(pDevice, pGraphicsPipelineLayout, nullptr);
 		vkDestroyRenderPass(pDevice, pRenderPass, nullptr);
 
 		for (int i = 0; i < swapChainImageViews.size(); i++)
@@ -84,7 +84,7 @@ namespace Ruya
 		vkDestroyInstance(pInstance, nullptr);
 	}
 
-	void RVulkan::Draw()
+	void RVulkan::Draw(EngineUI* pEngineUI)
 	{
 		CHECK_VKRESULT_DEBUG(vkWaitForFences(pDevice, 1, &GetCurrentFrame().renderFence, VK_TRUE, UINT64_MAX));
 		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
@@ -115,6 +115,8 @@ namespace Ruya
 		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 		rvkCopyImageToImage(cmdBuffer, drawImage.image, swapChainImages[imageIndex], drawExtent, swapChainExtent);
+
+		DrawEngineUI(pEngineUI, cmdBuffer, swapChainImageViews[imageIndex]);
 
 		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
@@ -149,6 +151,19 @@ namespace Ruya
 	{
 		return frames[frameNumber % frameOverlap];
 	}
+
+	void RVulkan::DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView)
+	{
+		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(targetImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(swapChainExtent, &colorAttachment, nullptr);
+
+		vkCmdBeginRendering(cmd, &renderInfo);
+
+		pEngineUI->DrawData(cmd);
+
+		vkCmdEndRendering(cmd);
+	}
+
 
 	void rvkCreateInstance(RVulkan* pRVulkan)
 	{
@@ -531,7 +546,7 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &rimgCreateInfo, nullptr, &(pRVulkan->drawImage.imageView)));
 
-		pRVulkan->mainDeletionQueue.PushFunction([=]()
+		pRVulkan->deletionQueue.PushFunction([=]()
 			{
 				vmaDestroyImage(pRVulkan->vmaAllocator, pRVulkan->drawImage.image, pRVulkan->drawImage.allocation);
 				vkDestroyImageView(pRVulkan->pDevice, pRVulkan->drawImage.imageView, nullptr);
@@ -540,121 +555,9 @@ namespace Ruya
 		RLOG("[VULKAN] Swap chain created.");
 	}
 
+
 	void rvkCreatePipelines(RVulkan* pRVulkan)
 	{
-		//Graphics pipelines
-		VkShaderModule vertexShaderModule;
-		VkShaderModule fragmentShaderModule;
-
-		std::vector<char> vertexShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/vert.spv");
-		std::vector<char> fragmentShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/frag.spv");
-
-		vertexShaderModule = rvkCreateShaderModule(pRVulkan, vertexShaderCode);
-		fragmentShaderModule = rvkCreateShaderModule(pRVulkan, fragmentShaderCode);
-
-		VkPipelineShaderStageCreateInfo vertexShaderStageCreateInfo = {};
-		vertexShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		vertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertexShaderStageCreateInfo.module = vertexShaderModule;
-		vertexShaderStageCreateInfo.pName = "main";
-
-		VkPipelineShaderStageCreateInfo fragmentShaderStageCreateInfo = {};
-		fragmentShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		fragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragmentShaderStageCreateInfo.module = fragmentShaderModule;
-		fragmentShaderStageCreateInfo.pName = "main";
-
-		VkPipelineShaderStageCreateInfo shaderStageCreateInfos[] = { vertexShaderStageCreateInfo, fragmentShaderStageCreateInfo };
-
-
-		VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
-		vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
-		vertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
-		vertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
-		vertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
-
-
-		VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo = {};
-		inputAssemblyCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		inputAssemblyCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
-
-
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = (float)pRVulkan->swapChainExtent.width;
-		viewport.height = (float)pRVulkan->swapChainExtent.height;
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-
-		VkRect2D scissor = {};
-		scissor.offset = { 0, 0 };
-		scissor.extent = pRVulkan->swapChainExtent;
-
-		VkPipelineViewportStateCreateInfo viewportStateCreateInfo = {};
-		viewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-		viewportStateCreateInfo.viewportCount = 1;
-		viewportStateCreateInfo.pViewports = &viewport;
-		viewportStateCreateInfo.scissorCount = 1;
-		viewportStateCreateInfo.pScissors = &scissor;
-
-
-		VkPipelineRasterizationStateCreateInfo rasterizationCreateInfo = {};
-		rasterizationCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterizationCreateInfo.depthClampEnable = VK_FALSE;
-		rasterizationCreateInfo.rasterizerDiscardEnable = VK_FALSE;
-		rasterizationCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterizationCreateInfo.lineWidth = 1.0f;
-		rasterizationCreateInfo.cullMode = VK_CULL_MODE_BACK_BIT;
-		rasterizationCreateInfo.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		rasterizationCreateInfo.depthBiasEnable = VK_FALSE;
-
-
-		VkPipelineMultisampleStateCreateInfo multisampleStateCreateInfo = {};
-		multisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-		multisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
-		multisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-
-
-		VkPipelineColorBlendAttachmentState colorBlendAttachmentState = {};
-		colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		colorBlendAttachmentState.blendEnable = VK_FALSE;
-
-
-		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
-		colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-		colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
-		colorBlendStateCreateInfo.attachmentCount = 1;
-		colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
-
-
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
-		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &pipelineLayoutCreateInfo, nullptr, &(pRVulkan->pGraphicsPipelineLayout)));
-
-		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
-		graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-		graphicsPipelineCreateInfo.stageCount = 2;
-		graphicsPipelineCreateInfo.pStages = shaderStageCreateInfos;
-		graphicsPipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
-		graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
-		graphicsPipelineCreateInfo.pViewportState = &viewportStateCreateInfo;
-		graphicsPipelineCreateInfo.pRasterizationState = &rasterizationCreateInfo;
-		graphicsPipelineCreateInfo.pMultisampleState = &multisampleStateCreateInfo;
-		graphicsPipelineCreateInfo.pDepthStencilState = nullptr;
-		graphicsPipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
-		graphicsPipelineCreateInfo.layout = pRVulkan->pGraphicsPipelineLayout;
-		graphicsPipelineCreateInfo.renderPass = pRVulkan->pRenderPass;
-		graphicsPipelineCreateInfo.subpass = 0;
-
-		CHECK_VKRESULT(vkCreateGraphicsPipelines(pRVulkan->pDevice, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &(pRVulkan->pGraphicsPipeline)));
-
-		vkDestroyShaderModule(pRVulkan->pDevice, vertexShaderModule, nullptr);
-		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShaderModule, nullptr);
-
 		//Compute pipelines
 		VkPipelineLayoutCreateInfo computePipelineLayoutCreateInfo = {};
 		computePipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -683,7 +586,7 @@ namespace Ruya
 
 		vkDestroyShaderModule(pRVulkan->pDevice, computeShaderModule, nullptr);
 
-		pRVulkan->mainDeletionQueue.PushFunction([=]()
+		pRVulkan->deletionQueue.PushFunction([=]()
 			{
 				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pComputePipeline, nullptr);
 				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pComputePipelineLayout, nullptr);
@@ -795,35 +698,6 @@ namespace Ruya
 		RLOG("[VULKAN] Command pools and buffers created.")
 	}
 
-	void rvkRecordCommandBuffer(RVulkan* pRVulkan, VkCommandBuffer commandBuffer, uint32_t frameBufferIndex)
-	{
-		VkCommandBufferBeginInfo commandBufferBeginInfo = {};
-		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-
-		CHECK_VKRESULT(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
-
-		VkRenderPassBeginInfo renderPassBeginInfo = {};
-		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		renderPassBeginInfo.renderPass = pRVulkan->pRenderPass;
-		renderPassBeginInfo.framebuffer = pRVulkan->swapChainFramebuffers[frameBufferIndex];
-		renderPassBeginInfo.renderArea.offset = { 0,0 };
-		renderPassBeginInfo.renderArea.extent = pRVulkan->swapChainExtent;
-		renderPassBeginInfo.clearValueCount = 1;
-
-		VkClearValue clearColor = { {{0.0f, 0.0f, 0.0f, 1.0f}} };
-		renderPassBeginInfo.pClearValues = &clearColor;
-
-		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pRVulkan->pGraphicsPipeline);
-
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
-
-		vkCmdEndRenderPass(commandBuffer);
-
-		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(commandBuffer));
-	}
-
 	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan)
 	{
 		for (int i = 0; i < frameOverlap; i++)
@@ -865,7 +739,7 @@ namespace Ruya
 
 		CHECK_VKRESULT(vmaCreateAllocator(&allocatorCreateInfo, &(pRVulkan->vmaAllocator)));
 
-		pRVulkan->mainDeletionQueue.PushFunction([vmaAllocator = pRVulkan->vmaAllocator]() {vmaDestroyAllocator(vmaAllocator);});
+		pRVulkan->deletionQueue.PushFunction([vmaAllocator = pRVulkan->vmaAllocator]() {vmaDestroyAllocator(vmaAllocator);});
 
 		RLOG("[VULKAN] Vulkan memory allocator created.")
 	}
@@ -910,7 +784,7 @@ namespace Ruya
 
 		vkUpdateDescriptorSets(pRVulkan->pDevice, 1, &writeDescriptorSet, 0, nullptr);
 
-		pRVulkan->mainDeletionQueue.PushFunction([=]()
+		pRVulkan->deletionQueue.PushFunction([=]()
 			{
 				pRVulkan->globalDescriptorAllocator.DestroyPool(pRVulkan);
 				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->drawImageDescriptorLayout, nullptr);
@@ -1067,6 +941,68 @@ namespace Ruya
 		blitInfo.pRegions = &blitRegion;
 
 		vkCmdBlitImage2(cmd, &blitInfo);
+	}
+
+	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan)
+	{
+		VkDescriptorPoolSize poolSizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 } };
+
+		VkDescriptorPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		poolInfo.maxSets = 1000;
+		poolInfo.poolSizeCount = (uint32_t)std::size(poolSizes);
+		poolInfo.pPoolSizes = poolSizes;
+
+		CHECK_VKRESULT(vkCreateDescriptorPool(pRVulkan->pDevice, &poolInfo, nullptr, &(pRVulkan->immediateUIPool)));
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyDescriptorPool(pRVulkan->pDevice, pRVulkan->immediateUIPool, nullptr);
+			});
+
+		RLOG("[VULKAN] Immediate ui descriptor pool created.");
+	}
+
+	VkRenderingAttachmentInfo rvkCreateAttachmentInfo(VkImageView view, VkClearValue* clear, VkImageLayout layout)
+	{
+		VkRenderingAttachmentInfo colorAttachmentInfo = {};
+		colorAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		colorAttachmentInfo.imageView = view;
+		colorAttachmentInfo.imageLayout = layout;
+		colorAttachmentInfo.loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+		if (clear) 
+		{
+			colorAttachmentInfo.clearValue = *clear;
+		}
+
+		return colorAttachmentInfo;
+	}
+
+	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment)
+	{
+		VkRenderingInfo renderingInfo = {};
+		renderingInfo.sType = VK_STRUCTURE_TYPE_RENDERING_INFO;
+		renderingInfo.renderArea = VkRect2D{ VkOffset2D { 0, 0 }, renderExtent };
+		renderingInfo.layerCount = 1;
+		renderingInfo.colorAttachmentCount = 1;
+		renderingInfo.pColorAttachments = colorAttachment;
+		renderingInfo.pDepthAttachment = depthAttachment;
+		renderingInfo.pStencilAttachment = nullptr;
+
+		return renderingInfo;
 	}
 
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)

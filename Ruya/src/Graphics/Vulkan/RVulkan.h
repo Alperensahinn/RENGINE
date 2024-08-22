@@ -2,9 +2,9 @@
 
 #include "RVulkanConfig.h"
 
+#include "../../Collections/RDeletionQueue.h"
+
 #include <vector>
-#include <deque>
-#include <functional>
 #include <span>
 
 struct GLFWwindow;
@@ -12,22 +12,7 @@ struct GLFWwindow;
 namespace Ruya
 {
 	struct RVulkan;
-
-	struct RVkDeletionQueue
-	{
-		std::deque<std::function<void()>> deletors;
-
-		void PushFunction(std::function<void()>&& function) {
-			deletors.push_back(function);
-		}
-
-		void flush() {
-			for (auto it = deletors.rbegin(); it != deletors.rend(); it++) {
-				(*it)();
-			}
-			deletors.clear();
-		}
-	};
+	class EngineUI;
 
 	struct RVkFrameData
 	{
@@ -38,7 +23,7 @@ namespace Ruya
 		VkSemaphore renderSemaphore = VK_NULL_HANDLE;;
 		VkFence renderFence = VK_NULL_HANDLE;;
 
-		RVkDeletionQueue deletionQueue;
+		RDeletionQueue deletionQueue;
 	};
 
 	struct RVkAllocatedImage
@@ -106,9 +91,6 @@ namespace Ruya
 
 		VkRenderPass pRenderPass;
 
-		VkPipeline pGraphicsPipeline;
-		VkPipelineLayout pGraphicsPipelineLayout;
-
 		VkPipeline pComputePipeline;
 		VkPipelineLayout pComputePipelineLayout;
 
@@ -118,12 +100,13 @@ namespace Ruya
 		VkExtent2D drawExtent;
 
 		VmaAllocator vmaAllocator;
-		RVkDeletionQueue mainDeletionQueue;
+		RDeletionQueue deletionQueue;
 	
 		DescriptorAllocator globalDescriptorAllocator;
 
+		VkDescriptorPool immediateUIPool;
 
-		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
+		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface"};
 		std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
 		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
@@ -141,8 +124,11 @@ namespace Ruya
 		void Init(GLFWwindow& window);
 		void CleanUp();
 
-		void Draw();
+		void Draw(EngineUI* pEngineUI);
 		RVkFrameData& GetCurrentFrame();
+
+	private:
+		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
 	};
 
 	void rvkCreateInstance(RVulkan* pRVulkan);
@@ -160,7 +146,6 @@ namespace Ruya
 	void rvkCreateRenderPass(RVulkan* pRVulkan);
 	void rvkCreateFrameBuffers(RVulkan* pRVulkan);
 	void rvkCreateCommandPool(RVulkan* pRVulkan);
-	void rvkRecordCommandBuffer(RVulkan* pRVulkan, VkCommandBuffer commandBuffer, uint32_t frameBufferIndex);
 	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
 	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
 	void rvkCreateBuffer();
@@ -174,6 +159,9 @@ namespace Ruya
 	VkImageCreateInfo rvkImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
 	VkImageViewCreateInfo rvkImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
 	void rvkCopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
+	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan);
+	VkRenderingAttachmentInfo rvkCreateAttachmentInfo(VkImageView view, VkClearValue* clear, VkImageLayout layout);
+	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
 }
 
 
