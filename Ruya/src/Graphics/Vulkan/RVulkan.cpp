@@ -46,10 +46,13 @@ namespace Ruya
 		rvkCreateSynchronizationObjects(this);
 	}
 
-	void RVulkan::CleanUp()
+	void RVulkan::WaitDeviceForCleanUp()
 	{
 		vkDeviceWaitIdle(pDevice);
+	}
 
+	void RVulkan::CleanUp()
+	{
 		deletionQueue.flush();
 
 		for (int i = 0; i < frameOverlap; i++)
@@ -108,6 +111,12 @@ namespace Ruya
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputePipeline);
 
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputePipelineLayout, 0, 1, &drawImageDescriptors, 0, nullptr);
+
+		ComputePushConstants pc;
+		pc.data1 = glm::vec4(1, 0, 0, 1);
+		pc.data2 = glm::vec4(0, 0, 1, 1);
+
+		vkCmdPushConstants(cmdBuffer, pComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstants), &pc);
 
 		vkCmdDispatch(cmdBuffer, std::ceil(drawExtent.width / 16.0), std::ceil(drawExtent.height / 16.0), 1);
 
@@ -564,11 +573,19 @@ namespace Ruya
 		computePipelineLayoutCreateInfo.pSetLayouts = &pRVulkan->drawImageDescriptorLayout;
 		computePipelineLayoutCreateInfo.setLayoutCount = 1;
 
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.size = sizeof(ComputePushConstants);
+		pushConstantRange.offset = 0;
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
+
+		computePipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+		computePipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+
 		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &computePipelineLayoutCreateInfo, nullptr, &(pRVulkan->pComputePipelineLayout)));
 
 		VkShaderModule computeShaderModule;
 
-		std::vector<char> computeShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ComputeTest.spv");
+		std::vector<char> computeShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/GradientColor.spv");
 		computeShaderModule = rvkCreateShaderModule(pRVulkan, computeShaderCode);
 
 		VkPipelineShaderStageCreateInfo stageCreateInfo = {};

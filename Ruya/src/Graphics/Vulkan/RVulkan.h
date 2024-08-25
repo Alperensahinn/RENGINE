@@ -1,8 +1,8 @@
 #pragma once
 
 #include "RVulkanConfig.h"
-
 #include "../../Collections/RDeletionQueue.h"
+#include "../../Utilities/Math/RMath.h"
 
 #include <vector>
 #include <span>
@@ -59,6 +59,14 @@ namespace Ruya
 		void DestroyPool(RVulkan* pRVulkan);
 
 		VkDescriptorSet Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout);
+	};
+
+	struct ComputePushConstants 
+	{
+		math::vec4 data1;
+		math::vec4 data2;
+		math::vec4 data3;
+		math::vec4 data4;
 	};
 
 	constexpr uint32_t frameOverlap = 2;
@@ -122,6 +130,7 @@ namespace Ruya
 
 	public:
 		void Init(GLFWwindow& window);
+		void WaitDeviceForCleanUp();
 		void CleanUp();
 
 		void Draw(EngineUI* pEngineUI);

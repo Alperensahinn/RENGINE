@@ -60,6 +60,9 @@
     <ClCompile Include="src\Vendor\imgui\imgui_impl_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utilities\Math\RMath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\App.h">
@@ -119,9 +122,13 @@
     <ClInclude Include="src\Vendor\imgui\imgui_impl_glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utilities\Math\RMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics\Shaders\VertexShader.vert" />
     <None Include="Graphics\Shaders\FragmentShader.frag" />
+    <None Include="src\Graphics\Shaders\GradientColor.comp" />
   </ItemGroup>
 </Project>

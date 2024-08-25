@@ -31,6 +31,8 @@ namespace Ruya
 
 	void Renderer::CleanUp()
 	{
+		pRVulkan->WaitDeviceForCleanUp();
+
 		deletionQueue.flush();
 		delete pEngineUI;
 		delete pRVulkan;

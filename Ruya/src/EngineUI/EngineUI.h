@@ -26,6 +26,7 @@ namespace Ruya
 
 	private:
 		void Init(GLFWwindow& window, Renderer* pRenderer);
+		void SetupUIStyle();
 		void CleanUp();
 
 	private:

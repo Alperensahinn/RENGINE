@@ -143,6 +143,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
     <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
+    <ClCompile Include="src\Utilities\Math\RMath.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_demo.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_draw.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h" />
     <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="src\Utilities\Log\RLog.h" />
+    <ClInclude Include="src\Utilities\Math\RMath.h" />
     <ClInclude Include="src\Vendor\imgui\imconfig.h" />
     <ClInclude Include="src\Vendor\imgui\imgui.h" />
     <ClInclude Include="src\Vendor\imgui\imgui_impl_glfw.h" />
@@ -176,6 +178,7 @@
   <ItemGroup>
     <None Include="Graphics\Shaders\FragmentShader.frag" />
     <None Include="Graphics\Shaders\VertexShader.vert" />
+    <None Include="src\Graphics\Shaders\GradientColor.comp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
