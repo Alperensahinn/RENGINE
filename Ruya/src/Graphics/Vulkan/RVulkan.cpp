@@ -40,6 +40,7 @@ namespace Ruya
 		rvkCreateRenderPass(this);
 		rvkCreateDescriptors(this);
 		rvkCreatePipelines(this);
+		CreateTrianglePipeline();
 		rvkCreateEngineUIDescriptorPool(this);
 		rvkCreateFrameBuffers(this);
 		rvkCreateCommandPool(this);
@@ -100,7 +101,6 @@ namespace Ruya
 
 		VkCommandBufferBeginInfo cmdBufferbeginInfo = rvkCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 
-
 		drawExtent.width = drawImage.imageExtent.width;
 		drawExtent.height = drawImage.imageExtent.height;
 
@@ -108,24 +108,21 @@ namespace Ruya
 
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputePipeline);
+		VkClearColorValue clearValue = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+		VkImageSubresourceRange clearRange = rvkImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
 
-		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pComputePipelineLayout, 0, 1, &drawImageDescriptors, 0, nullptr);
+		vkCmdClearColorImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 
-		ComputePushConstants pc;
-		pc.data1 = glm::vec4(1, 0, 0, 1);
-		pc.data2 = glm::vec4(0, 0, 1, 1);
+		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-		vkCmdPushConstants(cmdBuffer, pComputePipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(ComputePushConstants), &pc);
+		DrawGeometry(cmdBuffer);
 
-		vkCmdDispatch(cmdBuffer, std::ceil(drawExtent.width / 16.0), std::ceil(drawExtent.height / 16.0), 1);
+		DrawEngineUI(pEngineUI, cmdBuffer, drawImage.imageView);
 
-		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
 		rvkCopyImageToImage(cmdBuffer, drawImage.image, swapChainImages[imageIndex], drawExtent, swapChainExtent);
-
-		DrawEngineUI(pEngineUI, cmdBuffer, swapChainImageViews[imageIndex]);
 
 		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
@@ -171,6 +168,78 @@ namespace Ruya
 		pEngineUI->DrawData(cmd);
 
 		vkCmdEndRendering(cmd);
+	}
+
+	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer)
+	{
+		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, nullptr);
+		vkCmdBeginRendering(cmdBuffer, &renderInfo);
+
+		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipeline);
+
+		VkViewport viewport = {};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = drawExtent.width;
+		viewport.height = drawExtent.height;
+		viewport.minDepth = 0.f;
+		viewport.maxDepth = 1.f;
+
+		vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+
+		VkRect2D scissor = {};
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		scissor.extent.width = drawExtent.width;
+		scissor.extent.height = drawExtent.height;
+
+		vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+
+		vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+
+		vkCmdEndRendering(cmdBuffer);
+	}
+
+	void RVulkan::CreateTrianglePipeline()
+	{
+		VkShaderModule vertexShader;
+		std::vector<char> colorTriangleVertexCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ColoredTriangleVertexShader.spv");
+		vertexShader = rvkCreateShaderModule(this, colorTriangleVertexCode);
+
+		VkShaderModule fragmentShader;
+		std::vector<char> colorTriangleFragmentCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ColoredTriangleFragmentShader.spv");
+		fragmentShader = rvkCreateShaderModule(this, colorTriangleFragmentCode);
+
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
+		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+		CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &trianglePipelineLayout));
+
+		PipelineBuilder pipelineBuilder;
+
+		pipelineBuilder.SetShaders(vertexShader, fragmentShader);
+		pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
+		pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
+		pipelineBuilder.SetMultisampling(false);
+		pipelineBuilder.SetBlending(false);
+		pipelineBuilder.SetDepthTest(false);
+		pipelineBuilder.SetColorAttachmentFormat(drawImage.imageFormat);
+		pipelineBuilder.SetDepthFormat(VK_FORMAT_UNDEFINED);
+		pipelineBuilder.pipelineLayout = trianglePipelineLayout;
+
+		trianglePipeline = pipelineBuilder.BuildPipeline(this);
+
+		vkDestroyShaderModule(pDevice, vertexShader, nullptr);
+		vkDestroyShaderModule(pDevice, fragmentShader, nullptr);
+
+		deletionQueue.PushFunction([=]()
+			{
+				vkDestroyPipelineLayout(pDevice, trianglePipelineLayout, nullptr);
+				vkDestroyPipeline(pDevice, trianglePipeline, nullptr);
+			});
 	}
 
 
@@ -1022,6 +1091,17 @@ namespace Ruya
 		return renderingInfo;
 	}
 
+	VkPipelineShaderStageCreateInfo rvkCreateShaderStageInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag)
+	{
+		VkPipelineShaderStageCreateInfo stageCreateInfo = {};
+		stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		stageCreateInfo.stage = shaderStageFlag;
+		stageCreateInfo.module = shaderModule;
+		stageCreateInfo.pName = "main";
+
+		return stageCreateInfo;
+	}
+
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
 	{
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
@@ -1099,8 +1179,151 @@ namespace Ruya
 		descriptorSetAllocateInfo.pSetLayouts = &layout;
 
 		VkDescriptorSet descriptorSet;
-		vkAllocateDescriptorSets(pRVulkan->pDevice, &descriptorSetAllocateInfo, &descriptorSet);
+		CHECK_VKRESULT(vkAllocateDescriptorSets(pRVulkan->pDevice, &descriptorSetAllocateInfo, &descriptorSet));
 
 		return descriptorSet;
+	}
+	PipelineBuilder::PipelineBuilder()
+	{
+		Clear();
+	}
+
+	PipelineBuilder::~PipelineBuilder()
+	{
+	}
+
+	VkPipeline PipelineBuilder::BuildPipeline(RVulkan* pRVulkan)
+	{
+		VkPipelineViewportStateCreateInfo viewPortStateCreateInfo = {};
+		viewPortStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewPortStateCreateInfo.viewportCount = 1;
+		viewPortStateCreateInfo.scissorCount = 1;
+
+
+		VkPipelineColorBlendStateCreateInfo colorBlendStateCreateInfo = {};
+		colorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		colorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
+		colorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY;
+		colorBlendStateCreateInfo.attachmentCount = 1;
+		colorBlendStateCreateInfo.pAttachments = &colorBlendAttachmentState;
+
+		VkPipelineVertexInputStateCreateInfo vertexInputStateCreateInfo = {};
+		vertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+
+		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
+		graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		graphicsPipelineCreateInfo.pNext = &pipelineRenderingCreateInfo;
+		graphicsPipelineCreateInfo.stageCount = shaderStages.size();
+		graphicsPipelineCreateInfo.pStages = shaderStages.data();
+		graphicsPipelineCreateInfo.pVertexInputState = &vertexInputStateCreateInfo;
+		graphicsPipelineCreateInfo.pInputAssemblyState = &inputAssemblyCreateInfo;
+		graphicsPipelineCreateInfo.pViewportState = &viewPortStateCreateInfo;
+		graphicsPipelineCreateInfo.pRasterizationState = &rasterizerCreateInfo;
+		graphicsPipelineCreateInfo.pMultisampleState = &multisamplingCreateInfo;
+		graphicsPipelineCreateInfo.pDepthStencilState = &depthStencilCreateInfo;
+		graphicsPipelineCreateInfo.pColorBlendState = &colorBlendStateCreateInfo;
+		graphicsPipelineCreateInfo.layout = pipelineLayout;
+
+		VkDynamicState dyanmicState[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+
+		VkPipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};
+		dynamicStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicStateCreateInfo.pDynamicStates = &dyanmicState[0];
+		dynamicStateCreateInfo.dynamicStateCount = 2;
+
+		graphicsPipelineCreateInfo.pDynamicState = &dynamicStateCreateInfo;
+
+		VkPipeline pPipeline;
+		CHECK_VKRESULT(vkCreateGraphicsPipelines(pRVulkan->pDevice, nullptr, 1, &graphicsPipelineCreateInfo, nullptr, &pPipeline));
+
+		return pPipeline;
+	}
+
+	void PipelineBuilder::Clear()
+	{
+		shaderStages.clear();
+		inputAssemblyCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+		rasterizerCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+		colorBlendAttachmentState = {};
+		multisamplingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+		pipelineLayout = {};
+		depthStencilCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+		pipelineRenderingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
+	}
+
+	void PipelineBuilder::SetShaders(VkShaderModule vertexShader, VkShaderModule fragmentShader)
+	{
+		shaderStages.clear();
+		shaderStages.push_back(rvkCreateShaderStageInfo(vertexShader, VK_SHADER_STAGE_VERTEX_BIT));
+		shaderStages.push_back(rvkCreateShaderStageInfo(fragmentShader, VK_SHADER_STAGE_FRAGMENT_BIT));
+	}
+
+	void PipelineBuilder::SetInputTopology(VkPrimitiveTopology topology)
+	{
+		inputAssemblyCreateInfo.topology = topology;
+		inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
+	}
+
+	void PipelineBuilder::SetPolygonMode(VkPolygonMode polygonMode)
+	{
+		rasterizerCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+		rasterizerCreateInfo.polygonMode = polygonMode;
+		rasterizerCreateInfo.lineWidth = 1.0f;
+	}
+
+	void PipelineBuilder::SetCullMode(VkCullModeFlags cullModeFlags, VkFrontFace frontFace)
+	{
+		rasterizerCreateInfo.cullMode = cullModeFlags;
+		rasterizerCreateInfo.frontFace = frontFace;
+	}
+
+	void PipelineBuilder::SetMultisampling(bool b)
+	{
+		if(b == false)
+		{
+			multisamplingCreateInfo.sampleShadingEnable = VK_FALSE;
+			multisamplingCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+			multisamplingCreateInfo.minSampleShading = 1.0f;
+			multisamplingCreateInfo.pSampleMask = nullptr;
+			multisamplingCreateInfo.alphaToCoverageEnable = VK_FALSE;
+			multisamplingCreateInfo.alphaToOneEnable = VK_FALSE;
+		}
+	}
+
+	void PipelineBuilder::SetBlending(bool b)
+	{
+		if(b == false)
+		{
+			colorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			colorBlendAttachmentState.blendEnable = VK_FALSE;
+		}
+	}
+
+	void PipelineBuilder::SetColorAttachmentFormat(VkFormat format)
+	{
+		colorAttachmentformat = format;
+		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
+		pipelineRenderingCreateInfo.pColorAttachmentFormats = &colorAttachmentformat;
+	}
+
+	void PipelineBuilder::SetDepthFormat(VkFormat format)
+	{
+		pipelineRenderingCreateInfo.depthAttachmentFormat = format;
+	}
+
+	void PipelineBuilder::SetDepthTest(bool b)
+	{
+		if(b == false)
+		{
+			depthStencilCreateInfo.depthTestEnable = VK_FALSE;
+			depthStencilCreateInfo.depthWriteEnable = VK_FALSE;
+			depthStencilCreateInfo.depthCompareOp = VK_COMPARE_OP_NEVER;
+			depthStencilCreateInfo.depthBoundsTestEnable = VK_FALSE;
+			depthStencilCreateInfo.stencilTestEnable = VK_FALSE;
+			depthStencilCreateInfo.front = {};
+			depthStencilCreateInfo.back = {};
+			depthStencilCreateInfo.minDepthBounds = 0.f;
+			depthStencilCreateInfo.maxDepthBounds = 1.f;
+		}
 	}
 }

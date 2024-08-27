@@ -11,7 +11,7 @@ struct GLFWwindow;
 
 namespace Ruya
 {
-	struct RVulkan;
+	class RVulkan;
 	class EngineUI;
 
 	struct RVkFrameData
@@ -71,8 +71,45 @@ namespace Ruya
 
 	constexpr uint32_t frameOverlap = 2;
 
-	struct RVulkan
+	class PipelineBuilder
 	{
+	public:
+		PipelineBuilder();
+		~PipelineBuilder();
+
+		PipelineBuilder(const PipelineBuilder&) = delete;
+		PipelineBuilder& operator=(const PipelineBuilder&) = delete;
+
+	public:
+		VkPipeline BuildPipeline(RVulkan*  pRVulkan);
+		void Clear();
+		
+		void SetShaders(VkShaderModule vertexShader, VkShaderModule fragmentShader);
+		void SetInputTopology(VkPrimitiveTopology topology);
+		void SetPolygonMode(VkPolygonMode polygonMode);
+		void SetCullMode(VkCullModeFlags cullModeFlags, VkFrontFace frontFace);
+		void SetMultisampling(bool b);
+		void SetBlending(bool b);
+		void SetColorAttachmentFormat(VkFormat format);
+		void SetDepthFormat(VkFormat format);
+		void SetDepthTest(bool b);
+
+
+	public:
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+		VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo;
+		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo;
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState;
+		VkPipelineMultisampleStateCreateInfo multisamplingCreateInfo;
+		VkPipelineLayout pipelineLayout;
+		VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo;
+		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo;
+		VkFormat colorAttachmentformat;
+	};
+
+	class RVulkan
+	{
+	public:
 #ifdef NDEBUG
 		const bool enableValidationLayers = false;
 #else
@@ -98,6 +135,11 @@ namespace Ruya
 		std::vector<VkFramebuffer> swapChainFramebuffers;
 
 		VkRenderPass pRenderPass;
+
+		VkPipeline pGraphicsPipeline;
+
+		VkPipelineLayout trianglePipelineLayout;
+		VkPipeline trianglePipeline;
 
 		VkPipeline pComputePipeline;
 		VkPipelineLayout pComputePipelineLayout;
@@ -138,6 +180,8 @@ namespace Ruya
 
 	private:
 		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
+		void DrawGeometry(VkCommandBuffer cmdBuffer);
+		void CreateTrianglePipeline();
 	};
 
 	void rvkCreateInstance(RVulkan* pRVulkan);
@@ -171,6 +215,7 @@ namespace Ruya
 	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan);
 	VkRenderingAttachmentInfo rvkCreateAttachmentInfo(VkImageView view, VkClearValue* clear, VkImageLayout layout);
 	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
+	VkPipelineShaderStageCreateInfo rvkCreateShaderStageInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag);
 }
 
 

@@ -47,7 +47,7 @@ namespace Ruya
 		initInfo.UseDynamicRendering = true;
 		initInfo.PipelineRenderingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
 		initInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-		initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &(pRenderer->GetRendererBackend()->swapChainImageFormat);
+		initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &(pRenderer->GetRendererBackend()->drawImage.imageFormat);
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
 		ImGui_ImplVulkan_Init(&initInfo);

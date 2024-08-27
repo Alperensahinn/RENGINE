@@ -129,6 +129,6 @@
   <ItemGroup>
     <None Include="Graphics\Shaders\VertexShader.vert" />
     <None Include="Graphics\Shaders\FragmentShader.frag" />
-    <None Include="src\Graphics\Shaders\GradientColor.comp" />
+    <None Include="src\Graphics\Shaders\ColoredTriangle.frag" />
   </ItemGroup>
 </Project>
