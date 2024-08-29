@@ -125,10 +125,15 @@
     <ClInclude Include="src\Utilities\Math\RMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Graphics\DefaultObjects\DefaultCube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics\Shaders\VertexShader.vert" />
     <None Include="Graphics\Shaders\FragmentShader.frag" />
-    <None Include="src\Graphics\Shaders\ColoredTriangle.frag" />
   </ItemGroup>
 </Project>

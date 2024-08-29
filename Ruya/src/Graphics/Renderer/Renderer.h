@@ -23,6 +23,8 @@ namespace Ruya
 		void DrawFrame();
 		RVulkan* GetRendererBackend();
 
+		void LoadMesh();
+
 	private:
 		void Init(GLFWwindow& window);
 		void CleanUp();
@@ -33,5 +35,8 @@ namespace Ruya
 	private:
 		RVulkan* pRVulkan;
 		EngineUI* pEngineUI;
+
+		//test
+		RVkMeshBuffer geometry;
 	};
 }

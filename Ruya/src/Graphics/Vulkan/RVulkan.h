@@ -3,6 +3,7 @@
 #include "RVulkanConfig.h"
 #include "../../Collections/RDeletionQueue.h"
 #include "../../Utilities/Math/RMath.h"
+#include "../../Scene/Mesh.h"
 
 #include <vector>
 #include <span>
@@ -44,7 +45,7 @@ namespace Ruya
 		VkDescriptorSetLayout Build(RVulkan* pRVulkan, VkShaderStageFlags shaderStageFlags, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags dcsSetLayoutCreateflags = 0);
 	};
 
-	struct DescriptorAllocator
+	struct RVkDescriptorAllocator
 	{
 		struct PoolSizeRatio
 		{
@@ -71,14 +72,14 @@ namespace Ruya
 
 	constexpr uint32_t frameOverlap = 2;
 
-	class PipelineBuilder
+	class RVkPipelineBuilder
 	{
 	public:
-		PipelineBuilder();
-		~PipelineBuilder();
+		RVkPipelineBuilder();
+		~RVkPipelineBuilder();
 
-		PipelineBuilder(const PipelineBuilder&) = delete;
-		PipelineBuilder& operator=(const PipelineBuilder&) = delete;
+		RVkPipelineBuilder(const RVkPipelineBuilder&) = delete;
+		RVkPipelineBuilder& operator=(const RVkPipelineBuilder&) = delete;
 
 	public:
 		VkPipeline BuildPipeline(RVulkan*  pRVulkan);
@@ -105,6 +106,25 @@ namespace Ruya
 		VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo;
 		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo;
 		VkFormat colorAttachmentformat;
+	};
+
+	struct RVkAllocatedBuffer
+	{
+		VkBuffer buffer;
+		VmaAllocation allocation;
+		VmaAllocationInfo allocationInfo;
+	};
+
+	struct RVkMeshBuffer
+	{
+		RVkAllocatedBuffer vertexBuffer;
+		RVkAllocatedBuffer indexBuffer;
+		VkDeviceAddress vertexBufferAddress;
+	};
+
+	struct RVkDrawPushConstants {
+		math::mat4 worldMatrix;
+		VkDeviceAddress vertexBuffer;
 	};
 
 	class RVulkan
@@ -152,13 +172,17 @@ namespace Ruya
 		VmaAllocator vmaAllocator;
 		RDeletionQueue deletionQueue;
 	
-		DescriptorAllocator globalDescriptorAllocator;
+		RVkDescriptorAllocator globalDescriptorAllocator;
 
 		VkDescriptorPool immediateUIPool;
 
+		VkFence immediateFence;
+		VkCommandBuffer immediateCommandBuffer;
+		VkCommandPool immediateCommandPool;
+
 		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface"};
 		std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_buffer_device_address"};
 
 		RVkFrameData frames[frameOverlap];
 		uint32_t frameNumber = 0;
@@ -175,12 +199,12 @@ namespace Ruya
 		void WaitDeviceForCleanUp();
 		void CleanUp();
 
-		void Draw(EngineUI* pEngineUI);
+		void Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry);
 		RVkFrameData& GetCurrentFrame();
 
 	private:
 		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
-		void DrawGeometry(VkCommandBuffer cmdBuffer);
+		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry);
 		void CreateTrianglePipeline();
 	};
 
@@ -216,6 +240,10 @@ namespace Ruya
 	VkRenderingAttachmentInfo rvkCreateAttachmentInfo(VkImageView view, VkClearValue* clear, VkImageLayout layout);
 	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
 	VkPipelineShaderStageCreateInfo rvkCreateShaderStageInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag);
+	RVkAllocatedBuffer rvkCreateBuffer(RVulkan* pRulkan, size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);
+	void rvkDestoryBuffer(RVulkan* pRulkan, RVkAllocatedBuffer& buffer);
+	RVkMeshBuffer rvkLoadMesh(RVulkan* pRVulkan, std::span<Vertex> vertices, std::span<uint32_t> indices);
+	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function);
 }
 
 

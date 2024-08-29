@@ -88,7 +88,7 @@ namespace Ruya
 		vkDestroyInstance(pInstance, nullptr);
 	}
 
-	void RVulkan::Draw(EngineUI* pEngineUI)
+	void RVulkan::Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry)
 	{
 		CHECK_VKRESULT_DEBUG(vkWaitForFences(pDevice, 1, &GetCurrentFrame().renderFence, VK_TRUE, UINT64_MAX));
 		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
@@ -115,7 +115,7 @@ namespace Ruya
 
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-		DrawGeometry(cmdBuffer);
+		DrawGeometry(cmdBuffer, geometry);
 
 		DrawEngineUI(pEngineUI, cmdBuffer, drawImage.imageView);
 
@@ -170,7 +170,7 @@ namespace Ruya
 		vkCmdEndRendering(cmd);
 	}
 
-	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer)
+	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry)
 	{
 		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
@@ -197,7 +197,14 @@ namespace Ruya
 
 		vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-		vkCmdDraw(cmdBuffer, 3, 1, 0, 0);
+		RVkDrawPushConstants push_constants;
+		push_constants.worldMatrix = math::mat4{ 1.f };
+		push_constants.vertexBuffer = geometry.vertexBufferAddress;
+
+		vkCmdPushConstants(cmdBuffer, trianglePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
+		vkCmdBindIndexBuffer(cmdBuffer, geometry.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdDrawIndexed(cmdBuffer, 6, 1, 0, 0, 0);
 
 		vkCmdEndRendering(cmdBuffer);
 	}
@@ -212,12 +219,19 @@ namespace Ruya
 		std::vector<char> colorTriangleFragmentCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ColoredTriangleFragmentShader.spv");
 		fragmentShader = rvkCreateShaderModule(this, colorTriangleFragmentCode);
 
+		VkPushConstantRange pushConstantBufferRange = {};
+		pushConstantBufferRange.offset = 0;
+		pushConstantBufferRange.size = sizeof(RVkDrawPushConstants);
+		pushConstantBufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantBufferRange;
+		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
 
 		CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &trianglePipelineLayout));
 
-		PipelineBuilder pipelineBuilder;
+		RVkPipelineBuilder pipelineBuilder;
 
 		pipelineBuilder.SetShaders(vertexShader, fragmentShader);
 		pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
@@ -780,6 +794,16 @@ namespace Ruya
 
 			CHECK_VKRESULT(vkAllocateCommandBuffers(pRVulkan->pDevice, &commandBufferAllocateInfo, &(pRVulkan->frames[i].mainCommandBuffer)));
 		}
+		
+		CHECK_VKRESULT(vkCreateCommandPool(pRVulkan->pDevice, &commandPoolCreateInfo, nullptr, &(pRVulkan->immediateCommandPool)));
+
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo = {};
+		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		commandBufferAllocateInfo.commandPool = pRVulkan->immediateCommandPool;
+		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		commandBufferAllocateInfo.commandBufferCount = 1;
+
+		CHECK_VKRESULT(vkAllocateCommandBuffers(pRVulkan->pDevice, &commandBufferAllocateInfo, &(pRVulkan->immediateCommandBuffer)));
 
 		RLOG("[VULKAN] Command pools and buffers created.")
 	}
@@ -800,6 +824,12 @@ namespace Ruya
 
 			CHECK_VKRESULT(vkCreateFence(pRVulkan->pDevice, &fenceCreateInfo, nullptr, &(pRVulkan->frames[i].renderFence)));
 		}
+
+		VkFenceCreateInfo fenceCreateInfo = {};
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		CHECK_VKRESULT(vkCreateFence(pRVulkan->pDevice, &fenceCreateInfo, nullptr, &(pRVulkan->immediateFence)));
 
 		RLOG("[VULKAN] Synchronization objects created.")
 	}
@@ -841,7 +871,7 @@ namespace Ruya
 
 	void rvkCreateDescriptors(RVulkan* pRVulkan)
 	{
-		std::vector<DescriptorAllocator::PoolSizeRatio> sizes =
+		std::vector<RVkDescriptorAllocator::PoolSizeRatio> sizes =
 		{
 			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
 		};
@@ -953,12 +983,22 @@ namespace Ruya
 	{
 		VkSubmitInfo2 submitInfo = {};
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2;
-		submitInfo.waitSemaphoreInfoCount = 1;
-		submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfo;
+		
+		if(waitSemaphoreInfo != nullptr)
+		{
+			submitInfo.waitSemaphoreInfoCount = 1;
+			submitInfo.pWaitSemaphoreInfos = waitSemaphoreInfo;
+		}
+
 		submitInfo.commandBufferInfoCount = 1;
 		submitInfo.pCommandBufferInfos = cmdBufferInfo;
-		submitInfo.signalSemaphoreInfoCount = 1;
-		submitInfo.pSignalSemaphoreInfos = signalSemaphoreInfo;
+
+
+		if (signalSemaphoreInfo != nullptr)
+		{
+			submitInfo.signalSemaphoreInfoCount = 1;
+			submitInfo.pSignalSemaphoreInfos = signalSemaphoreInfo;
+		}
 
 		return submitInfo;
 	}
@@ -1102,6 +1142,98 @@ namespace Ruya
 		return stageCreateInfo;
 	}
 
+	RVkAllocatedBuffer rvkCreateBuffer(RVulkan* pRulkan, size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage)
+	{
+		VkBufferCreateInfo bufferCreateInfo = {};
+		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferCreateInfo.size = allocSize;
+		bufferCreateInfo.usage = usageFlags;
+
+		VmaAllocationCreateInfo allocCreateInfo = {};
+		allocCreateInfo.usage = memoryUsage;
+		allocCreateInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+		RVkAllocatedBuffer buffer;
+		CHECK_VKRESULT(vmaCreateBuffer(pRulkan->vmaAllocator, &bufferCreateInfo, &allocCreateInfo, &buffer.buffer, &buffer.allocation, &buffer.allocationInfo));
+
+		return buffer;
+	}
+
+	void rvkDestoryBuffer(RVulkan* pRulkan, RVkAllocatedBuffer& buffer)
+	{
+		vmaDestroyBuffer(pRulkan->vmaAllocator, buffer.buffer, buffer.allocation);
+	}
+
+	RVkMeshBuffer rvkLoadMesh(RVulkan* pRVulkan, std::span<Vertex> vertices, std::span<uint32_t> indices)
+	{
+		const size_t vertexBufferSize = vertices.size() * sizeof(Vertex);
+		const size_t indexBufferSize = indices.size() * sizeof(uint32_t);
+
+		RVkMeshBuffer meshBuffer;
+
+		meshBuffer.vertexBuffer = rvkCreateBuffer(pRVulkan, vertexBufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
+
+		VkBufferDeviceAddressInfo deviceAdressInfo{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,.buffer = meshBuffer.vertexBuffer.buffer };
+		meshBuffer.vertexBufferAddress = vkGetBufferDeviceAddress(pRVulkan->pDevice, &deviceAdressInfo);
+
+		meshBuffer.indexBuffer = rvkCreateBuffer(pRVulkan, indexBufferSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+			VMA_MEMORY_USAGE_GPU_ONLY);
+
+		RVkAllocatedBuffer staging = rvkCreateBuffer(pRVulkan, vertexBufferSize + indexBufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
+
+		void* data;
+		vmaMapMemory(pRVulkan->vmaAllocator, staging.allocation, &data);
+
+		memcpy(data, vertices.data(), vertexBufferSize);
+		memcpy((char*)data + vertexBufferSize, indices.data(), indexBufferSize);
+
+		vmaUnmapMemory(pRVulkan->vmaAllocator, staging.allocation);
+
+		rvkImmediateSubmit(pRVulkan, [&](VkCommandBuffer cmd)
+			{
+			VkBufferCopy vertexCopy{ 0 };
+			vertexCopy.dstOffset = 0;
+			vertexCopy.srcOffset = 0;
+			vertexCopy.size = vertexBufferSize;
+
+			vkCmdCopyBuffer(cmd, staging.buffer, meshBuffer.vertexBuffer.buffer, 1, &vertexCopy);
+
+			VkBufferCopy indexCopy{ 0 };
+			indexCopy.dstOffset = 0;
+			indexCopy.srcOffset = vertexBufferSize;
+			indexCopy.size = indexBufferSize;
+
+			vkCmdCopyBuffer(cmd, staging.buffer, meshBuffer.indexBuffer.buffer, 1, &indexCopy);
+			});
+
+		rvkDestoryBuffer(pRVulkan, staging);
+
+		return meshBuffer;
+	}
+
+	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function)
+	{
+		CHECK_VKRESULT(vkResetFences(pRVulkan->pDevice, 1, &(pRVulkan->immediateFence)));
+		CHECK_VKRESULT(vkResetCommandBuffer(pRVulkan->immediateCommandBuffer, 0));
+
+		VkCommandBuffer cmdBuffer = pRVulkan->immediateCommandBuffer;
+
+		VkCommandBufferBeginInfo cmdBeginInfo = rvkCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+		CHECK_VKRESULT(vkBeginCommandBuffer(cmdBuffer, &cmdBeginInfo));
+
+		function(cmdBuffer);
+
+		CHECK_VKRESULT(vkEndCommandBuffer(cmdBuffer));
+
+		VkCommandBufferSubmitInfo cmdinfo = rvkCommandBufferSubmitInfo(cmdBuffer);
+		VkSubmitInfo2 submit = rvkSubmitInfo(&cmdinfo, nullptr, nullptr);
+
+		CHECK_VKRESULT(vkQueueSubmit2(pRVulkan->pGraphicsQueue, 1, &submit, pRVulkan->immediateFence));
+
+		CHECK_VKRESULT(vkWaitForFences(pRVulkan->pDevice, 1, &(pRVulkan->immediateFence), true, UINT32_MAX));
+	}
+
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
 	{
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
@@ -1138,7 +1270,7 @@ namespace Ruya
 		return setLayout;
 	}
 
-	void DescriptorAllocator::InitPool(RVulkan* pRVulkan, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+	void RVkDescriptorAllocator::InitPool(RVulkan* pRVulkan, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
 	{
 		std::vector<VkDescriptorPoolSize> poolSizes;
 		for (int i = 0; i < poolRatios.size(); i++)
@@ -1160,17 +1292,17 @@ namespace Ruya
 		CHECK_VKRESULT(vkCreateDescriptorPool(pRVulkan->pDevice, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
 	}
 
-	void DescriptorAllocator::ClearDescriptors(RVulkan* pRVulkan)
+	void RVkDescriptorAllocator::ClearDescriptors(RVulkan* pRVulkan)
 	{
 		CHECK_VKRESULT(vkResetDescriptorPool(pRVulkan->pDevice, descriptorPool, 0));
 	}
 
-	void DescriptorAllocator::DestroyPool(RVulkan* pRVulkan)
+	void RVkDescriptorAllocator::DestroyPool(RVulkan* pRVulkan)
 	{
 		vkDestroyDescriptorPool(pRVulkan->pDevice, descriptorPool, nullptr);
 	}
 
-	VkDescriptorSet DescriptorAllocator::Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout)
+	VkDescriptorSet RVkDescriptorAllocator::Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout)
 	{
 		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
 		descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
@@ -1183,16 +1315,16 @@ namespace Ruya
 
 		return descriptorSet;
 	}
-	PipelineBuilder::PipelineBuilder()
+	RVkPipelineBuilder::RVkPipelineBuilder()
 	{
 		Clear();
 	}
 
-	PipelineBuilder::~PipelineBuilder()
+	RVkPipelineBuilder::~RVkPipelineBuilder()
 	{
 	}
 
-	VkPipeline PipelineBuilder::BuildPipeline(RVulkan* pRVulkan)
+	VkPipeline RVkPipelineBuilder::BuildPipeline(RVulkan* pRVulkan)
 	{
 		VkPipelineViewportStateCreateInfo viewPortStateCreateInfo = {};
 		viewPortStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -1239,7 +1371,7 @@ namespace Ruya
 		return pPipeline;
 	}
 
-	void PipelineBuilder::Clear()
+	void RVkPipelineBuilder::Clear()
 	{
 		shaderStages.clear();
 		inputAssemblyCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
@@ -1251,33 +1383,33 @@ namespace Ruya
 		pipelineRenderingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
 	}
 
-	void PipelineBuilder::SetShaders(VkShaderModule vertexShader, VkShaderModule fragmentShader)
+	void RVkPipelineBuilder::SetShaders(VkShaderModule vertexShader, VkShaderModule fragmentShader)
 	{
 		shaderStages.clear();
 		shaderStages.push_back(rvkCreateShaderStageInfo(vertexShader, VK_SHADER_STAGE_VERTEX_BIT));
 		shaderStages.push_back(rvkCreateShaderStageInfo(fragmentShader, VK_SHADER_STAGE_FRAGMENT_BIT));
 	}
 
-	void PipelineBuilder::SetInputTopology(VkPrimitiveTopology topology)
+	void RVkPipelineBuilder::SetInputTopology(VkPrimitiveTopology topology)
 	{
 		inputAssemblyCreateInfo.topology = topology;
 		inputAssemblyCreateInfo.primitiveRestartEnable = VK_FALSE;
 	}
 
-	void PipelineBuilder::SetPolygonMode(VkPolygonMode polygonMode)
+	void RVkPipelineBuilder::SetPolygonMode(VkPolygonMode polygonMode)
 	{
 		rasterizerCreateInfo.rasterizerDiscardEnable = VK_FALSE;
 		rasterizerCreateInfo.polygonMode = polygonMode;
 		rasterizerCreateInfo.lineWidth = 1.0f;
 	}
 
-	void PipelineBuilder::SetCullMode(VkCullModeFlags cullModeFlags, VkFrontFace frontFace)
+	void RVkPipelineBuilder::SetCullMode(VkCullModeFlags cullModeFlags, VkFrontFace frontFace)
 	{
 		rasterizerCreateInfo.cullMode = cullModeFlags;
 		rasterizerCreateInfo.frontFace = frontFace;
 	}
 
-	void PipelineBuilder::SetMultisampling(bool b)
+	void RVkPipelineBuilder::SetMultisampling(bool b)
 	{
 		if(b == false)
 		{
@@ -1290,7 +1422,7 @@ namespace Ruya
 		}
 	}
 
-	void PipelineBuilder::SetBlending(bool b)
+	void RVkPipelineBuilder::SetBlending(bool b)
 	{
 		if(b == false)
 		{
@@ -1299,19 +1431,19 @@ namespace Ruya
 		}
 	}
 
-	void PipelineBuilder::SetColorAttachmentFormat(VkFormat format)
+	void RVkPipelineBuilder::SetColorAttachmentFormat(VkFormat format)
 	{
 		colorAttachmentformat = format;
 		pipelineRenderingCreateInfo.colorAttachmentCount = 1;
 		pipelineRenderingCreateInfo.pColorAttachmentFormats = &colorAttachmentformat;
 	}
 
-	void PipelineBuilder::SetDepthFormat(VkFormat format)
+	void RVkPipelineBuilder::SetDepthFormat(VkFormat format)
 	{
 		pipelineRenderingCreateInfo.depthAttachmentFormat = format;
 	}
 
-	void PipelineBuilder::SetDepthTest(bool b)
+	void RVkPipelineBuilder::SetDepthTest(bool b)
 	{
 		if(b == false)
 		{

@@ -157,11 +157,13 @@
     <ClInclude Include="src\App\App.h" />
     <ClInclude Include="src\Collections\RDeletionQueue.h" />
     <ClInclude Include="src\EngineUI\EngineUI.h" />
+    <ClInclude Include="src\Graphics\DefaultObjects\DefaultCube.h" />
     <ClInclude Include="src\Graphics\Renderer\Renderer.h" />
     <ClInclude Include="src\Graphics\Renderer\RendererConfig.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
     <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h" />
+    <ClInclude Include="src\Scene\Mesh.h" />
     <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="src\Utilities\Log\RLog.h" />
     <ClInclude Include="src\Utilities\Math\RMath.h" />
@@ -178,7 +180,6 @@
   <ItemGroup>
     <None Include="Graphics\Shaders\FragmentShader.frag" />
     <None Include="Graphics\Shaders\VertexShader.vert" />
-    <None Include="src\Graphics\Shaders\ColoredTriangle.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
