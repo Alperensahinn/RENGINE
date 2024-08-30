@@ -3,7 +3,7 @@
 #include "RVulkanConfig.h"
 #include "../../Collections/RDeletionQueue.h"
 #include "../../Utilities/Math/RMath.h"
-#include "../../Scene/Mesh.h"
+#include "../../Scene/Model.h"
 
 #include <vector>
 #include <span>
@@ -120,6 +120,7 @@ namespace Ruya
 		RVkAllocatedBuffer vertexBuffer;
 		RVkAllocatedBuffer indexBuffer;
 		VkDeviceAddress vertexBufferAddress;
+		uint32_t indexCount;
 	};
 
 	struct RVkDrawPushConstants {

@@ -115,7 +115,7 @@ namespace Ruya
 
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
-		DrawGeometry(cmdBuffer, geometry);
+		//DrawGeometry(cmdBuffer, geometry);
 
 		DrawEngineUI(pEngineUI, cmdBuffer, drawImage.imageView);
 
@@ -204,7 +204,7 @@ namespace Ruya
 		vkCmdPushConstants(cmdBuffer, trianglePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
 		vkCmdBindIndexBuffer(cmdBuffer, geometry.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(cmdBuffer, 6, 1, 0, 0, 0);
+		vkCmdDrawIndexed(cmdBuffer, geometry.indexCount, 1, 0, 0, 0);
 
 		vkCmdEndRendering(cmdBuffer);
 	}
@@ -1170,6 +1170,7 @@ namespace Ruya
 		const size_t indexBufferSize = indices.size() * sizeof(uint32_t);
 
 		RVkMeshBuffer meshBuffer;
+		meshBuffer.indexCount = indexBufferSize;
 
 		meshBuffer.vertexBuffer = rvkCreateBuffer(pRVulkan, vertexBufferSize, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT, VMA_MEMORY_USAGE_GPU_ONLY);
 

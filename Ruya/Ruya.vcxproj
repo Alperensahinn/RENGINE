@@ -105,14 +105,14 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\VulkanSDK\1.3.290.0\Include;$(ProjectDir)src\Vendor\glm;$(ProjectDir)src\Vendor\glfw-3.4.WIN64\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.3.290.0\Include;$(ProjectDir)src\Vendor\glm;$(ProjectDir)src\Vendor\glfw-3.4.WIN64\include;$(ProjectDir)src\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;$(ProjectDir)src\Vendor\glfw-3.4.WIN64\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;$(ProjectDir)src\Vendor\glfw-3.4.WIN64\lib;$(ProjectDir)src\Vendor\assimp;$(ProjectDir)src\Vendor\tinygltf;$(ProjectDir)src\Vendor\assimp\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,6 +142,7 @@
     <ClCompile Include="src\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
+    <ClCompile Include="src\Scene\Model.cpp" />
     <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
     <ClCompile Include="src\Utilities\Math\RMath.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui.cpp" />
@@ -151,6 +152,7 @@
     <ClCompile Include="src\Vendor\imgui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Vendor\VendorDefines.cpp" />
     <ClCompile Include="src\Window\RWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -163,7 +165,7 @@
     <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
     <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h" />
-    <ClInclude Include="src\Scene\Mesh.h" />
+    <ClInclude Include="src\Scene\Model.h" />
     <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="src\Utilities\Log\RLog.h" />
     <ClInclude Include="src\Utilities\Math\RMath.h" />

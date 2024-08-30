@@ -3,24 +3,27 @@
 #include "../Log/RLog.h"
 
 
-namespace Ruya 
+std::vector<char> Ruya::ReadBinaryFile(const std::string& filepath)
 {
-    std::vector<char> ReadBinaryFile(const std::string& filename)
-    {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+	std::ifstream file(filepath, std::ios::ate | std::ios::binary);
 
-        if (!file.is_open()) 
-        {
-            RERRLOG("[File System] Failed to open file.")
-        }
+	if (!file.is_open())
+	{
+		RERRLOG("[File System] Failed to open file.")
+	}
 
-        size_t fileSize = (size_t)file.tellg();
-        std::vector<char> buffer(fileSize);
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-        file.close();
+	size_t fileSize = (size_t)file.tellg();
+	std::vector<char> buffer(fileSize);
+	file.seekg(0);
+	file.read(buffer.data(), fileSize);
+	file.close();
 
-        return buffer;
-    }
+	return buffer;
 }
+
+bool Ruya::ImportOBJMesh(Mesh& mesh, const std::string& filepath)
+{
+	return true;
+}
+
 

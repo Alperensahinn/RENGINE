@@ -1,5 +1,7 @@
 #include "Renderer.h"
 #include "../DefaultObjects/DefaultCube.h"
+#include "../../Utilities/FileSystem/FileSystem.h"
+#include "../../Scene/Model.h"
 
 namespace Ruya 
 {
@@ -25,10 +27,10 @@ namespace Ruya
 	}
 
 	void Renderer::LoadMesh()
-	{
-		DefaultCube* defaultCube = new DefaultCube();
-		auto vertices = defaultCube->GetVertices();
-		auto indices = defaultCube->GetIndices();
+	{	
+		/*
+		auto vertices = mesh.vertices;
+		auto indices = mesh.indices;
 
 		geometry = rvkLoadMesh(pRVulkan, vertices, indices);
 
@@ -37,13 +39,14 @@ namespace Ruya
 			rvkDestoryBuffer(pRVulkan, geometry.vertexBuffer);
 			rvkDestoryBuffer(pRVulkan, geometry.indexBuffer);
 			});
+			*/
 	}
 
 	void Renderer::Init(GLFWwindow& window)
 	{
 		pRVulkan = new RVulkan(window);
 		pEngineUI = new EngineUI(window, this);
-		LoadMesh();
+		//LoadMesh();
 	}
 
 	void Renderer::CleanUp()
