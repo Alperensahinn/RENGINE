@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RuyaEditor")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f4f762583f89f7f58cbf89df4d2cb9e9cfee9758")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+25876af00d8936aabbf385e77b4dc5f73eba6500")]
 [assembly: System.Reflection.AssemblyProductAttribute("RuyaEditor")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RuyaEditor")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
