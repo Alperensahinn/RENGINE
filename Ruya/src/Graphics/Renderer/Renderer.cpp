@@ -2,6 +2,7 @@
 #include "../DefaultObjects/DefaultCube.h"
 #include "../../Utilities/FileSystem/FileSystem.h"
 #include "../../Scene/Model.h"
+#include <memory>
 
 namespace Ruya 
 {
@@ -28,25 +29,27 @@ namespace Ruya
 
 	void Renderer::LoadMesh()
 	{	
-		/*
-		auto vertices = mesh.vertices;
-		auto indices = mesh.indices;
+		std::shared_ptr<Mesh> mesh;
+		mesh = ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\src\\TestMeshes\\Monkey.glb");
+
+		auto vertices = mesh->vertices;
+		auto indices = mesh->indices;
+
 
 		geometry = rvkLoadMesh(pRVulkan, vertices, indices);
 
-		pRVulkan->deletionQueue.PushFunction([&]() 
+		pRVulkan->deletionQueue.PushFunction([=]() 
 			{
 			rvkDestoryBuffer(pRVulkan, geometry.vertexBuffer);
 			rvkDestoryBuffer(pRVulkan, geometry.indexBuffer);
 			});
-			*/
 	}
 
 	void Renderer::Init(GLFWwindow& window)
 	{
 		pRVulkan = new RVulkan(window);
 		pEngineUI = new EngineUI(window, this);
-		//LoadMesh();
+		LoadMesh();
 	}
 
 	void Renderer::CleanUp()

@@ -1,11 +1,19 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include "../../Scene/Model.h"
+#include <memory>
 
 namespace Ruya
 {
 	std::vector<char> ReadBinaryFile(const std::string& filepath);
 
-	bool ImportOBJMesh(Mesh& mesh, const std::string& filepath);
+	std::shared_ptr<Ruya::Mesh> ImportFBXMesh(const std::string& filepath);
+
+	Mesh ProcessNode(aiNode* node, const aiScene* scene);
+
+	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 }

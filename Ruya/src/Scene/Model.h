@@ -6,9 +6,11 @@ namespace Ruya
 {
 	struct Vertex
 	{
-		math::vec3 position;
-		math::vec3 normal;
-		math::vec2 uv;
+		glm::vec3 position;
+		float uv_x;
+		glm::vec3 normal;
+		float uv_y;
+		glm::vec4 color;
 	};
 
 	struct GeometrySurface

@@ -93,7 +93,7 @@ namespace Ruya
 		void SetBlending(bool b);
 		void SetColorAttachmentFormat(VkFormat format);
 		void SetDepthFormat(VkFormat format);
-		void SetDepthTest(bool b);
+		void SetDepthTest(bool b, VkCompareOp op);
 
 
 	public:
@@ -166,6 +166,7 @@ namespace Ruya
 		VkPipelineLayout pComputePipelineLayout;
 
 		RVkAllocatedImage drawImage;
+		RVkAllocatedImage depthImage;
 		VkDescriptorSet drawImageDescriptors;
 		VkDescriptorSetLayout drawImageDescriptorLayout;
 		VkExtent2D drawExtent;
@@ -243,8 +244,9 @@ namespace Ruya
 	VkPipelineShaderStageCreateInfo rvkCreateShaderStageInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag);
 	RVkAllocatedBuffer rvkCreateBuffer(RVulkan* pRulkan, size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);
 	void rvkDestoryBuffer(RVulkan* pRulkan, RVkAllocatedBuffer& buffer);
-	RVkMeshBuffer rvkLoadMesh(RVulkan* pRVulkan, std::span<Vertex> vertices, std::span<uint32_t> indices);
+	RVkMeshBuffer rvkLoadMesh(RVulkan* pRVulkan, std::vector<Vertex> vertices, std::vector<uint32_t> indices);
 	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function);
+	VkRenderingAttachmentInfo  rvkDepthAttachmentInfo(VkImageView view, VkImageLayout layout);
 }
 
 
