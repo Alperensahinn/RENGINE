@@ -15,6 +15,5 @@ Ruya::math::mat4 Ruya::Camera::GetViewMatrix()
 
 Ruya::math::vec3 Ruya::Camera::Transform::GetRight()
 {
-	right = glm::normalize(glm::cross(worldUp, direction));
-	return right;
+	return glm::cross(front, up);
 }
