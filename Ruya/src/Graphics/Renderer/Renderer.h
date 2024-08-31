@@ -1,7 +1,6 @@
 #pragma once
 #include "../Vulkan/RVulkan.h"
 #include "../../EngineUI/EngineUI.h"
-
 #include "../../Collections/RDeletionQueue.h"
 
 struct GLFWwindow;
@@ -9,6 +8,7 @@ struct GLFWwindow;
 namespace Ruya
 {
 	struct RVulkan;
+	class Camera;
 
 	class Renderer
 	{
@@ -24,6 +24,7 @@ namespace Ruya
 		RVulkan* GetRendererBackend();
 
 		void LoadMesh();
+		void BindCamera(Camera* camera);
 
 	private:
 		void Init(GLFWwindow& window);
@@ -38,5 +39,7 @@ namespace Ruya
 
 		//test
 		RVkMeshBuffer geometry;
+
+		Camera* camera;
 	};
 }

@@ -2,6 +2,7 @@
 #include "../DefaultObjects/DefaultCube.h"
 #include "../../Utilities/FileSystem/FileSystem.h"
 #include "../../Scene/Model.h"
+#include "../../Scene/Camera.h"
 #include <memory>
 
 namespace Ruya 
@@ -19,7 +20,7 @@ namespace Ruya
 	void Renderer::DrawFrame()
 	{
 		pEngineUI->Draw();
-		pRVulkan->Draw(pEngineUI, geometry);
+		pRVulkan->Draw(pEngineUI, geometry, camera->GetViewMatrix());
 	}
 
 	RVulkan* Renderer::GetRendererBackend()
@@ -43,6 +44,11 @@ namespace Ruya
 			rvkDestoryBuffer(pRVulkan, geometry.vertexBuffer);
 			rvkDestoryBuffer(pRVulkan, geometry.indexBuffer);
 			});
+	}
+
+	void Renderer::BindCamera(Camera* camera)
+	{
+		this->camera = camera;
 	}
 
 	void Renderer::Init(GLFWwindow& window)

@@ -4,6 +4,8 @@ namespace Ruya
 {
 	class RWindow;
 	class Renderer;
+	class RInput;
+	class Camera;
 
 	class App
 	{
@@ -17,8 +19,12 @@ namespace Ruya
 
 		void CleanUp();
 
+		void ProcessInput();
+
 	private:
 		RWindow* pWindow;
 		Renderer* pRenderer;
+		RInput* pRInput;
+		Camera* camera;
 	};
 }

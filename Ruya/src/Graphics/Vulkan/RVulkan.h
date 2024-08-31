@@ -201,12 +201,12 @@ namespace Ruya
 		void WaitDeviceForCleanUp();
 		void CleanUp();
 
-		void Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry);
+		void Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry, math::mat4 viewMatrix);
 		RVkFrameData& GetCurrentFrame();
 
 	private:
 		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
-		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry);
+		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry, math::mat4 viewMatrix);
 		void CreateTrianglePipeline();
 	};
 

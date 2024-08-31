@@ -140,8 +140,10 @@
     <ClCompile Include="src\EngineUI\EngineUI.cpp" />
     <ClCompile Include="src\Graphics\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
+    <ClCompile Include="src\Input\RInput.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
+    <ClCompile Include="src\Scene\Camera.cpp" />
     <ClCompile Include="src\Scene\Model.cpp" />
     <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
     <ClCompile Include="src\Utilities\Math\RMath.cpp" />
@@ -165,6 +167,8 @@
     <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
     <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
     <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h" />
+    <ClInclude Include="src\Input\RInput.h" />
+    <ClInclude Include="src\Scene\Camera.h" />
     <ClInclude Include="src\Scene\Model.h" />
     <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="src\Utilities\Log\RLog.h" />

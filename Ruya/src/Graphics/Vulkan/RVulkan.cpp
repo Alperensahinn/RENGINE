@@ -88,7 +88,7 @@ namespace Ruya
 		vkDestroyInstance(pInstance, nullptr);
 	}
 
-	void RVulkan::Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry)
+	void RVulkan::Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry, math::mat4 viewMatrix)
 	{
 		CHECK_VKRESULT_DEBUG(vkWaitForFences(pDevice, 1, &GetCurrentFrame().renderFence, VK_TRUE, UINT64_MAX));
 		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
@@ -116,14 +116,7 @@ namespace Ruya
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		rvkTransitionImage(cmdBuffer, depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-		VkRenderingAttachmentInfo depthAttachment = rvkDepthAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
-
-		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-
-		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
-		vkCmdBeginRendering(cmdBuffer, &renderInfo);
-
-		DrawGeometry(cmdBuffer, geometry);
+		DrawGeometry(cmdBuffer, geometry, viewMatrix);
 
 		DrawEngineUI(pEngineUI, cmdBuffer, drawImage.imageView);
 
@@ -178,8 +171,14 @@ namespace Ruya
 		vkCmdEndRendering(cmd);
 	}
 
-	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry)
+	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry, math::mat4 viewMatrix)
 	{
+		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkRenderingAttachmentInfo depthAttachment = rvkDepthAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
+		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
+		vkCmdBeginRendering(cmdBuffer, &renderInfo);
+
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipeline);
 
 		VkViewport viewport = {};
@@ -202,13 +201,10 @@ namespace Ruya
 
 		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)1600 / (float)900, 0.1f, 100.0f);
 		glm::mat4 model = glm::mat4(1.0f);
-		glm::mat4 view = glm::mat4(1.0f);
 		proj[1][1] *= -1;
 
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
-
 		RVkDrawPushConstants push_constants;
-		push_constants.worldMatrix = proj * view * model;
+		push_constants.worldMatrix = proj * viewMatrix * model;
 		push_constants.vertexBuffer = geometry.vertexBufferAddress;
 
 		vkCmdPushConstants(cmdBuffer, trianglePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
@@ -242,16 +238,16 @@ namespace Ruya
 		CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &trianglePipelineLayout));
 
 		RVkPipelineBuilder pipelineBuilder;
-
+		pipelineBuilder.Clear();
 		pipelineBuilder.SetShaders(vertexShader, fragmentShader);
 		pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
 		pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
-		pipelineBuilder.SetCullMode(VK_CULL_MODE_NONE, VK_FRONT_FACE_CLOCKWISE);
+		pipelineBuilder.SetCullMode(VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE);
 		pipelineBuilder.SetMultisampling(false);
 		pipelineBuilder.SetBlending(false);
-		pipelineBuilder.SetDepthTest(false, VK_COMPARE_OP_GREATER_OR_EQUAL);
-		pipelineBuilder.SetDepthFormat(depthImage.imageFormat);
+		pipelineBuilder.SetDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
 		pipelineBuilder.SetColorAttachmentFormat(drawImage.imageFormat);
+		pipelineBuilder.SetDepthFormat(depthImage.imageFormat);
 		pipelineBuilder.pipelineLayout = trianglePipelineLayout;
 
 		trianglePipeline = pipelineBuilder.BuildPipeline(this);
@@ -648,15 +644,14 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &rimgCreateInfo, nullptr, &(pRVulkan->drawImage.imageView)));
 
-
 		pRVulkan->depthImage.imageFormat = VK_FORMAT_D32_SFLOAT;
 		pRVulkan->depthImage.imageExtent = drawImageExtent;
-		VkImageUsageFlags depthImageUsages{};
+		VkImageUsageFlags depthImageUsages = {};
 		depthImageUsages |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
 		VkImageCreateInfo dimg_info = rvkImageCreateInfo(pRVulkan->depthImage.imageFormat, depthImageUsages, drawImageExtent);
 
-		vmaCreateImage(pRVulkan->vmaAllocator, &dimg_info, &rimgAllocCreateInfo, &(pRVulkan->depthImage.image), &(pRVulkan->depthImage.allocation), nullptr);
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &dimg_info, &rimgAllocCreateInfo, &(pRVulkan->depthImage.image), &(pRVulkan->depthImage.allocation), nullptr));
 
 		VkImageViewCreateInfo dview_info = rvkImageViewCreateInfo(pRVulkan->depthImage.imageFormat, pRVulkan->depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
 
@@ -957,7 +952,16 @@ namespace Ruya
 		imageBarrier.oldLayout = currentLayout;
 		imageBarrier.newLayout = newLayout;
 
-		VkImageAspectFlags aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		VkImageAspectFlags aspectMask = {};
+		if (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
+		{
+			aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+
+		else
+		{
+			aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		}
 		imageBarrier.subresourceRange = rvkImageSubresourceRange(aspectMask);
 		imageBarrier.image = image;
 
@@ -1264,17 +1268,17 @@ namespace Ruya
 
 	VkRenderingAttachmentInfo  rvkDepthAttachmentInfo(VkImageView view, VkImageLayout layout)
 	{
-		VkRenderingAttachmentInfo depthAttachmentInfo = {};
-		depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
-		depthAttachmentInfo.pNext = nullptr;
+		VkRenderingAttachmentInfo depthAttachment{};
+		depthAttachment.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
+		depthAttachment.pNext = nullptr;
 
-		depthAttachmentInfo.imageView = view;
-		depthAttachmentInfo.imageLayout = layout;
-		depthAttachmentInfo.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachmentInfo.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachmentInfo.clearValue.depthStencil.depth = 0.f;
+		depthAttachment.imageView = view;
+		depthAttachment.imageLayout = layout;
+		depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.clearValue.depthStencil.depth = 0.f;
 
-		return depthAttachmentInfo;
+		return depthAttachment;
 	}
 
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
@@ -1358,9 +1362,10 @@ namespace Ruya
 
 		return descriptorSet;
 	}
+
 	RVkPipelineBuilder::RVkPipelineBuilder()
 	{
-		Clear();
+
 	}
 
 	RVkPipelineBuilder::~RVkPipelineBuilder()
