@@ -20,6 +20,10 @@ namespace Ruya
 	void Renderer::DrawFrame()
 	{
 		pEngineUI->Draw();
+		if(pRVulkan->resizeRequest)
+		{
+			pRVulkan->ResizeSwapChain();
+		}
 		pRVulkan->Draw(pEngineUI, geometry, camera->GetViewMatrix());
 	}
 

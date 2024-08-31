@@ -4,16 +4,19 @@
 
 namespace Ruya
 {
+	enum  KeyCode
+	{
+		A,
+		D,
+		E,
+		Q,
+		S,
+		W
+	};
+
 	class RInput
 	{
 	public:
-		enum  KeyCode
-		{
-			A,
-			D,
-			S,
-			W
-		};
 
 	public:
 		RInput(GLFWwindow& window);
@@ -23,7 +26,7 @@ namespace Ruya
 		RInput& operator=(const RInput&) = delete;
 
 	public:
-		bool GetKeyDown(KeyCode keyCode);
+		bool GetKey(KeyCode keyCode);
 
 	private:
 		GLFWwindow& window;

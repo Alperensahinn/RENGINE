@@ -8,23 +8,23 @@ Ruya::RInput::~RInput()
 {
 }
 
-bool Ruya::RInput::GetKeyDown(KeyCode keyCode)
+bool Ruya::RInput::GetKey(KeyCode keyCode)
 {
-	switch (keyCode)
-	{
-	case RInput::A:
+	if(keyCode == KeyCode::A)
 		return glfwGetKey(&window, GLFW_KEY_A) == GLFW_PRESS;
-		break;
-	case RInput::D:
+
+	if (keyCode == KeyCode::D)
 		return glfwGetKey(&window, GLFW_KEY_D) == GLFW_PRESS;
-		break;
-	case RInput::S:
+
+	if (keyCode == KeyCode::E)
+		return glfwGetKey(&window, GLFW_KEY_E) == GLFW_PRESS;
+
+	if (keyCode == KeyCode::Q)
+		return glfwGetKey(&window, GLFW_KEY_Q) == GLFW_PRESS;
+
+	if (keyCode == KeyCode::S)
 		return glfwGetKey(&window, GLFW_KEY_S) == GLFW_PRESS;
-		break;
-	case RInput::W:
+
+	if (keyCode == KeyCode::W)
 		return glfwGetKey(&window, GLFW_KEY_W) == GLFW_PRESS;
-		break;
-	default:
-		break;
-	}
 }

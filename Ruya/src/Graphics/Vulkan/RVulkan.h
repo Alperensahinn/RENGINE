@@ -153,17 +153,11 @@ namespace Ruya
 		std::vector<VkImageView> swapChainImageViews;
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
-		std::vector<VkFramebuffer> swapChainFramebuffers;
-
-		VkRenderPass pRenderPass;
 
 		VkPipeline pGraphicsPipeline;
 
 		VkPipelineLayout trianglePipelineLayout;
 		VkPipeline trianglePipeline;
-
-		VkPipeline pComputePipeline;
-		VkPipelineLayout pComputePipelineLayout;
 
 		RVkAllocatedImage drawImage;
 		RVkAllocatedImage depthImage;
@@ -184,11 +178,14 @@ namespace Ruya
 
 		std::vector<const char*> instanceExtensions = { VK_EXT_DEBUG_UTILS_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface"};
 		std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
-		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_buffer_device_address"};
+		std::vector<const char*> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME};
 
 		RVkFrameData frames[frameOverlap];
 		uint32_t frameNumber = 0;
 
+		GLFWwindow& window;
+
+		bool resizeRequest = false;
 	public:
 		RVulkan(GLFWwindow& window);
 		~RVulkan();
@@ -204,6 +201,8 @@ namespace Ruya
 		void Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry, math::mat4 viewMatrix);
 		RVkFrameData& GetCurrentFrame();
 
+		void ResizeSwapChain();
+
 	private:
 		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
 		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry, math::mat4 viewMatrix);
@@ -218,12 +217,9 @@ namespace Ruya
 	void rvkCheckQueueFamilies(RVulkan* pRVulkan);
 	void rvkCreateDevice(RVulkan* pRVulkan);
 	void rvkSetQueues(RVulkan* pRVulkan);
-	void rvkCreateWindowSurface(RVulkan* pRVulkan, GLFWwindow& window);
-	void rvkCreateSwapChain(RVulkan* pRVulkan, GLFWwindow& window);
-	void rvkCreatePipelines(RVulkan* pRVulkan);
+	void rvkCreateWindowSurface(RVulkan* pRVulkan);
+	void rvkCreateSwapChain(RVulkan* pRVulkan);
 	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode);
-	void rvkCreateRenderPass(RVulkan* pRVulkan);
-	void rvkCreateFrameBuffers(RVulkan* pRVulkan);
 	void rvkCreateCommandPool(RVulkan* pRVulkan);
 	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
 	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
@@ -247,6 +243,7 @@ namespace Ruya
 	RVkMeshBuffer rvkLoadMesh(RVulkan* pRVulkan, std::vector<Vertex> vertices, std::vector<uint32_t> indices);
 	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function);
 	VkRenderingAttachmentInfo  rvkDepthAttachmentInfo(VkImageView view, VkImageLayout layout);
+	void rvkResizeSwapChain(RVulkan* pRVulkan);
 }
 
 

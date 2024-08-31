@@ -16,7 +16,7 @@
 
 namespace Ruya 
 {
-	RVulkan::RVulkan(GLFWwindow& window)
+	RVulkan::RVulkan(GLFWwindow& window) : window(window)
 	{
 		Init(window);
 	}
@@ -30,19 +30,16 @@ namespace Ruya
 	{
 		rvkCreateInstance(this);
 		rvkCreateDebugMessenger(this);
-		rvkCreateWindowSurface(this, window);
+		rvkCreateWindowSurface(this);
 		rvkSelectPhysicalDevice(this);
 		rvkCheckQueueFamilies(this);
 		rvkCreateDevice(this);
 		rvkCreateVulkanMemoryAllocator(this);
-		rvkCreateSwapChain(this, window);
+		rvkCreateSwapChain(this);
 		rvkSetQueues(this);
-		rvkCreateRenderPass(this);
 		rvkCreateDescriptors(this);
-		rvkCreatePipelines(this);
 		CreateTrianglePipeline();
 		rvkCreateEngineUIDescriptorPool(this);
-		rvkCreateFrameBuffers(this);
 		rvkCreateCommandPool(this);
 		rvkCreateSynchronizationObjects(this);
 	}
@@ -63,13 +60,6 @@ namespace Ruya
 			vkDestroySemaphore(pDevice, frames[i].renderSemaphore, nullptr);
 			vkDestroyFence(pDevice, frames[i].renderFence, nullptr);
 		}
-
-		for (int i = 0; i < swapChainFramebuffers.size(); i++)
-		{
-			vkDestroyFramebuffer(pDevice, swapChainFramebuffers[i], nullptr);
-		}
-
-		vkDestroyRenderPass(pDevice, pRenderPass, nullptr);
 
 		for (int i = 0; i < swapChainImageViews.size(); i++)
 		{
@@ -94,7 +84,13 @@ namespace Ruya
 		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
 
 		uint32_t imageIndex;
-		CHECK_VKRESULT_DEBUG(vkAcquireNextImageKHR(pDevice, pSwapChain, UINT64_MAX, GetCurrentFrame().swapchainSemaphore, nullptr, &imageIndex));
+		VkResult nextImageResult = vkAcquireNextImageKHR(pDevice, pSwapChain, UINT64_MAX, GetCurrentFrame().swapchainSemaphore, nullptr, &imageIndex);
+
+		if(nextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			resizeRequest = true;
+			return;
+		}
 
 		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 		CHECK_VKRESULT_DEBUG(vkResetCommandBuffer(cmdBuffer, 0));
@@ -147,7 +143,12 @@ namespace Ruya
 
 		presentInfo.pImageIndices = &imageIndex;
 
-		CHECK_VKRESULT_DEBUG(vkQueuePresentKHR(pGraphicsQueue, &presentInfo));
+		VkResult queuePresentResult = vkQueuePresentKHR(pGraphicsQueue, &presentInfo);
+
+		if (queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			resizeRequest = true;
+		}
 
 		frameNumber++;
 
@@ -157,6 +158,12 @@ namespace Ruya
 	RVkFrameData& RVulkan::GetCurrentFrame()
 	{
 		return frames[frameNumber % frameOverlap];
+	}
+
+	void RVulkan::ResizeSwapChain()
+	{
+		rvkResizeSwapChain(this);
+		resizeRequest = false;
 	}
 
 	void RVulkan::DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView)
@@ -434,18 +441,20 @@ namespace Ruya
 
 		float queuePrioritie = 1.0f;
 		queueCreateInfo.pQueuePriorities = &queuePrioritie;
-
-		VkPhysicalDeviceFeatures physicalDeviceFutures = {};
-
+		
 		VkPhysicalDeviceVulkan13Features features13 = {};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		features13.dynamicRendering = VK_TRUE;
 		features13.synchronization2 = VK_TRUE;
 
+		VkPhysicalDeviceBufferDeviceAddressFeatures physicalDeviceBufferDeviceAddressFeatures = {};
+		physicalDeviceBufferDeviceAddressFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES;
+		physicalDeviceBufferDeviceAddressFeatures.pNext = &features13;
+		physicalDeviceBufferDeviceAddressFeatures.bufferDeviceAddress = VK_TRUE;
+
 		VkPhysicalDeviceFeatures2 features2 = {};
 		features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
-		features2.pNext = &features13;
-		features2.features = physicalDeviceFutures;
+		features2.pNext = &physicalDeviceBufferDeviceAddressFeatures;
 
 		VkDeviceCreateInfo deviceCreateInfo = {};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -469,11 +478,11 @@ namespace Ruya
 		RLOG("[VULKAN] Device queues setted.");
 	}
 
-	void rvkCreateWindowSurface(RVulkan* pRVulkan, GLFWwindow& window)
+	void rvkCreateWindowSurface(RVulkan* pRVulkan)
 	{
 		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
 		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.hwnd = glfwGetWin32Window(&window);
+		surfaceCreateInfo.hwnd = glfwGetWin32Window(&(pRVulkan->window));
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 
 		CHECK_VKRESULT(vkCreateWin32SurfaceKHR(pRVulkan->pInstance, &surfaceCreateInfo, nullptr, &(pRVulkan->pSurface)));
@@ -481,7 +490,7 @@ namespace Ruya
 		RLOG("[VULKAN] Window surface created.")
 	}
 
-	void rvkCreateSwapChain(RVulkan* pRVulkan, GLFWwindow& window)
+	void rvkCreateSwapChain(RVulkan* pRVulkan)
 	{
 		VkSurfaceCapabilitiesKHR capabilities;
 		CHECK_VKRESULT(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pRVulkan->pPhysicalDevice, pRVulkan->pSurface, &capabilities))
@@ -536,7 +545,7 @@ namespace Ruya
 		VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
 
 		int width, height;
-		glfwGetFramebufferSize(&window, &width, &height);
+		glfwGetFramebufferSize(&(pRVulkan->window), &width, &height);
 
 		VkExtent2D actualExtent =
 		{
@@ -669,54 +678,6 @@ namespace Ruya
 		RLOG("[VULKAN] Swap chain created.");
 	}
 
-
-	void rvkCreatePipelines(RVulkan* pRVulkan)
-	{
-		//Compute pipelines
-		VkPipelineLayoutCreateInfo computePipelineLayoutCreateInfo = {};
-		computePipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		computePipelineLayoutCreateInfo.pSetLayouts = &pRVulkan->drawImageDescriptorLayout;
-		computePipelineLayoutCreateInfo.setLayoutCount = 1;
-
-		VkPushConstantRange pushConstantRange = {};
-		pushConstantRange.size = sizeof(ComputePushConstants);
-		pushConstantRange.offset = 0;
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
-
-		computePipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
-		computePipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-
-		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &computePipelineLayoutCreateInfo, nullptr, &(pRVulkan->pComputePipelineLayout)));
-
-		VkShaderModule computeShaderModule;
-
-		std::vector<char> computeShaderCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/GradientColor.spv");
-		computeShaderModule = rvkCreateShaderModule(pRVulkan, computeShaderCode);
-
-		VkPipelineShaderStageCreateInfo stageCreateInfo = {};
-		stageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-		stageCreateInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
-		stageCreateInfo.module = computeShaderModule;
-		stageCreateInfo.pName = "main";
-
-		VkComputePipelineCreateInfo computePipelineCreateInfo = {};
-		computePipelineCreateInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
-		computePipelineCreateInfo.layout = pRVulkan->pComputePipelineLayout;
-		computePipelineCreateInfo.stage = stageCreateInfo;
-
-		CHECK_VKRESULT(vkCreateComputePipelines(pRVulkan->pDevice, VK_NULL_HANDLE, 1, &computePipelineCreateInfo, nullptr, &(pRVulkan->pComputePipeline)));
-
-		vkDestroyShaderModule(pRVulkan->pDevice, computeShaderModule, nullptr);
-
-		pRVulkan->deletionQueue.PushFunction([=]()
-			{
-				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pComputePipeline, nullptr);
-				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pComputePipelineLayout, nullptr);
-			});
-
-		RLOG("[VULKAN] Pipelines created.")
-	}
-
 	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode)
 	{
 		VkShaderModule shaderModule;
@@ -731,70 +692,6 @@ namespace Ruya
 		RLOG("[VULKAN] Shader module created.")
 
 		return shaderModule;
-	}
-
-	void rvkCreateRenderPass(RVulkan* pRVulkan)
-	{
-		VkAttachmentDescription attachmentDescription = {};
-		attachmentDescription.format = pRVulkan->swapChainImageFormat;
-		attachmentDescription.samples = VK_SAMPLE_COUNT_1_BIT;
-		attachmentDescription.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		attachmentDescription.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		attachmentDescription.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		attachmentDescription.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		attachmentDescription.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		attachmentDescription.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentReference attachmentReference = {};
-		attachmentReference.attachment = 0;
-		attachmentReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpassDescription = {};
-		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpassDescription.colorAttachmentCount = 1;
-		subpassDescription.pColorAttachments = &attachmentReference;
-
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		VkRenderPassCreateInfo renderPassCreateInfo = {};
-		renderPassCreateInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		renderPassCreateInfo.attachmentCount = 1;
-		renderPassCreateInfo.pAttachments = &attachmentDescription;
-		renderPassCreateInfo.subpassCount = 1;
-		renderPassCreateInfo.pSubpasses = &subpassDescription;
-		renderPassCreateInfo.dependencyCount = 1;
-		renderPassCreateInfo.pDependencies = &dependency;
-
-		CHECK_VKRESULT(vkCreateRenderPass(pRVulkan->pDevice, &renderPassCreateInfo, nullptr, &(pRVulkan->pRenderPass)));
-
-		RLOG("[VULKAN] Render pass created.")
-	}
-
-	void rvkCreateFrameBuffers(RVulkan* pRVulkan)
-	{
-		pRVulkan->swapChainFramebuffers.resize(pRVulkan->swapChainImageViews.size());
-
-		for (int i = 0; i < pRVulkan->swapChainImageViews.size(); i++)
-		{
-			VkFramebufferCreateInfo frameBufferCreateInfo = {};
-			frameBufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			frameBufferCreateInfo.renderPass = pRVulkan->pRenderPass;
-			frameBufferCreateInfo.pAttachments = &(pRVulkan->swapChainImageViews[i]);
-			frameBufferCreateInfo.attachmentCount = 1;
-			frameBufferCreateInfo.width = pRVulkan->swapChainExtent.width;
-			frameBufferCreateInfo.height = pRVulkan->swapChainExtent.height;
-			frameBufferCreateInfo.layers = 1;
-
-			CHECK_VKRESULT(vkCreateFramebuffer(pRVulkan->pDevice, &frameBufferCreateInfo, nullptr, &(pRVulkan->swapChainFramebuffers[i])));
-		}
-
-		RLOG("[VULKAN] Frame buffers created.")
 	}
 
 	void rvkCreateCommandPool(RVulkan* pRVulkan)
@@ -827,6 +724,14 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkAllocateCommandBuffers(pRVulkan->pDevice, &commandBufferAllocateInfo, &(pRVulkan->immediateCommandBuffer)));
 
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyCommandPool(pRVulkan->pDevice, pRVulkan->immediateCommandPool, nullptr);
+
+			});
+
+
 		RLOG("[VULKAN] Command pools and buffers created.")
 	}
 
@@ -852,6 +757,12 @@ namespace Ruya
 		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 		CHECK_VKRESULT(vkCreateFence(pRVulkan->pDevice, &fenceCreateInfo, nullptr, &(pRVulkan->immediateFence)));
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyFence(pRVulkan->pDevice, pRVulkan->immediateFence, nullptr);
+
+			});
 
 		RLOG("[VULKAN] Synchronization objects created.")
 	}
@@ -1279,6 +1190,14 @@ namespace Ruya
 		depthAttachment.clearValue.depthStencil.depth = 0.f;
 
 		return depthAttachment;
+	}
+
+	void rvkResizeSwapChain(RVulkan* pRVulkan)
+	{
+		vkDeviceWaitIdle(pRVulkan->pDevice);
+
+		vkDestroySwapchainKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, nullptr);
+		rvkCreateSwapChain(pRVulkan);
 	}
 
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)

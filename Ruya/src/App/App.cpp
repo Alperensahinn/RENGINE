@@ -44,24 +44,34 @@ namespace Ruya
 	void App::ProcessInput()
 	{
 		const float cameraSpeed = 0.05f;
-		if (pRInput->GetKeyDown(RInput::KeyCode::W))
-		{
-			camera->transform.position -= cameraSpeed * camera->transform.front;
-		}
-
-		if (pRInput->GetKeyDown(RInput::KeyCode::S))
+		if (pRInput->GetKey(KeyCode::W))
 		{
 			camera->transform.position += cameraSpeed * camera->transform.front;
 		}
 
-		if (pRInput->GetKeyDown(RInput::KeyCode::A))
+		if (pRInput->GetKey(KeyCode::S))
 		{
-			camera->transform.position -= cameraSpeed * camera->transform.right;
+			camera->transform.position -= cameraSpeed * camera->transform.front;
 		}
 
-		if (pRInput->GetKeyDown(RInput::KeyCode::D))
+		if (pRInput->GetKey(KeyCode::A))
 		{
-			camera->transform.position += cameraSpeed * camera->transform.right;
+			camera->transform.position -= cameraSpeed * camera->transform.GetRight();
+		}
+
+		if (pRInput->GetKey(KeyCode::D))
+		{
+			camera->transform.position += cameraSpeed * camera->transform.GetRight();
+		}
+
+		if (pRInput->GetKey(KeyCode::Q))
+		{
+			camera->transform.position -= cameraSpeed * math::vec3(0.0f, 1.0f, 0.0f);
+		}
+
+		if (pRInput->GetKey(KeyCode::E))
+		{
+			camera->transform.position += cameraSpeed * math::vec3(0.0f, 1.0f, 0.0f);
 		}
 	}
 }
