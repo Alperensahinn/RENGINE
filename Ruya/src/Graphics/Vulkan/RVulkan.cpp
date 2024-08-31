@@ -186,8 +186,8 @@ namespace Ruya
 		viewport.y = 0;
 		viewport.width = drawExtent.width;
 		viewport.height = drawExtent.height;
-		viewport.minDepth = 0.f;
-		viewport.maxDepth = 1.f;
+		viewport.minDepth = 1.f;
+		viewport.maxDepth = 0.f;
 
 		vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 
