@@ -7,9 +7,9 @@
 namespace Ruya
 {
 
-	RWindow::RWindow()
+	RWindow::RWindow(unsigned int windowWidth, unsigned int windowHeight)
 	{
-		InitGLFWWindow();
+		InitGLFWWindow(windowWidth, windowHeight);
 	}
 
 	RWindow::~RWindow()
@@ -32,11 +32,11 @@ namespace Ruya
 		glfwPollEvents();
 	}
 
-	void RWindow::InitGLFWWindow()
+	void RWindow::InitGLFWWindow(unsigned int windowWidth, unsigned int windowHeight)
 	{
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindow = glfwCreateWindow(1600, 900, "Ruya", nullptr, nullptr);
+		glfwWindow = glfwCreateWindow(windowWidth, windowHeight, "Ruya", nullptr, nullptr);
 
 		unsigned int requiredExtensionsCount;
 		const char** requiredExtensions = glfwGetRequiredInstanceExtensions(&requiredExtensionsCount);

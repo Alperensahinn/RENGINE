@@ -138,6 +138,9 @@
   <ItemGroup>
     <ClCompile Include="src\App\App.cpp" />
     <ClCompile Include="src\EngineUI\EngineUI.cpp" />
+    <ClCompile Include="src\Game\GameObject.cpp" />
+    <ClCompile Include="src\Game\RGame.cpp" />
+    <ClCompile Include="src\Game\RObject.cpp" />
     <ClCompile Include="src\Graphics\Renderer\Renderer.cpp" />
     <ClCompile Include="src\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
     <ClCompile Include="src\Input\RInput.cpp" />
@@ -161,6 +164,9 @@
     <ClInclude Include="src\App\App.h" />
     <ClInclude Include="src\Collections\RDeletionQueue.h" />
     <ClInclude Include="src\EngineUI\EngineUI.h" />
+    <ClInclude Include="src\Game\GameObject.h" />
+    <ClInclude Include="src\Game\RGame.h" />
+    <ClInclude Include="src\Game\RObject.h" />
     <ClInclude Include="src\Graphics\DefaultObjects\DefaultCube.h" />
     <ClInclude Include="src\Graphics\Renderer\Renderer.h" />
     <ClInclude Include="src\Graphics\Renderer\RendererConfig.h" />

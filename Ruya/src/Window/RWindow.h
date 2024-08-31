@@ -7,7 +7,7 @@ namespace Ruya
 	class RWindow
 	{
 	public:
-		RWindow();
+		RWindow(unsigned int windowWidth, unsigned int windowHeight);
 		~RWindow();
 
 		RWindow(const RWindow&) = delete;
@@ -19,7 +19,7 @@ namespace Ruya
 		void PoolEvents();
 
 	private:
-		void InitGLFWWindow();
+		void InitGLFWWindow(unsigned int windowWidth, unsigned int windowHeight);
 		void CleanUp();
 
 	private:

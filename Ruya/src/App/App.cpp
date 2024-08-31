@@ -22,7 +22,7 @@ namespace Ruya
 	void App::Init()
 	{
 		mainCamera = new Camera();
-		pWindow = new RWindow();
+		pWindow = new RWindow(1600, 900);
 		pRenderer = new Renderer(pWindow->GetWindow());
 		pRenderer->BindCamera(mainCamera);
 		pRInput = new RInput(pWindow->GetWindow());
