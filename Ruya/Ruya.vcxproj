@@ -154,7 +154,6 @@
     <ClCompile Include="src\Vendor\imgui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_widgets.cpp" />
-    <ClCompile Include="src\Vendor\VendorDefines.cpp" />
     <ClCompile Include="src\Engine\Window\RWindow.cpp" />
   </ItemGroup>
   <ItemGroup>

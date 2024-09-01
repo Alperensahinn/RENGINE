@@ -63,9 +63,6 @@
     <ClCompile Include="src\Engine\Utilities\Math\RMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\VendorDefines.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Engine\Scene\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
