@@ -1,6 +1,7 @@
 #pragma once
+#include "../Engine/GameFramework/RGame.h"
 
-class ProjectB
+class ProjectB : public RGame
 {
 
 };
