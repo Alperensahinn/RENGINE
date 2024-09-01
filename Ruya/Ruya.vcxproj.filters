@@ -36,28 +36,28 @@
     <ClCompile Include="src\Engine\Graphics\Vulkan\vk_mem_alloc_config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui_demo.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui_demo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui_draw.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui_draw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui_tables.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui_tables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui_widgets.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine\EngineUI\EngineUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui_impl_glfw.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui_impl_glfw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Vendor\imgui\imgui_impl_vulkan.cpp">
+    <ClCompile Include="src\Engine\Vendor\imgui\imgui_impl_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine\Utilities\Math\RMath.cpp">
@@ -95,22 +95,22 @@
     <ClInclude Include="src\Engine\Graphics\Vulkan\vk_mem_alloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imconfig.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imconfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imgui.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imgui_internal.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imgui_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imstb_rectpack.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imstb_rectpack.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imstb_textedit.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imstb_textedit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imstb_truetype.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Graphics\Renderer\RendererConfig.h">
@@ -122,10 +122,10 @@
     <ClInclude Include="src\Engine\Collections\RDeletionQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imgui_impl_vulkan.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imgui_impl_vulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Vendor\imgui\imgui_impl_glfw.h">
+    <ClInclude Include="src\Engine\Vendor\imgui\imgui_impl_glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Utilities\Math\RMath.h">
