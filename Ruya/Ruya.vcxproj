@@ -137,16 +137,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\App\App.cpp" />
-    <ClCompile Include="src\EngineUI\EngineUI.cpp" />
-    <ClCompile Include="src\Graphics\Renderer\Renderer.cpp" />
-    <ClCompile Include="src\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
-    <ClCompile Include="src\Input\RInput.cpp" />
+    <ClCompile Include="src\Engine\EngineUI\EngineUI.cpp" />
+    <ClCompile Include="src\Engine\Graphics\Renderer\Renderer.cpp" />
+    <ClCompile Include="src\Engine\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
+    <ClCompile Include="src\Engine\Input\RInput.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp" />
-    <ClCompile Include="src\Scene\Camera.cpp" />
-    <ClCompile Include="src\Scene\Model.cpp" />
-    <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp" />
-    <ClCompile Include="src\Utilities\Math\RMath.cpp" />
+    <ClCompile Include="src\Engine\Graphics\Vulkan\RVulkan.cpp" />
+    <ClCompile Include="src\Engine\Scene\Camera.cpp" />
+    <ClCompile Include="src\Engine\Scene\Model.cpp" />
+    <ClCompile Include="src\Engine\Utilities\FileSystem\FileSystem.cpp" />
+    <ClCompile Include="src\Engine\Utilities\Math\RMath.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_demo.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_draw.cpp" />
@@ -155,24 +155,24 @@
     <ClCompile Include="src\Vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="src\Vendor\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Vendor\VendorDefines.cpp" />
-    <ClCompile Include="src\Window\RWindow.cpp" />
+    <ClCompile Include="src\Engine\Window\RWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\App\App.h" />
-    <ClInclude Include="src\Collections\RDeletionQueue.h" />
-    <ClInclude Include="src\EngineUI\EngineUI.h" />
-    <ClInclude Include="src\Graphics\DefaultObjects\DefaultCube.h" />
-    <ClInclude Include="src\Graphics\Renderer\Renderer.h" />
-    <ClInclude Include="src\Graphics\Renderer\RendererConfig.h" />
-    <ClInclude Include="src\Graphics\Vulkan\RVulkan.h" />
-    <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h" />
-    <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h" />
-    <ClInclude Include="src\Input\RInput.h" />
-    <ClInclude Include="src\Scene\Camera.h" />
-    <ClInclude Include="src\Scene\Model.h" />
-    <ClInclude Include="src\Utilities\FileSystem\FileSystem.h" />
-    <ClInclude Include="src\Utilities\Log\RLog.h" />
-    <ClInclude Include="src\Utilities\Math\RMath.h" />
+    <ClInclude Include="src\Engine\Collections\RDeletionQueue.h" />
+    <ClInclude Include="src\Engine\EngineUI\EngineUI.h" />
+    <ClInclude Include="src\Engine\Graphics\DefaultObjects\DefaultCube.h" />
+    <ClInclude Include="src\Engine\Graphics\Renderer\Renderer.h" />
+    <ClInclude Include="src\Engine\Graphics\Renderer\RendererConfig.h" />
+    <ClInclude Include="src\Engine\Graphics\Vulkan\RVulkan.h" />
+    <ClInclude Include="src\Engine\Graphics\Vulkan\RVulkanConfig.h" />
+    <ClInclude Include="src\Engine\Graphics\Vulkan\vk_mem_alloc.h" />
+    <ClInclude Include="src\Engine\Input\RInput.h" />
+    <ClInclude Include="src\Engine\Scene\Camera.h" />
+    <ClInclude Include="src\Engine\Scene\Model.h" />
+    <ClInclude Include="src\Engine\Utilities\FileSystem\FileSystem.h" />
+    <ClInclude Include="src\Engine\Utilities\Log\RLog.h" />
+    <ClInclude Include="src\Engine\Utilities\Math\RMath.h" />
     <ClInclude Include="src\Vendor\imgui\imconfig.h" />
     <ClInclude Include="src\Vendor\imgui\imgui.h" />
     <ClInclude Include="src\Vendor\imgui\imgui_impl_glfw.h" />
@@ -181,7 +181,7 @@
     <ClInclude Include="src\Vendor\imgui\imstb_rectpack.h" />
     <ClInclude Include="src\Vendor\imgui\imstb_textedit.h" />
     <ClInclude Include="src\Vendor\imgui\imstb_truetype.h" />
-    <ClInclude Include="src\Window\RWindow.h" />
+    <ClInclude Include="src\Engine\Window\RWindow.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Graphics\Shaders\FragmentShader.frag" />

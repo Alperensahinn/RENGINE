@@ -225,11 +225,11 @@ namespace Ruya
 	void RVulkan::CreateTrianglePipeline()
 	{
 		VkShaderModule vertexShader;
-		std::vector<char> colorTriangleVertexCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ColoredTriangleVertexShader.spv");
+		std::vector<char> colorTriangleVertexCode = Ruya::ReadBinaryFile("src/Engine/Graphics/Shaders/ColoredTriangleVertexShader.spv");
 		vertexShader = rvkCreateShaderModule(this, colorTriangleVertexCode);
 
 		VkShaderModule fragmentShader;
-		std::vector<char> colorTriangleFragmentCode = Ruya::ReadBinaryFile("src/Graphics/Shaders/ColoredTriangleFragmentShader.spv");
+		std::vector<char> colorTriangleFragmentCode = Ruya::ReadBinaryFile("src/Engine/Graphics/Shaders/ColoredTriangleFragmentShader.spv");
 		fragmentShader = rvkCreateShaderModule(this, colorTriangleFragmentCode);
 
 		VkPushConstantRange pushConstantBufferRange = {};

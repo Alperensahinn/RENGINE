@@ -21,19 +21,19 @@
     <ClCompile Include="src\App\App.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\RVulkan.cpp">
+    <ClCompile Include="src\Engine\Graphics\Vulkan\RVulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Utilities\FileSystem\FileSystem.cpp">
+    <ClCompile Include="src\Engine\Utilities\FileSystem\FileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Renderer\Renderer.cpp">
+    <ClCompile Include="src\Engine\Graphics\Renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Window\RWindow.cpp">
+    <ClCompile Include="src\Engine\Window\RWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\vk_mem_alloc_config.cpp">
+    <ClCompile Include="src\Engine\Graphics\Vulkan\vk_mem_alloc_config.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vendor\imgui\imgui.cpp">
@@ -51,7 +51,7 @@
     <ClCompile Include="src\Vendor\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\EngineUI\EngineUI.cpp">
+    <ClCompile Include="src\Engine\EngineUI\EngineUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vendor\imgui\imgui_impl_glfw.cpp">
@@ -60,19 +60,19 @@
     <ClCompile Include="src\Vendor\imgui\imgui_impl_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Utilities\Math\RMath.cpp">
+    <ClCompile Include="src\Engine\Utilities\Math\RMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Vendor\VendorDefines.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Scene\Model.cpp">
+    <ClCompile Include="src\Engine\Scene\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Scene\Camera.cpp">
+    <ClCompile Include="src\Engine\Scene\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input\RInput.cpp">
+    <ClCompile Include="src\Engine\Input\RInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -80,22 +80,22 @@
     <ClInclude Include="src\App\App.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\RVulkan.h">
+    <ClInclude Include="src\Engine\Graphics\Vulkan\RVulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utilities\FileSystem\FileSystem.h">
+    <ClInclude Include="src\Engine\Utilities\FileSystem\FileSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\RVulkanConfig.h">
+    <ClInclude Include="src\Engine\Graphics\Vulkan\RVulkanConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Renderer\Renderer.h">
+    <ClInclude Include="src\Engine\Graphics\Renderer\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Window\RWindow.h">
+    <ClInclude Include="src\Engine\Window\RWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\vk_mem_alloc.h">
+    <ClInclude Include="src\Engine\Graphics\Vulkan\vk_mem_alloc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Vendor\imgui\imconfig.h">
@@ -116,13 +116,13 @@
     <ClInclude Include="src\Vendor\imgui\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Renderer\RendererConfig.h">
+    <ClInclude Include="src\Engine\Graphics\Renderer\RendererConfig.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\EngineUI\EngineUI.h">
+    <ClInclude Include="src\Engine\EngineUI\EngineUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Collections\RDeletionQueue.h">
+    <ClInclude Include="src\Engine\Collections\RDeletionQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Vendor\imgui\imgui_impl_vulkan.h">
@@ -131,22 +131,22 @@
     <ClInclude Include="src\Vendor\imgui\imgui_impl_glfw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utilities\Math\RMath.h">
+    <ClInclude Include="src\Engine\Utilities\Math\RMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\Model.h">
+    <ClInclude Include="src\Engine\Scene\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\DefaultObjects\DefaultCube.h">
+    <ClInclude Include="src\Engine\Graphics\DefaultObjects\DefaultCube.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene\Camera.h">
+    <ClInclude Include="src\Engine\Scene\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Input\RInput.h">
+    <ClInclude Include="src\Engine\Input\RInput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utilities\Log\RLog.h">
+    <ClInclude Include="src\Engine\Utilities\Log\RLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

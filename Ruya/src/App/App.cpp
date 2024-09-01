@@ -1,8 +1,8 @@
 #include "App.h"
-#include "../Window/RWindow.h"
-#include "../Graphics/Renderer/Renderer.h"
-#include "../Input/RInput.h"
-#include "../Scene/Camera.h"
+#include "../Engine/Window/RWindow.h"
+#include "../Engine/Graphics/Renderer/Renderer.h"
+#include "../Engine/Input/RInput.h"
+#include "../Engine/Scene/Camera.h"
 
 #include <iostream>
 

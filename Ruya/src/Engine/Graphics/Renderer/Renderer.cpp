@@ -35,7 +35,7 @@ namespace Ruya
 	void Renderer::LoadMesh()
 	{	
 		std::shared_ptr<Mesh> mesh;
-		mesh = ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\src\\TestMeshes\\Monkey.glb");
+		mesh = ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\src\\Engine\\TestMeshes\\Monkey.glb");
 
 		auto vertices = mesh->vertices;
 		auto indices = mesh->indices;
