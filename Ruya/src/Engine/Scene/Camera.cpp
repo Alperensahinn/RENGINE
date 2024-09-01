@@ -2,6 +2,9 @@
 
 Ruya::Camera::Camera()
 {
+	transform.position = math::vec3(0.0f, 0.0f, 5.0f);
+	transform.front = glm::vec3(0.0f, 0.0f, -1.0f);
+	transform.up = glm::vec3(0.0f, 1.0f, 0.0f);
 }
 
 Ruya::Camera::~Camera()

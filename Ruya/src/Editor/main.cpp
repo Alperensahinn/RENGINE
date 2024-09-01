@@ -6,7 +6,7 @@
 
 int main() 
 {
-    Ruya::Editor::App app;
+    REditor::App app;
 
     try
     {

@@ -1,10 +1,15 @@
 #pragma once
 #include "../../Engine/Scene/Camera.h"
 
-namespace Ruya::Editor
+namespace REditor
 {
-	class EditorCamera : public Camera
+	class EditorCamera : public Ruya::Camera
 	{
+	public:
+		EditorCamera();
+		~EditorCamera();
 
+		EditorCamera(const EditorCamera&) = delete;
+		EditorCamera& operator=(const EditorCamera&) = delete;
 	};
 }

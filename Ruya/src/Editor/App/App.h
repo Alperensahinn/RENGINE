@@ -1,7 +1,8 @@
 #pragma once
 #include "../../Engine/Engine.h"
+#include "../Camera/EditorCamera.h"
 
-namespace Ruya::Editor
+namespace REditor
 {
 	class App
 	{
@@ -13,6 +14,7 @@ namespace Ruya::Editor
 		void CleanUp();
 
 	private:
-		Engine* engine;
+		Ruya::Engine* engine;
+		std::unique_ptr<EditorCamera> editorCamera;
 	};
 }

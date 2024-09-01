@@ -19,6 +19,16 @@ void Ruya::Engine::ProcessFrame()
 	}
 }
 
+Ruya::EngineMode Ruya::Engine::GetEngineMode()
+{
+	return mode;
+}
+
+void Ruya::Engine::SetEngineMode(EngineMode engineMode)
+{
+	mode = engineMode;
+}
+
 void Ruya::Engine::Init()
 {
 	pWindow = new RWindow();

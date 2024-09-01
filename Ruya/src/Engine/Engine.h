@@ -3,11 +3,18 @@
 #include "Graphics/Renderer/Renderer.h"
 #include "Input/RInput.h"
 #include "Scene/Camera.h"
+#include "GameFramework/RGame.h"
 #define GLFW_INCLUDE_VULKAN
 #include "GLFW/glfw3.h"
 
 namespace Ruya
 {
+	enum EngineMode
+	{
+		Editor,
+		Game
+	};
+
 	class Engine
 	{
 	public:
@@ -20,6 +27,9 @@ namespace Ruya
 	public:
 		void ProcessFrame();
 
+		EngineMode GetEngineMode();
+		void SetEngineMode(EngineMode engineMode);
+
 	private:
 		void Init();
 		void CleanUp();
@@ -29,5 +39,7 @@ namespace Ruya
 		Renderer* pRenderer;
 		RInput* pRInput;
 		Camera* mainCamera;
+
+		EngineMode mode;
 	};
 }

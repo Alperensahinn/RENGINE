@@ -7,7 +7,7 @@ struct GLFWwindow;
 
 namespace Ruya
 {
-	struct RVulkan;
+	class RVulkan;
 	class Camera;
 
 	class Renderer

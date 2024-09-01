@@ -1,18 +1,19 @@
 #include "App.h"
 
-void Ruya::Editor::App::Run()
+void REditor::App::Run()
 {
 	Init();
 	engine->ProcessFrame();
 	CleanUp();
 }
 
-void Ruya::Editor::App::Init()
+void REditor::App::Init()
 {
-	engine = new Engine();
+	engine = new Ruya::Engine();
+	editorCamera = std::make_unique<EditorCamera>();
 }
 
-void Ruya::Editor::App::CleanUp()
+void REditor::App::CleanUp()
 {
 	delete engine;
 }
