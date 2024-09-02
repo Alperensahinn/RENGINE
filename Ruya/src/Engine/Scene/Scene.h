@@ -22,7 +22,7 @@ namespace Ruya
 		void InitUpdateFunctionEnabledActors();
 
 	public:
-		std::unique_ptr<Actor>& AddActor(std::unique_ptr<Actor>& actor);
+		std::unique_ptr<Actor>& AddActor(std::unique_ptr<Actor> actor);
 		void RemoveActor(unsigned int actorID);
 
 	private:

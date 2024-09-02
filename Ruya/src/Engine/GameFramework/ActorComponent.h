@@ -19,6 +19,6 @@ namespace Ruya
 		bool GetUpdateFunctionEnabled();
 
 	private:
-		bool bCanEverUpdate = false;
+		bool bCanEverUpdate;
 	};
 }

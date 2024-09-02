@@ -5,6 +5,8 @@
 
 namespace Ruya
 {
+	class Engine;
+
 	class RGame
 	{
 	public:
@@ -19,7 +21,7 @@ namespace Ruya
 		void Update();
 
 	public:
-		std::unique_ptr<Scene>& AddScene(std::unique_ptr<Scene>& scene);
+		std::unique_ptr<Scene>& AddScene(std::unique_ptr<Scene> scene);
 		void RemoveScene(unsigned int sceneID);
 
 	private:

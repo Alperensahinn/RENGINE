@@ -11,6 +11,10 @@ Ruya::RGame::~RGame()
 
 void Ruya::RGame::Start()
 {
+	for (const auto& pair : sceneMap)
+	{
+		pair.second->Start();
+	}
 }
 
 void Ruya::RGame::Update()
@@ -21,7 +25,7 @@ void Ruya::RGame::Update()
 	}
 }
 
-std::unique_ptr<Ruya::Scene>& Ruya::RGame::AddScene(std::unique_ptr<Scene>& scene)
+std::unique_ptr<Ruya::Scene>& Ruya::RGame::AddScene(std::unique_ptr<Scene> scene)
 {
 	unsigned int newID = avaibleSceneIDs.front();
 	avaibleSceneIDs.pop();

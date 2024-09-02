@@ -1,6 +1,10 @@
 #pragma once
+#define GLFW_INCLUDE_VULKAN
+#include "GLFW/glfw3.h"
 #include "../../Engine/Engine.h"
-#include "../Camera/EditorCamera.h"
+#include "../../Editor/Camera/EditorCamera.h"
+#include <memory>
+
 
 namespace REditor
 {
@@ -14,7 +18,8 @@ namespace REditor
 		void CleanUp();
 
 	private:
-		Ruya::Engine* engine;
+		RWindow* pWindow;
+		std::unique_ptr<Ruya::RGame> game;
 		std::unique_ptr<EditorCamera> editorCamera;
 	};
 }

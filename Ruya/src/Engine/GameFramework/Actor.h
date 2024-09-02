@@ -16,12 +16,6 @@ namespace Ruya
 
 	class Actor : public RObject
 	{
-		enum class BehaviorType
-		{
-			Static,
-			Dynamic
-		};
-
 	public:
 		Actor();
 		virtual ~Actor();
@@ -42,16 +36,12 @@ namespace Ruya
 		void SetUpdateFunctionEnable(bool b);
 		bool GetUpdateFunctionEnabled();
 
-		void SetBehaviorType(BehaviorType type);
-		BehaviorType GetBehaviorType();
-
 	public:
 		Transform transform;
 
 	private:
 		unsigned int id;
-		bool bCanEverUpdate = false;
-		BehaviorType behaviorType;
+		bool bCanEverUpdate;
 		std::vector<std::unique_ptr<ActorComponent>> components;
 		std::vector <std::unique_ptr<ActorComponent>> updateFunctionEnabledComponents;
 	};

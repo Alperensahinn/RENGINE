@@ -19,3 +19,8 @@ void Ruya::RenderQueue::Push(std::shared_ptr<Mesh> mesh)
 {
     meshQueue.push(mesh);
 }
+
+bool Ruya::RenderQueue::IsEmpty()
+{
+    return meshQueue.empty();
+}

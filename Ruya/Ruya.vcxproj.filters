@@ -30,7 +30,7 @@
     <ClCompile Include="src\Engine\Graphics\Renderer\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Engine\Window\RWindow.cpp">
+    <ClCompile Include="src\Editor\App\Window\RWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine\Graphics\Vulkan\vk_mem_alloc_config.cpp">
@@ -102,6 +102,9 @@
     <ClCompile Include="src\Engine\Graphics\Renderer\RenderQueue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Game\ProjectB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Editor\App\App.h">
@@ -119,7 +122,7 @@
     <ClInclude Include="src\Engine\Graphics\Renderer\Renderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Engine\Window\RWindow.h">
+    <ClInclude Include="src\Editor\App\Window\RWindow.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Graphics\Vulkan\vk_mem_alloc.h">
@@ -207,6 +210,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine\Graphics\Renderer\RenderQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Engine\Graphics\Renderer\Drawable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

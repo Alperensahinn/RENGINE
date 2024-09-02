@@ -18,6 +18,8 @@ namespace Ruya
 		std::shared_ptr<Mesh> Pop();
 		void Push(std::shared_ptr<Mesh> mesh);
 
+		bool IsEmpty();;
+
 	private:
 		std::queue<std::shared_ptr<Mesh>> meshQueue;
 	};

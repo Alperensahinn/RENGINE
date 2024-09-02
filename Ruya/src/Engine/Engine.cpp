@@ -1,8 +1,8 @@
 #include "Engine.h"
+#include "Utilities/FileSystem/FileSystem.h"
 
 Ruya::Engine::Engine()
 {
-	Init();
 }
 
 Ruya::Engine::~Engine()
@@ -10,37 +10,26 @@ Ruya::Engine::~Engine()
 	CleanUp();
 }
 
+Ruya::Renderer& Ruya::Engine::GetRenderer()
+{
+	return *pRenderer;
+}
+
 void Ruya::Engine::ProcessFrame()
 {
-	while (!pWindow->RWindowShouldClose())
-	{
-		pWindow->PoolEvents();
-		pRenderer->DrawFrame();
-	}
+	pRenderer->DrawFrame();
 }
 
-Ruya::EngineMode Ruya::Engine::GetEngineMode()
+void Ruya::Engine::Init(RWindow* window)
 {
-	return mode;
-}
-
-void Ruya::Engine::SetEngineMode(EngineMode engineMode)
-{
-	mode = engineMode;
-}
-
-void Ruya::Engine::Init()
-{
-	pWindow = new RWindow();
-	pRInput = new RInput(pWindow->GetWindow());
-	pRenderer = new Renderer(pWindow->GetWindow());
+	pRInput = new RInput(window->GetWindow());
+	pRenderer = new Renderer(window->GetWindow());
 	mainCamera = new Camera();
 	pRenderer->BindCamera(mainCamera);
 }
 
 void Ruya::Engine::CleanUp()
 {
-	delete pWindow;
 	delete pRInput;
 	delete pRenderer;
 	delete mainCamera;

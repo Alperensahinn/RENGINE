@@ -1,8 +1,10 @@
 #include "Actor.h"
 
-Ruya::Actor::Actor() : RObject()
+Ruya::Actor::Actor() : RObject(), bCanEverUpdate(true)
 {    
-    behaviorType = BehaviorType::Static;
+    transform.position = math::vec3(0.0f, 0.0f, 0.0f);
+    transform.rotation = math::vec3(0.0f, 0.0f, 0.0f);
+    transform.scale = math::vec3(1.0f, 1.0f, 1.0f);
 }
 
 Ruya::Actor::~Actor()
@@ -11,9 +13,9 @@ Ruya::Actor::~Actor()
 
 void Ruya::Actor::Start()
 {
-    for(std::unique_ptr<ActorComponent>& component : components)
+    for (std::unique_ptr<ActorComponent>& component : components)
     {
-        if(component->GetUpdateFunctionEnabled())
+        if (component->GetUpdateFunctionEnabled())
         {
             updateFunctionEnabledComponents.push_back(std::move(component));
         }
@@ -64,14 +66,4 @@ void Ruya::Actor::SetUpdateFunctionEnable(bool b)
 bool Ruya::Actor::GetUpdateFunctionEnabled()
 {
     return bCanEverUpdate;
-}
-
-void Ruya::Actor::SetBehaviorType(BehaviorType type)
-{
-    behaviorType = type;
-}
-
-Ruya::Actor::BehaviorType Ruya::Actor::GetBehaviorType()
-{
-    return behaviorType;
 }

@@ -2,6 +2,7 @@
 
 Ruya::Scene::Scene()
 {
+	InitAvaibleActorIDs();
 }
 
 Ruya::Scene::~Scene()
@@ -10,8 +11,12 @@ Ruya::Scene::~Scene()
 
 void Ruya::Scene::Start()
 {
-	InitAvaibleActorIDs();
 	InitUpdateFunctionEnabledActors();
+
+	for (const auto& pair : actorMap)
+	{
+		pair.second->Start();
+	}
 }
 
 void Ruya::Scene::Update()
@@ -46,7 +51,7 @@ void Ruya::Scene::InitUpdateFunctionEnabledActors()
 	}
 }
 
-std::unique_ptr<Ruya::Actor>& Ruya::Scene::AddActor(std::unique_ptr<Actor>& actor)
+std::unique_ptr<Ruya::Actor>& Ruya::Scene::AddActor(std::unique_ptr<Actor> actor)
 {
 	unsigned int newID = avaibleActorIDs.front();
 	avaibleActorIDs.pop();

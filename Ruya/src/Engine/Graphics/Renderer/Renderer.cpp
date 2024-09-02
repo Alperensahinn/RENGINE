@@ -4,6 +4,7 @@
 #include "../Mesh.h"
 #include "../../Scene/Camera.h"
 #include "RenderQueue.h"
+#include "Drawable.h"
 #include <memory>
 
 namespace Ruya 
@@ -25,7 +26,15 @@ namespace Ruya
 		{
 			pRVulkan->ResizeSwapChain();
 		}
-		pRVulkan->Draw(pEngineUI, geometry, camera->GetViewMatrix());
+
+		while(!renderQueue->IsEmpty())
+		{
+			std::shared_ptr<Mesh> mesh = renderQueue->Pop();
+
+			std::shared_ptr<Drawable> drawable = LoadMesh(mesh);
+
+			pRVulkan->Draw(pEngineUI, drawable->meshBuffer, camera->GetViewMatrix());
+		}
 	}
 
 	RVulkan* Renderer::GetRendererBackend()
@@ -33,22 +42,22 @@ namespace Ruya
 		return pRVulkan;
 	}
 
-	void Renderer::LoadMesh()
+	std::shared_ptr<Drawable> Renderer::LoadMesh(std::shared_ptr<Mesh> mesh)
 	{	
-		std::shared_ptr<Mesh> mesh;
-		mesh = ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\src\\Engine\\TestMeshes\\Monkey.glb");
-
 		auto vertices = mesh->vertices;
 		auto indices = mesh->indices;
 
+		std::shared_ptr<Drawable> drawable = std::make_shared<Drawable>();
 
-		geometry = rvkLoadMesh(pRVulkan, vertices, indices);
+		drawable->meshBuffer = rvkLoadMesh(pRVulkan, vertices, indices);
 
 		pRVulkan->deletionQueue.PushFunction([=]() 
 			{
-			rvkDestoryBuffer(pRVulkan, geometry.vertexBuffer);
-			rvkDestoryBuffer(pRVulkan, geometry.indexBuffer);
+			rvkDestoryBuffer(pRVulkan, drawable->meshBuffer.vertexBuffer);
+			rvkDestoryBuffer(pRVulkan, drawable->meshBuffer.indexBuffer);
 			});
+
+		return drawable;
 	}
 
 	void Renderer::BindCamera(Camera* camera)
@@ -56,11 +65,15 @@ namespace Ruya
 		this->camera = camera;
 	}
 
+	void Renderer::AddToRenderQueue(std::shared_ptr<Mesh> mesh)
+	{
+		renderQueue->Push(mesh);
+	}
+
 	void Renderer::Init(GLFWwindow& window)
 	{
 		pRVulkan = new RVulkan(window);
 		pEngineUI = new EngineUI(window, this);
-		LoadMesh();
 		renderQueue = new RenderQueue();
 	}
 

@@ -1,6 +1,6 @@
 #include "ActorComponent.h"
 
-Ruya::ActorComponent::ActorComponent()
+Ruya::ActorComponent::ActorComponent() : bCanEverUpdate(true)
 {
 }
 
