@@ -9,6 +9,7 @@ namespace Ruya
 {
 	class RVulkan;
 	class Camera;
+	class RenderQueue;
 
 	class Renderer
 	{
@@ -36,6 +37,8 @@ namespace Ruya
 	private:
 		RVulkan* pRVulkan;
 		EngineUI* pEngineUI;
+
+		RenderQueue* renderQueue;
 
 		//test
 		RVkMeshBuffer geometry;

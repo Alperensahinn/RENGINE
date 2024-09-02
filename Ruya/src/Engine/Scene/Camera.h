@@ -7,9 +7,9 @@ namespace Ruya
 	{
 		struct Transform
 		{
-			glm::vec3 position;
-			glm::vec3 front;
-			glm::vec3 up;
+			math::vec3 position;
+			math::vec3 front;
+			math::vec3 up;
 
 			math::vec3 GetRight();
 		};

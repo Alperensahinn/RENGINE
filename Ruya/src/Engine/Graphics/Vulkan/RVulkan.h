@@ -3,7 +3,7 @@
 #include "RVulkanConfig.h"
 #include "../../Collections/RDeletionQueue.h"
 #include "../../Utilities/Math/RMath.h"
-#include "../../Scene/Model.h"
+#include "../Mesh.h"
 
 #include <vector>
 #include <span>

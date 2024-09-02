@@ -1,0 +1,46 @@
+#include "RGame.h"
+
+Ruya::RGame::RGame()
+{
+	InitAvaibleSceneIDs();
+}
+
+Ruya::RGame::~RGame()
+{
+}
+
+void Ruya::RGame::Start()
+{
+}
+
+void Ruya::RGame::Update()
+{
+	for (const auto& pair : sceneMap)
+	{
+		pair.second->Update();
+	}
+}
+
+std::unique_ptr<Ruya::Scene>& Ruya::RGame::AddScene(std::unique_ptr<Scene>& scene)
+{
+	unsigned int newID = avaibleSceneIDs.front();
+	avaibleSceneIDs.pop();
+	avaibleSceneIDs.push(maxAvaibleSceneID + 1);
+	maxAvaibleSceneID++;
+
+	sceneMap.insert(std::make_pair(newID, std::move(scene)));
+
+	return sceneMap.find(newID)->second;
+}
+
+void Ruya::RGame::RemoveScene(unsigned int sceneID)
+{
+	sceneMap.erase(sceneID);
+	avaibleSceneIDs.push(sceneID);
+}
+
+void Ruya::RGame::InitAvaibleSceneIDs()
+{
+	avaibleSceneIDs.push(0);
+	maxAvaibleSceneID = 0;
+}

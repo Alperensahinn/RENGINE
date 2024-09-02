@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Scene/Model.h"
+#include "../../Graphics/Mesh.h"
 #include <array>
 
 namespace Ruya

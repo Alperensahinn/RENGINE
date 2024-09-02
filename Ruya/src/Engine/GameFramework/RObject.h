@@ -6,7 +6,7 @@ namespace Ruya
 	{
 	public:
 		RObject();
-		~RObject();
+		virtual ~RObject();
 
 		RObject(const RObject&) = delete;
 		RObject& operator=(const RObject&) = delete;

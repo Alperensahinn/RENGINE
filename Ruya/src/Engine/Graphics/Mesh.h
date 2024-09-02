@@ -1,6 +1,5 @@
 #pragma once
 #include "../Utilities/Math/RMath.h"
-#include <string>
 
 namespace Ruya
 {
@@ -13,17 +12,9 @@ namespace Ruya
 		glm::vec4 color;
 	};
 
-	struct GeometrySurface
-	{
-		uint32_t startIndex;
-		uint32_t count;
-	};
-
 	struct Mesh
 	{
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
 	};
-
-	void BuildModel();
 }

@@ -2,6 +2,7 @@
 
 Ruya::RObject::RObject()
 {
+
 }
 
 Ruya::RObject::~RObject()

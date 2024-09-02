@@ -1,8 +1,9 @@
 #include "Renderer.h"
 #include "../DefaultObjects/DefaultCube.h"
 #include "../../Utilities/FileSystem/FileSystem.h"
-#include "../../Scene/Model.h"
+#include "../Mesh.h"
 #include "../../Scene/Camera.h"
+#include "RenderQueue.h"
 #include <memory>
 
 namespace Ruya 
@@ -60,6 +61,7 @@ namespace Ruya
 		pRVulkan = new RVulkan(window);
 		pEngineUI = new EngineUI(window, this);
 		LoadMesh();
+		renderQueue = new RenderQueue();
 	}
 
 	void Renderer::CleanUp()
@@ -69,5 +71,6 @@ namespace Ruya
 		deletionQueue.flush();
 		delete pEngineUI;
 		delete pRVulkan;
+		delete renderQueue;
 	}
 }
