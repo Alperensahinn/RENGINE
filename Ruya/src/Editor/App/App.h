@@ -20,6 +20,6 @@ namespace REditor
 	private:
 		RWindow* pWindow;
 		std::unique_ptr<Ruya::RGame> game;
-		std::unique_ptr<EditorCamera> editorCamera;
+		EditorCamera* editorCamera;
 	};
 }

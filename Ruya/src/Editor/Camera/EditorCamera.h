@@ -11,5 +11,13 @@ namespace REditor
 
 		EditorCamera(const EditorCamera&) = delete;
 		EditorCamera& operator=(const EditorCamera&) = delete;
+
+	public:
+		void Update();
+
+	private:
+		Ruya::math::vec3 direction;
+		float pitch;
+		float yaw;
 	};
 }

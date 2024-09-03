@@ -25,15 +25,19 @@ namespace Ruya
 
 	public:
 		void Init(RWindow* window);
-		Renderer& GetRenderer();
 		void ProcessFrame();
+
+		void SetMainCamera(Camera* camera);
+
+		RWindow& GetWindow();
+		Renderer& GetRenderer();
 
 	private:
 		void CleanUp();
 
 	private:
 		Renderer* pRenderer;
-		RInput* pRInput;
+		RWindow* pWindow;
 		Camera* mainCamera;
 	};
 }

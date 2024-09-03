@@ -22,5 +22,12 @@ namespace Ruya
 		float Dot(vec2 v1, vec2 v2);
 		float Dot(vec3 v1, vec3 v2);
 		float Dot(vec4 v1, vec4 v2);
+
+		vec1 Normalize(vec1 v);
+		vec2 Normalize(vec2 v);
+		vec3 Normalize(vec3 v);
+		vec4 Normalize(vec4 v);
+
+		vec3 Cross(vec3 v1, vec3 v2);
 	}
 }

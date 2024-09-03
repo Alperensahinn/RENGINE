@@ -1,5 +1,6 @@
 #include "Engine.h"
 #include "Utilities/FileSystem/FileSystem.h"
+#include "Core/Time.h"
 
 Ruya::Engine::Engine()
 {
@@ -17,20 +18,33 @@ Ruya::Renderer& Ruya::Engine::GetRenderer()
 
 void Ruya::Engine::ProcessFrame()
 {
+	Time::UpdateTime();
 	pRenderer->DrawFrame();
+}
+
+void Ruya::Engine::SetMainCamera(Camera* camera)
+{
+	mainCamera = camera;
+	pRenderer->BindCamera(mainCamera);
+}
+
+RWindow& Ruya::Engine::GetWindow()
+{
+	return *pWindow;
 }
 
 void Ruya::Engine::Init(RWindow* window)
 {
-	pRInput = new RInput(window->GetWindow());
-	pRenderer = new Renderer(window->GetWindow());
+	pWindow = window;
+	pRenderer = new Renderer(pWindow->GetWindow());
 	mainCamera = new Camera();
-	pRenderer->BindCamera(mainCamera);
+
+	RInput::Init();
 }
 
 void Ruya::Engine::CleanUp()
 {
-	delete pRInput;
 	delete pRenderer;
+	delete pWindow;
 	delete mainCamera;
 }

@@ -1,34 +1,53 @@
 #pragma once
+#include "../Utilities/Math/RMath.h"
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+
 namespace Ruya
 {
-	enum  KeyCode
-	{
-		A,
-		D,
-		E,
-		Q,
-		S,
-		W
-	};
+	class Engine;
 
 	class RInput
 	{
-	public:
-
-	public:
-		RInput(GLFWwindow& window);
+	private:
+		RInput();
 		~RInput();
 
 		RInput(const RInput&) = delete;
 		RInput& operator=(const RInput&) = delete;
 
 	public:
-		bool GetKey(KeyCode keyCode);
+		enum class KeyCode
+		{
+			A,
+			D,
+			E,
+			Q,
+			S,
+			W
+		};
 
-	private:
-		GLFWwindow& window;
+		enum class MouseButton
+		{
+			RIGHT,
+			LEFT
+		};
+		static void Init();
+
+		static bool GetKey(KeyCode keyCode);
+
+		static bool GetMouseButton(MouseButton mouseButton);
+		static math::vec2 GetMouseDelta();
+		static void SetCursorEnabled(bool isEnable);
+
+	public:
+		static float firstMouse;
+		static float mouseLastX;
+		static float mouseLastY;
+		static float mouse_offset_x;
+		static float mouse_offset_y;
+		static float mouse_offset_x_last;
+		static float mouse_offset_y_last;
 	};
 }

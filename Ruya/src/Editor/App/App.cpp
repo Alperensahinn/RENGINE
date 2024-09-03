@@ -9,6 +9,7 @@ void REditor::App::Run()
 	while (!pWindow->RWindowShouldClose())
 	{
 		pWindow->PoolEvents();
+		editorCamera->Update();
 		game->Update();
 		Ruya::Engine::GetInstance().ProcessFrame();
 	}
@@ -19,9 +20,11 @@ void REditor::App::Run()
 void REditor::App::Init()
 {
 	pWindow = new RWindow();
-	Ruya::Engine::GetInstance().Init(pWindow);
-	editorCamera = std::make_unique<EditorCamera>();
+	
+	editorCamera = new EditorCamera();
 
+	Ruya::Engine::GetInstance().Init(pWindow);
+	Ruya::Engine::GetInstance().SetMainCamera(editorCamera);
 
 	game = std::make_unique<ProjectB>();
 }
