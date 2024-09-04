@@ -50,8 +50,6 @@ void REditor::EditorCamera::Update()
         deltaPosX = mouseDelta.x * sensitivity;
         deltaPosY = mouseDelta.y * sensitivity;
 
-        std::cout << deltaPosY << std::endl;
-
         yaw += deltaPosX;
         pitch += deltaPosY;
 

@@ -15,11 +15,18 @@ void Ruya::Actor::Start()
 {
     for (std::unique_ptr<ActorComponent>& component : components)
     {
+        component->Start();
+    }
+
+    for (std::unique_ptr<ActorComponent>& component : components)
+    {
         if (component->GetUpdateFunctionEnabled())
         {
             updateFunctionEnabledComponents.push_back(std::move(component));
         }
     }
+
+
 }
 
 void Ruya::Actor::Update()

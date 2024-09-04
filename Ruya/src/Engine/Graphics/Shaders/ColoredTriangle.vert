@@ -29,7 +29,7 @@ void main()
 	Vertex v = PushConstants.vertexBuffer.vertices[gl_VertexIndex];
 
 	gl_Position = PushConstants.render_matrix * vec4(v.position, 1.0f);
-	outColor = v.normal;
+	outColor = vec3(v.uv_x, 0.0f, v.uv_y);
 	outUV.x = v.uv_x;
 	outUV.y = v.uv_y;
 }

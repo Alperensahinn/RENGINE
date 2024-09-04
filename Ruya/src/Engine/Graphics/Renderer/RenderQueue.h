@@ -2,6 +2,7 @@
 #include "../Mesh.h"
 #include <queue>
 #include <memory>
+#include "Drawable.h"
 
 namespace Ruya
 {
@@ -15,12 +16,12 @@ namespace Ruya
 		RenderQueue& operator=(const RenderQueue&) = delete;
 
 	public:
-		std::shared_ptr<Mesh> Pop();
-		void Push(std::shared_ptr<Mesh> mesh);
+		std::shared_ptr<Drawable> Pop();
+		void Push(std::shared_ptr<Drawable> mesh);
 
 		bool IsEmpty();;
 
 	private:
-		std::queue<std::shared_ptr<Mesh>> meshQueue;
+		std::queue<std::shared_ptr<Drawable>> meshQueue;
 	};
 }

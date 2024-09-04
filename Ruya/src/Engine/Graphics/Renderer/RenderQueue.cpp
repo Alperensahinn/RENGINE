@@ -8,14 +8,14 @@ Ruya::RenderQueue::~RenderQueue()
 {
 }
 
-std::shared_ptr<Ruya::Mesh> Ruya::RenderQueue::Pop()
+std::shared_ptr<Ruya::Drawable> Ruya::RenderQueue::Pop()
 {
-    std::shared_ptr<Mesh> frontMesh = meshQueue.front();
+    std::shared_ptr<Drawable> frontMesh = meshQueue.front();
     meshQueue.pop();
     return frontMesh;
 }
 
-void Ruya::RenderQueue::Push(std::shared_ptr<Mesh> mesh)
+void Ruya::RenderQueue::Push(std::shared_ptr<Drawable> mesh)
 {
     meshQueue.push(mesh);
 }

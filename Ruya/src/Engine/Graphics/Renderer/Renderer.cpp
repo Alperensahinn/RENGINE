@@ -29,11 +29,9 @@ namespace Ruya
 
 		while(!renderQueue->IsEmpty())
 		{
-			std::shared_ptr<Mesh> mesh = renderQueue->Pop();
+			std::shared_ptr<Drawable> mesh = renderQueue->Pop();
 
-			std::shared_ptr<Drawable> drawable = LoadMesh(mesh);
-
-			pRVulkan->Draw(pEngineUI, drawable->meshBuffer, camera->GetViewMatrix());
+			pRVulkan->Draw(pEngineUI, mesh->meshBuffer, camera->GetViewMatrix());
 		}
 	}
 
@@ -65,7 +63,7 @@ namespace Ruya
 		this->camera = camera;
 	}
 
-	void Renderer::AddToRenderQueue(std::shared_ptr<Mesh> mesh)
+	void Renderer::AddToRenderQueue(std::shared_ptr<Drawable> mesh)
 	{
 		renderQueue->Push(mesh);
 	}

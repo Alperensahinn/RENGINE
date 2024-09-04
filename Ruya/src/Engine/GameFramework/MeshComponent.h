@@ -1,5 +1,6 @@
 #pragma once
 #include "ActorComponent.h"
+#include "../Graphics/Renderer/Drawable.h"
 
 #include <memory>
 
@@ -18,6 +19,7 @@ namespace Ruya
 		MeshComponent& operator=(const MeshComponent&) = delete;
 
 	public:
+		void Start() override;
 		void Update() override;
 
 		void SetMesh(const std::shared_ptr<Mesh> mesh);
@@ -27,5 +29,7 @@ namespace Ruya
 		bool bIsStaticMesh;
 		std::shared_ptr<Mesh> mesh;
 		std::shared_ptr<Material> material;
+
+		std::shared_ptr<Drawable> drawable;
 	};
 }

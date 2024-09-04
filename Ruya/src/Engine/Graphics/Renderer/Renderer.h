@@ -28,7 +28,7 @@ namespace Ruya
 		std::shared_ptr<Drawable> LoadMesh(std::shared_ptr<Mesh> mesh);
 		void BindCamera(Camera* camera);
 
-		void AddToRenderQueue(std::shared_ptr<Mesh> mesh);
+		void AddToRenderQueue(std::shared_ptr<Drawable> mesh);
 
 	private:
 		void Init(GLFWwindow& window);
