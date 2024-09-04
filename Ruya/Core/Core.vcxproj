@@ -1,0 +1,310 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Dist|x64">
+      <Configuration>Dist</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2EB4837C-1AEB-840D-C3D7-6A10AFED000F}</ProjectGuid>
+    <IgnoreWarnCompileDuplicatedFilename>true</IgnoreWarnCompileDuplicatedFilename>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Core</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>..\Binaries\windows-x86_64\Debug\Core\</OutDir>
+    <IntDir>..\Binaries\Intermediates\windows-x86_64\Debug\Core\</IntDir>
+    <TargetName>Core</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\Binaries\windows-x86_64\Release\Core\</OutDir>
+    <IntDir>..\Binaries\Intermediates\windows-x86_64\Release\Core\</IntDir>
+    <TargetName>Core</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+    <OutDir>..\Binaries\windows-x86_64\Dist\Core\</OutDir>
+    <IntDir>..\Binaries\Intermediates\windows-x86_64\Dist\Core\</IntDir>
+    <TargetName>Core</TargetName>
+    <TargetExt>.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalOptions>/EHsc /Zc:preprocessor /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/EHsc /Zc:preprocessor /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DebugInformationFormat>None</DebugInformationFormat>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalOptions>/EHsc /Zc:preprocessor /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <Lib>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Collections\RDeletionQueue.h" />
+    <ClInclude Include="Source\Core\Time.h" />
+    <ClInclude Include="Source\Engine.h" />
+    <ClInclude Include="Source\EngineUI\EngineUI.h" />
+    <ClInclude Include="Source\GameFramework\Actor.h" />
+    <ClInclude Include="Source\GameFramework\ActorComponent.h" />
+    <ClInclude Include="Source\GameFramework\MeshComponent.h" />
+    <ClInclude Include="Source\GameFramework\RGame.h" />
+    <ClInclude Include="Source\GameFramework\RObject.h" />
+    <ClInclude Include="Source\Graphics\DefaultObjects\DefaultCube.h" />
+    <ClInclude Include="Source\Graphics\Material.h" />
+    <ClInclude Include="Source\Graphics\Mesh.h" />
+    <ClInclude Include="Source\Graphics\Renderer\Drawable.h" />
+    <ClInclude Include="Source\Graphics\Renderer\RenderQueue.h" />
+    <ClInclude Include="Source\Graphics\Renderer\Renderer.h" />
+    <ClInclude Include="Source\Graphics\Renderer\RendererConfig.h" />
+    <ClInclude Include="Source\Graphics\Vulkan\RVulkan.h" />
+    <ClInclude Include="Source\Graphics\Vulkan\RVulkanConfig.h" />
+    <ClInclude Include="Source\Graphics\Vulkan\vk_mem_alloc.h" />
+    <ClInclude Include="Source\Input\RInput.h" />
+    <ClInclude Include="Source\Scene\Camera.h" />
+    <ClInclude Include="Source\Scene\Scene.h" />
+    <ClInclude Include="Source\Utilities\FileSystem\FileSystem.h" />
+    <ClInclude Include="Source\Utilities\Log\RLog.h" />
+    <ClInclude Include="Source\Utilities\Math\RMath.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\AssertHandler.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\BaseImporter.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Bitmap.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\BlobIOSystem.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\ByteSwapper.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\ColladaMetaData.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Compiler\poppack1.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Compiler\pstdint.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Compiler\pushpack1.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\CreateAnimMesh.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\DefaultIOStream.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\DefaultIOSystem.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Exceptional.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\GenericProperty.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\GltfMaterial.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Hash.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\IOStreamBuffer.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\LineSplitter.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\LogAux.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\MathFunctions.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\MemoryIOWrapper.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\ObjMaterial.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\ParsingUtils.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Profiler.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\RemoveComments.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\SGSpatialSort.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\SceneCombiner.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\SkeletonMeshBuilder.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\SmallVector.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\SmoothingGroups.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\SpatialSort.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\StandardShapes.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\StreamReader.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\StreamWriter.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\StringComparison.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\StringUtils.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Subdivision.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\TinyFormatter.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\Vertex.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\XMLTools.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\XmlParser.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\ZipArchiveIOSystem.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\aabb.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\ai_assert.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\anim.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\camera.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\cexport.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\cfileio.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\cimport.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\color4.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\commonMetaData.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\config.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\defs.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\fast_atof.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\importerdesc.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\light.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\material.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\matrix3x3.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\matrix4x4.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\mesh.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\metadata.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\pbrmaterial.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\port\AndroidJNI\AndroidJNIIOSystem.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\port\AndroidJNI\BundledAssetIOSystem.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\postprocess.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\qnan.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\quaternion.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\revision.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\scene.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\texture.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\types.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\vector2.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\vector3.h" />
+    <ClInclude Include="Source\Vendor\assimp\Include\assimp\version.h" />
+    <ClInclude Include="Source\Vendor\glfw-3.4.WIN64\include\GLFW\glfw3.h" />
+    <ClInclude Include="Source\Vendor\glfw-3.4.WIN64\include\GLFW\glfw3native.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\common.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\exponential.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\geometric.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\integer.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\matrix.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\neon.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\packing.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\platform.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\trigonometric.h" />
+    <ClInclude Include="Source\Vendor\glm\glm\simd\vector_relational.h" />
+    <ClInclude Include="Source\Vendor\imgui\imconfig.h" />
+    <ClInclude Include="Source\Vendor\imgui\imgui.h" />
+    <ClInclude Include="Source\Vendor\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="Source\Vendor\imgui\imgui_impl_vulkan.h" />
+    <ClInclude Include="Source\Vendor\imgui\imgui_internal.h" />
+    <ClInclude Include="Source\Vendor\imgui\imstb_rectpack.h" />
+    <ClInclude Include="Source\Vendor\imgui\imstb_textedit.h" />
+    <ClInclude Include="Source\Vendor\imgui\imstb_truetype.h" />
+    <ClInclude Include="Source\Window\RWindow.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Core\Time.cpp" />
+    <ClCompile Include="Source\Engine.cpp" />
+    <ClCompile Include="Source\EngineUI\EngineUI.cpp" />
+    <ClCompile Include="Source\GameFramework\Actor.cpp" />
+    <ClCompile Include="Source\GameFramework\ActorComponent.cpp" />
+    <ClCompile Include="Source\GameFramework\MeshComponent.cpp" />
+    <ClCompile Include="Source\GameFramework\RGame.cpp" />
+    <ClCompile Include="Source\GameFramework\RObject.cpp" />
+    <ClCompile Include="Source\Graphics\Material.cpp" />
+    <ClCompile Include="Source\Graphics\Mesh.cpp" />
+    <ClCompile Include="Source\Graphics\Renderer\RenderQueue.cpp" />
+    <ClCompile Include="Source\Graphics\Renderer\Renderer.cpp" />
+    <ClCompile Include="Source\Graphics\Vulkan\RVulkan.cpp" />
+    <ClCompile Include="Source\Graphics\Vulkan\vk_mem_alloc_config.cpp" />
+    <ClCompile Include="Source\Input\RInput.cpp" />
+    <ClCompile Include="Source\Scene\Camera.cpp" />
+    <ClCompile Include="Source\Scene\Scene.cpp" />
+    <ClCompile Include="Source\Utilities\FileSystem\FileSystem.cpp" />
+    <ClCompile Include="Source\Utilities\Math\RMath.cpp" />
+    <ClCompile Include="Source\Vendor\glm\glm\detail\glm.cpp" />
+    <ClCompile Include="Source\Vendor\glm\glm\glm.cppm">
+      <ObjectFileName>$(IntDir)\glm1.obj</ObjectFileName>
+    </ClCompile>
+    <ClCompile Include="Source\Vendor\imgui\imgui.cpp" />
+    <ClCompile Include="Source\Vendor\imgui\imgui_demo.cpp" />
+    <ClCompile Include="Source\Vendor\imgui\imgui_draw.cpp" />
+    <ClCompile Include="Source\Vendor\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="Source\Vendor\imgui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="Source\Vendor\imgui\imgui_tables.cpp" />
+    <ClCompile Include="Source\Vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\Window\RWindow.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
