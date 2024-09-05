@@ -15,34 +15,11 @@ namespace Ruya
 	class RVulkan;
 	class EngineUI;
 
-	struct RVkFrameData
+	struct GPUSceneData
 	{
-		VkCommandPool commandPool = VK_NULL_HANDLE;
-		VkCommandBuffer mainCommandBuffer = VK_NULL_HANDLE;
-
-		VkSemaphore swapchainSemaphore = VK_NULL_HANDLE;;
-		VkSemaphore renderSemaphore = VK_NULL_HANDLE;;
-		VkFence renderFence = VK_NULL_HANDLE;;
-
-		RDeletionQueue deletionQueue;
-	};
-
-	struct RVkAllocatedImage
-	{
-		VkImage image;
-		VkImageView imageView;
-		VmaAllocation allocation;
-		VkExtent3D imageExtent;
-		VkFormat imageFormat;
-	};
-
-	struct RVkDescriptorLayoutBuilder
-	{
-		std::vector<VkDescriptorSetLayoutBinding> bindings;
-
-		void AddBinding(uint32_t binding, VkDescriptorType descriptorType);
-		void Clear();
-		VkDescriptorSetLayout Build(RVulkan* pRVulkan, VkShaderStageFlags shaderStageFlags, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags dcsSetLayoutCreateflags = 0);
+		math::mat4 view;
+		math::mat4 proj;
+		math::mat4 viewproj;
 	};
 
 	struct RVkDescriptorAllocator
@@ -62,12 +39,35 @@ namespace Ruya
 		VkDescriptorSet Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout);
 	};
 
-	struct ComputePushConstants 
+	struct RVkFrameData
 	{
-		math::vec4 data1;
-		math::vec4 data2;
-		math::vec4 data3;
-		math::vec4 data4;
+		VkCommandPool commandPool = VK_NULL_HANDLE;
+		VkCommandBuffer mainCommandBuffer = VK_NULL_HANDLE;
+
+		VkSemaphore swapchainSemaphore = VK_NULL_HANDLE;;
+		VkSemaphore renderSemaphore = VK_NULL_HANDLE;;
+		VkFence renderFence = VK_NULL_HANDLE;;
+
+		RDeletionQueue deletionQueue;
+		RVkDescriptorAllocator descriptorAllocator;
+	};
+
+	struct RVkAllocatedImage
+	{
+		VkImage image;
+		VkImageView imageView;
+		VmaAllocation allocation;
+		VkExtent3D imageExtent;
+		VkFormat imageFormat;
+	};
+
+	struct RVkDescriptorLayoutBuilder
+	{
+		std::vector<VkDescriptorSetLayoutBinding> bindings;
+
+		void AddBinding(uint32_t binding, VkDescriptorType descriptorType);
+		void Clear();
+		VkDescriptorSetLayout Build(RVulkan* pRVulkan, VkShaderStageFlags shaderStageFlags, void* pNext = nullptr, VkDescriptorSetLayoutCreateFlags dcsSetLayoutCreateflags = 0);
 	};
 
 	constexpr uint32_t frameOverlap = 2;
@@ -128,6 +128,18 @@ namespace Ruya
 		VkDeviceAddress vertexBuffer;
 	};
 
+	struct RVkDescriptorWriter
+	{
+		std::deque<VkDescriptorImageInfo> imageInfos;
+		std::deque<VkDescriptorBufferInfo> bufferInfos;
+		std::vector<VkWriteDescriptorSet> writes;
+		
+		void WriteBuffer(uint32_t binding, VkDescriptorType descriptorType, VkBuffer buffer, size_t range, size_t offset);
+		void WriteImage(uint32_t binding, VkDescriptorType descriptorType, VkImageView imageView, VkSampler sampler, VkImageLayout layout);
+		void UpdateDescriptorSets(RVulkan* pRVulkan, VkDescriptorSet dstSet);
+		void Clear();
+	};
+
 	class RVulkan
 	{
 	public:
@@ -186,6 +198,16 @@ namespace Ruya
 		GLFWwindow& window;
 
 		bool resizeRequest = false;
+
+		GPUSceneData sceneData;
+		VkDescriptorSetLayout gpuSceneDataDescriptorSetLayout;
+
+		//texture test
+		RVkAllocatedImage test_texture;
+		VkSampler defaultSamplerNearest;
+		VkDescriptorSetLayout singleImageDescriptorLayout;
+
+
 	public:
 		RVulkan(GLFWwindow& window);
 		~RVulkan();
@@ -223,7 +245,6 @@ namespace Ruya
 	void rvkCreateCommandPool(RVulkan* pRVulkan);
 	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
 	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
-	void rvkCreateBuffer();
 	void rvkCreateDescriptors(RVulkan* pRVulkan);
 	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
 	void rvkTransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
@@ -244,6 +265,9 @@ namespace Ruya
 	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function);
 	VkRenderingAttachmentInfo  rvkDepthAttachmentInfo(VkImageView view, VkImageLayout layout);
 	void rvkResizeSwapChain(RVulkan* pRVulkan);
+	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
+	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, void* data, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
+	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
 }
 
 

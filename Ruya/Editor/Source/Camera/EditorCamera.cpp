@@ -21,7 +21,7 @@ void REditor::EditorCamera::Update()
     {
         RInput::SetCursorEnabled(false);
 
-        const float cameraSpeed = 1.0f * Time::GetDeltaTime();
+        const float cameraSpeed = 2.0f * Time::GetDeltaTime();
 
         if (RInput::GetKey(RInput::KeyCode::W))
             transform.position += cameraSpeed * transform.front;

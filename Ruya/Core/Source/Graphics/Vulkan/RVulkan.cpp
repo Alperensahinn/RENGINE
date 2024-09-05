@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <cmath>
+#include <array>
 
 namespace Ruya 
 {
@@ -35,13 +36,51 @@ namespace Ruya
 		rvkCheckQueueFamilies(this);
 		rvkCreateDevice(this);
 		rvkCreateVulkanMemoryAllocator(this);
+		rvkCreateCommandPool(this);
+		rvkCreateSynchronizationObjects(this);
 		rvkCreateSwapChain(this);
 		rvkSetQueues(this);
+
+
+		uint32_t magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
+		uint32_t black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 0));
+		std::array<uint32_t, 16 * 16 > pixels;
+
+		for (int x = 0; x < 16; x++)
+		{
+			for (int y = 0; y < 16; y++)
+			{
+				pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+			}
+		}
+
+		test_texture = rvkCreateImage(this, pixels.data(), VkExtent3D{ 16, 16, 1 }, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
+		VkSamplerCreateInfo sampl = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+
+		sampl.magFilter = VK_FILTER_NEAREST;
+		sampl.minFilter = VK_FILTER_NEAREST;
+
+		vkCreateSampler(pDevice, &sampl, nullptr, &defaultSamplerNearest);
+
+		deletionQueue.PushFunction([=]()
+			{
+				vkDestroySampler(pDevice, defaultSamplerNearest, nullptr);
+				rvkDestroyImage(this, test_texture);
+			});
+
+
 		rvkCreateDescriptors(this);
 		CreateTrianglePipeline();
 		rvkCreateEngineUIDescriptorPool(this);
-		rvkCreateCommandPool(this);
-		rvkCreateSynchronizationObjects(this);
+
+
+
+
+
+
+
+
 	}
 
 	void RVulkan::WaitDeviceForCleanUp()
@@ -82,6 +121,9 @@ namespace Ruya
 	{
 		CHECK_VKRESULT_DEBUG(vkWaitForFences(pDevice, 1, &GetCurrentFrame().renderFence, VK_TRUE, UINT64_MAX));
 		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
+
+		GetCurrentFrame().deletionQueue.flush();
+		GetCurrentFrame().descriptorAllocator.ClearDescriptors(this);
 
 		uint32_t imageIndex;
 		VkResult nextImageResult = vkAcquireNextImageKHR(pDevice, pSwapChain, UINT64_MAX, GetCurrentFrame().swapchainSemaphore, nullptr, &imageIndex);
@@ -151,8 +193,6 @@ namespace Ruya
 		}
 
 		frameNumber++;
-
-		GetCurrentFrame().deletionQueue.flush();
 	}
 
 	RVkFrameData& RVulkan::GetCurrentFrame()
@@ -187,6 +227,16 @@ namespace Ruya
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipeline);
+
+		VkDescriptorSet imageSet = GetCurrentFrame().descriptorAllocator.Allocate(this, singleImageDescriptorLayout);
+		{
+			RVkDescriptorWriter writer;
+			writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, test_texture.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			writer.UpdateDescriptorSets(this, imageSet);
+		}
+
+		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipelineLayout, 0, 1, &imageSet, 0, nullptr);
 
 		VkViewport viewport = {};
 		viewport.x = 0;
@@ -241,6 +291,8 @@ namespace Ruya
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantBufferRange;
 		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
+		pipelineLayoutCreateInfo.pSetLayouts = &singleImageDescriptorLayout;
+		pipelineLayoutCreateInfo.setLayoutCount = 1;
 
 		CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &trianglePipelineLayout));
 
@@ -793,52 +845,39 @@ namespace Ruya
 		RLOG("[VULKAN] Vulkan memory allocator created.")
 	}
 
-	void rvkCreateBuffer()
-	{
-		VkBufferCreateInfo bufferCreateInfo = {};
-		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-
-
-		//vmaCreateBuffer(vmaAllocator, );
-	}
-
 	void rvkCreateDescriptors(RVulkan* pRVulkan)
 	{
-		std::vector<RVkDescriptorAllocator::PoolSizeRatio> sizes =
-		{
-			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1 }
-		};
+		RVkDescriptorWriter writer;
 
-		pRVulkan->globalDescriptorAllocator.InitPool(pRVulkan, 10, sizes);
-
+		for (int i = 0; i < frameOverlap; i++) 
 		{
-			RVkDescriptorLayoutBuilder builder;
-			builder.AddBinding(0, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-			pRVulkan->drawImageDescriptorLayout = builder.Build(pRVulkan, VK_SHADER_STAGE_COMPUTE_BIT);
+			std::vector<RVkDescriptorAllocator::PoolSizeRatio> frame_sizes = 
+			{
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 }
+			};
+
+			pRVulkan->frames[i].descriptorAllocator = RVkDescriptorAllocator{};
+			pRVulkan->frames[i].descriptorAllocator.InitPool(pRVulkan, 1000, frame_sizes);
+
+			pRVulkan->deletionQueue.PushFunction([=]() 
+			{
+					pRVulkan->frames[i].descriptorAllocator.DestroyPool(pRVulkan);
+				});
 		}
 
-		pRVulkan->drawImageDescriptors = pRVulkan->globalDescriptorAllocator.Allocate(pRVulkan, pRVulkan->drawImageDescriptorLayout);
+		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
+		descriptorSetLayoutBinding.binding = 0;
+		descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		descriptorSetLayoutBinding.descriptorCount = 1;
+		descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		descriptorSetLayoutBinding.pImmutableSamplers = &pRVulkan->defaultSamplerNearest;
 
-		VkDescriptorImageInfo dscImageInfo = {};
-		dscImageInfo.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
-		dscImageInfo.imageView = pRVulkan->drawImage.imageView;
+		VkDescriptorSetLayoutCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		createInfo.bindingCount = 1;
+		createInfo.pBindings = &descriptorSetLayoutBinding;
 
-		VkWriteDescriptorSet writeDescriptorSet = {};
-		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-		writeDescriptorSet.dstSet = pRVulkan->drawImageDescriptors;
-		writeDescriptorSet.dstBinding = 0;
-		writeDescriptorSet.descriptorCount = 1;
-		writeDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-		writeDescriptorSet.pImageInfo = &dscImageInfo;
-
-		vkUpdateDescriptorSets(pRVulkan->pDevice, 1, &writeDescriptorSet, 0, nullptr);
-
-		pRVulkan->deletionQueue.PushFunction([=]()
-			{
-				pRVulkan->globalDescriptorAllocator.DestroyPool(pRVulkan);
-				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->drawImageDescriptorLayout, nullptr);
-
-			});
+		CHECK_VKRESULT(vkCreateDescriptorSetLayout(pRVulkan->pDevice, &createInfo, nullptr, &pRVulkan->singleImageDescriptorLayout));
 
 		RLOG("[VULKAN] Descriptor sets created.");
 	}
@@ -949,7 +988,6 @@ namespace Ruya
 	{
 		VkImageCreateInfo imageCreateInfo = {};
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		imageCreateInfo.pNext = nullptr;
 		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
 		imageCreateInfo.format = format;
 		imageCreateInfo.extent = extent;
@@ -1200,6 +1238,79 @@ namespace Ruya
 		rvkCreateSwapChain(pRVulkan);
 	}
 
+	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped)
+	{
+		RVkAllocatedImage image;
+		image.imageFormat = format;
+		image.imageExtent = extent;
+
+		VkImageCreateInfo imgInfo = rvkImageCreateInfo(format, usageFlags, extent);
+
+		if (mipmapped) 
+		{
+			imgInfo.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(extent.width, extent.height)))) + 1;
+		}
+
+		VmaAllocationCreateInfo allocInfo = {};
+		allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imgInfo, &allocInfo, &(image.image), &(image.allocation), nullptr));
+		
+		VkImageAspectFlags aspectFlag = VK_IMAGE_ASPECT_COLOR_BIT;
+
+		if (format == VK_FORMAT_D32_SFLOAT) 
+		{
+			aspectFlag = VK_IMAGE_ASPECT_DEPTH_BIT;
+		}
+
+		VkImageViewCreateInfo imageViewInfo = rvkImageViewCreateInfo(format, image.image, aspectFlag);
+		imageViewInfo.subresourceRange.levelCount = imgInfo.mipLevels;
+
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewInfo, nullptr, &(image.imageView)));
+
+		return image;
+	}
+
+	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, void* data, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped)
+	{
+		uint32_t data_size = extent.depth * extent.width * extent.height * 4;
+		RVkAllocatedBuffer stgBuffer = rvkCreateBuffer(pRVulkan, data_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+		memcpy(stgBuffer.allocationInfo.pMappedData, data, data_size);
+
+		RVkAllocatedImage image = rvkCreateImage(pRVulkan, extent, format, usageFlags, mipmapped);
+
+		rvkImmediateSubmit(pRVulkan, [&](VkCommandBuffer cmdBuffer) 
+			{
+			rvkTransitionImage(cmdBuffer, image.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+			VkBufferImageCopy copyRegion = {};
+			copyRegion.bufferOffset = 0;
+			copyRegion.bufferRowLength = 0;
+			copyRegion.bufferImageHeight = 0;
+
+			copyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			copyRegion.imageSubresource.mipLevel = 0;
+			copyRegion.imageSubresource.baseArrayLayer = 0;
+			copyRegion.imageSubresource.layerCount = 1;
+			copyRegion.imageExtent = extent;
+
+			vkCmdCopyBufferToImage(cmdBuffer, stgBuffer.buffer, image.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+
+			rvkTransitionImage(cmdBuffer, image.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			});
+
+		rvkDestoryBuffer(pRVulkan, stgBuffer);
+
+		return image;
+	}
+
+	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img)
+	{
+		vkDestroyImageView(pRVulkan->pDevice, img.imageView, nullptr);
+		vmaDestroyImage(pRVulkan->vmaAllocator, img.image, img.allocation);
+	}
+
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
 	{
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
@@ -1236,51 +1347,6 @@ namespace Ruya
 		return setLayout;
 	}
 
-	void RVkDescriptorAllocator::InitPool(RVulkan* pRVulkan, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
-	{
-		std::vector<VkDescriptorPoolSize> poolSizes;
-		for (int i = 0; i < poolRatios.size(); i++)
-		{
-			VkDescriptorPoolSize dscPoolSize = {};
-			dscPoolSize.type = poolRatios[i].descriptorType;
-			dscPoolSize.descriptorCount = uint32_t(poolRatios[i].ratio * maxSets);
-			
-			poolSizes.push_back(dscPoolSize);
-		}
-
-		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
-		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		descriptorPoolCreateInfo.flags = 0;
-		descriptorPoolCreateInfo.maxSets = maxSets;
-		descriptorPoolCreateInfo.poolSizeCount = (uint32_t)poolSizes.size();
-		descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
-		
-		CHECK_VKRESULT(vkCreateDescriptorPool(pRVulkan->pDevice, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
-	}
-
-	void RVkDescriptorAllocator::ClearDescriptors(RVulkan* pRVulkan)
-	{
-		CHECK_VKRESULT(vkResetDescriptorPool(pRVulkan->pDevice, descriptorPool, 0));
-	}
-
-	void RVkDescriptorAllocator::DestroyPool(RVulkan* pRVulkan)
-	{
-		vkDestroyDescriptorPool(pRVulkan->pDevice, descriptorPool, nullptr);
-	}
-
-	VkDescriptorSet RVkDescriptorAllocator::Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout)
-	{
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo = {};
-		descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		descriptorSetAllocateInfo.descriptorPool = descriptorPool;
-		descriptorSetAllocateInfo.descriptorSetCount = 1;
-		descriptorSetAllocateInfo.pSetLayouts = &layout;
-
-		VkDescriptorSet descriptorSet;
-		CHECK_VKRESULT(vkAllocateDescriptorSets(pRVulkan->pDevice, &descriptorSetAllocateInfo, &descriptorSet));
-
-		return descriptorSet;
-	}
 
 	RVkPipelineBuilder::RVkPipelineBuilder()
 	{
@@ -1437,5 +1503,108 @@ namespace Ruya
 			depthStencilCreateInfo.minDepthBounds = 0.f;
 			depthStencilCreateInfo.maxDepthBounds = 1.f;
 		}
+	}
+
+	void RVkDescriptorWriter::WriteBuffer(uint32_t binding, VkDescriptorType descriptorType, VkBuffer buffer, size_t range, size_t offset)
+	{
+		VkDescriptorBufferInfo bufferInfo = {};
+		bufferInfo.buffer = buffer;
+		bufferInfo.offset = offset;
+		bufferInfo.range = range;
+
+		bufferInfo = bufferInfos.emplace_back(bufferInfo);
+
+		VkWriteDescriptorSet writeDescriptorSet = {};
+		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+		writeDescriptorSet.dstBinding = binding;
+		writeDescriptorSet.descriptorCount = 1;
+		writeDescriptorSet.descriptorType = descriptorType;
+		writeDescriptorSet.pBufferInfo = &bufferInfo;
+
+		writes.push_back(writeDescriptorSet);
+	}
+
+	void RVkDescriptorWriter::WriteImage(uint32_t binding, VkDescriptorType descriptorType, VkImageView imageView, VkSampler sampler, VkImageLayout layout)
+	{
+		VkDescriptorImageInfo& info = imageInfos.emplace_back(VkDescriptorImageInfo{
+		.sampler = sampler,
+		.imageView = imageView,
+		.imageLayout = layout
+			});
+
+		VkWriteDescriptorSet writeDescriptorSet = {};
+		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+		writeDescriptorSet.dstSet = VK_NULL_HANDLE;
+		writeDescriptorSet.dstBinding = binding;
+		writeDescriptorSet.descriptorCount = 1;
+		writeDescriptorSet.descriptorType = descriptorType;
+		writeDescriptorSet.pImageInfo = &info;
+
+		writes.push_back(writeDescriptorSet);
+
+	}
+
+	void RVkDescriptorWriter::UpdateDescriptorSets(RVulkan* pRVulkan, VkDescriptorSet dstSet)
+	{
+		for (VkWriteDescriptorSet& write : writes) 
+		{
+			write.dstSet = dstSet;
+		}
+
+
+		vkUpdateDescriptorSets(pRVulkan->pDevice, writes.size(), writes.data(), 0, nullptr);
+	}
+
+	void RVkDescriptorWriter::Clear()
+	{
+		imageInfos.clear();
+		writes.clear();
+		bufferInfos.clear();
+	}
+
+	void RVkDescriptorAllocator::InitPool(RVulkan* pRVulkan, uint32_t maxSets, std::span<PoolSizeRatio> poolRatios)
+	{
+		std::vector<VkDescriptorPoolSize> poolSizes;
+
+		for (PoolSizeRatio ratio : poolRatios) 
+		{
+			VkDescriptorPoolSize poolSize = {};
+			poolSize.type = ratio.descriptorType;
+			poolSize.descriptorCount = uint32_t(ratio.ratio * maxSets);
+			poolSizes.push_back(poolSize);
+		}
+
+		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo = {};
+		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descriptorPoolCreateInfo.maxSets = maxSets;
+		descriptorPoolCreateInfo.poolSizeCount = poolSizes.size();
+		descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
+
+		CHECK_VKRESULT(vkCreateDescriptorPool(pRVulkan->pDevice, &descriptorPoolCreateInfo, nullptr, &descriptorPool));
+	}
+
+	void RVkDescriptorAllocator::ClearDescriptors(RVulkan* pRVulkan)
+	{
+		vkResetDescriptorPool(pRVulkan->pDevice, descriptorPool, 0);
+	}
+
+	void RVkDescriptorAllocator::DestroyPool(RVulkan* pRVulkan)
+	{
+		vkDestroyDescriptorPool(pRVulkan->pDevice, descriptorPool, nullptr);
+	}
+
+	VkDescriptorSet RVkDescriptorAllocator::Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout)
+	{
+		VkDescriptorSetAllocateInfo allocateInfo = {};
+		allocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+		allocateInfo.descriptorPool = descriptorPool;
+		allocateInfo.descriptorSetCount = 1;
+		allocateInfo.pSetLayouts = &layout;
+
+		VkDescriptorSet descriptorSet;
+		vkAllocateDescriptorSets(pRVulkan->pDevice, &allocateInfo, &descriptorSet);
+		return descriptorSet;
+
 	}
 }
