@@ -14,22 +14,16 @@ Ruya::MeshComponent::~MeshComponent()
 void Ruya::MeshComponent::Start()
 {
 	ActorComponent::Start();
-	drawable = Engine::GetInstance().GetRenderer().LoadMesh(mesh);
 }
 
 void Ruya::MeshComponent::Update()
 {
 	ActorComponent::Update();
 	
-	Engine::GetInstance().GetRenderer().AddToRenderQueue(drawable);
+	Engine::GetInstance().GetRenderer().AddToRenderQueue(renderObject);
 }
 
-void Ruya::MeshComponent::SetMesh(std::shared_ptr<Mesh> mesh)
+void Ruya::MeshComponent::SetRenderObject(std::shared_ptr<RenderObject> renderObject)
 {
-	this->mesh = mesh;
-}
-
-void Ruya::MeshComponent::SetMaterial(const std::shared_ptr<Material> material)
-{
-	this->material = material;
+	this->renderObject = renderObject;
 }

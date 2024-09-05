@@ -3,6 +3,8 @@
 #include <queue>
 #include <memory>
 #include "Drawable.h"
+#include <Graphics/Vulkan/RVulkan.h>
+#include "RenderObject.h"
 
 namespace Ruya
 {
@@ -16,12 +18,12 @@ namespace Ruya
 		RenderQueue& operator=(const RenderQueue&) = delete;
 
 	public:
-		std::shared_ptr<IDrawable> Pop();
-		void Push(std::shared_ptr<IDrawable> mesh);
+		std::shared_ptr<RenderObject> Pop();
+		void Push(std::shared_ptr<RenderObject> renderObject);
 
 		bool IsEmpty();;
 
 	private:
-		std::queue<std::shared_ptr<IDrawable>> meshQueue;
+		std::queue<std::shared_ptr<RenderObject>> renderQueue;
 	};
 }

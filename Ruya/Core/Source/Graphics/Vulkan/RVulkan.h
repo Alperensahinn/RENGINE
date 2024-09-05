@@ -35,13 +35,18 @@ namespace Ruya
 		MaterialPass passType;
 	};
 
+	struct RVkMaterial 
+	{
+		RVkMaterialInstance data;
+	};
+
 	struct RVkRenderObject
 	{
 		uint32_t indexCount;
 		uint32_t firstIndex;
 		VkBuffer indexBuffer;
 
-		RVkMaterialInstance* material;
+		std::shared_ptr<RVkMaterial> material;
 
 		glm::mat4 transform;
 		VkDeviceAddress vertexBufferAddress;
@@ -196,19 +201,10 @@ namespace Ruya
 
 		VkDescriptorSetLayout materialLayout;
 
-		struct MaterialConstants {
-			glm::vec4 colorFactors;
-			glm::vec4 metal_rough_factors;
-			glm::vec4 extra[14];
-		};
-
-		struct MaterialResources {
-			RVkAllocatedImage colorImage;
-			VkSampler colorSampler;
-			RVkAllocatedImage metalRoughImage;
-			VkSampler metalRoughSampler;
-			VkBuffer dataBuffer;
-			uint32_t dataBufferOffset;
+		struct MaterialResources 
+		{
+			RVkAllocatedImage albedoImage;
+			VkSampler albedoSampler;
 		};
 
 		RVkDescriptorWriter writer;
@@ -246,11 +242,6 @@ namespace Ruya
 		VkFormat swapChainImageFormat;
 		VkExtent2D swapChainExtent;
 
-		VkPipeline pGraphicsPipeline;
-
-		VkPipelineLayout trianglePipelineLayout;
-		VkPipeline opaquePipeline;
-
 		RVkAllocatedImage drawImage;
 		RVkAllocatedImage depthImage;
 		VkDescriptorSet drawImageDescriptors;
@@ -282,10 +273,9 @@ namespace Ruya
 		GPUSceneData sceneData;
 		VkDescriptorSetLayout gpuSceneDataDescriptorSetLayout;
 
-		//texture test
-		RVkAllocatedImage test_texture;
+		RVkMetallicRoughness metallicRoughnessPipeline;
+		RVkMaterialInstance defaultData;
 		VkSampler defaultSamplerNearest;
-		VkDescriptorSetLayout singleImageDescriptorLayout;
 
 
 	public:
@@ -300,15 +290,14 @@ namespace Ruya
 		void WaitDeviceForCleanUp();
 		void CleanUp();
 
-		void Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry, math::mat4 viewMatrix);
+		void Draw(EngineUI* pEngineUI, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
 		RVkFrameData& GetCurrentFrame();
 
 		void ResizeSwapChain();
 
 	private:
 		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
-		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry, math::mat4 viewMatrix);
-		void CreateTrianglePipeline();
+		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
 	};
 
 	void rvkCreateInstance(RVulkan* pRVulkan);
@@ -325,7 +314,6 @@ namespace Ruya
 	void rvkCreateCommandPool(RVulkan* pRVulkan);
 	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
 	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
-	void rvkCreateDescriptors(RVulkan* pRVulkan);
 	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
 	void rvkTransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
 	VkImageSubresourceRange rvkImageSubresourceRange(VkImageAspectFlags aspectMask);
@@ -348,6 +336,7 @@ namespace Ruya
 	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
 	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, void* data, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
 	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
+	void rvkCreatePipelines(RVulkan* pRVulkan);
 }
 
 

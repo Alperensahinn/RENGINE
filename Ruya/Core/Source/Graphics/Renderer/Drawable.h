@@ -3,8 +3,4 @@
 
 namespace Ruya
 {
-	struct IDrawable
-	{
-		RVkMeshBuffer meshBuffer;
-	};
 }

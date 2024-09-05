@@ -121,9 +121,6 @@
     <ClInclude Include="Source\Graphics\DefaultObjects\DefaultCube.h">
       <Filter>Graphics\DefaultObjects</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Graphics\Material.h">
-      <Filter>Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Graphics\Mesh.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -451,6 +448,10 @@
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Graphics\Renderer\RenderObject.h" />
+    <ClInclude Include="Source\Graphics\Renderer\Material.h" />
+    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h" />
+    <ClInclude Include="Source\Graphics\Renderer\Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -474,9 +475,6 @@
     </ClCompile>
     <ClCompile Include="Source\GameFramework\RObject.cpp">
       <Filter>GameFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Graphics\Material.cpp">
-      <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Mesh.cpp">
       <Filter>Graphics</Filter>

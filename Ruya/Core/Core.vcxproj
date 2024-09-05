@@ -160,12 +160,15 @@
     <ClInclude Include="Source\GameFramework\RGame.h" />
     <ClInclude Include="Source\GameFramework\RObject.h" />
     <ClInclude Include="Source\Graphics\DefaultObjects\DefaultCube.h" />
-    <ClInclude Include="Source\Graphics\Material.h" />
     <ClInclude Include="Source\Graphics\Mesh.h" />
     <ClInclude Include="Source\Graphics\Renderer\Drawable.h" />
+    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h" />
+    <ClInclude Include="Source\Graphics\Renderer\Material.h" />
+    <ClInclude Include="Source\Graphics\Renderer\RenderObject.h" />
     <ClInclude Include="Source\Graphics\Renderer\RenderQueue.h" />
     <ClInclude Include="Source\Graphics\Renderer\Renderer.h" />
     <ClInclude Include="Source\Graphics\Renderer\RendererConfig.h" />
+    <ClInclude Include="Source\Graphics\Renderer\Texture.h" />
     <ClInclude Include="Source\Graphics\Vulkan\RVulkan.h" />
     <ClInclude Include="Source\Graphics\Vulkan\RVulkanConfig.h" />
     <ClInclude Include="Source\Graphics\Vulkan\vk_mem_alloc.h" />
@@ -280,7 +283,6 @@
     <ClCompile Include="Source\GameFramework\MeshComponent.cpp" />
     <ClCompile Include="Source\GameFramework\RGame.cpp" />
     <ClCompile Include="Source\GameFramework\RObject.cpp" />
-    <ClCompile Include="Source\Graphics\Material.cpp" />
     <ClCompile Include="Source\Graphics\Mesh.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\RenderQueue.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\Renderer.cpp" />

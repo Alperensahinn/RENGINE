@@ -3,6 +3,10 @@
 #include <GameFramework/Actor.h>
 #include <GameFramework/MeshComponent.h>
 #include <Utilities/FileSystem/FileSystem.h>
+#include <Graphics/Renderer/RenderObject.h>
+#include <array>
+#include <Graphics/Renderer/Texture.h>
+#include <Engine.h>
 
 ProjectB::ProjectB()
 {
@@ -13,7 +17,28 @@ ProjectB::ProjectB()
 	std::unique_ptr<Ruya::ActorComponent>& monkeyMesh = monkey->AddComponent(std::make_unique<Ruya::MeshComponent>());
 
 	Ruya::MeshComponent* meshComponent = dynamic_cast<Ruya::MeshComponent*>(monkeyMesh.get());
-	meshComponent->SetMesh(Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\Monkey.glb"));
+
+
+	uint32_t magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
+	uint32_t black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 0));
+	std::array<uint32_t, 16 * 16 > pixels;
+
+	for (int x = 0; x < 16; x++)
+	{
+		for (int y = 0; y < 16; y++)
+		{
+			pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
+		}
+	}
+
+
+	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\Monkey.glb");
+	std::shared_ptr<Ruya::Texture> texture = std::make_shared<Ruya::Texture>();
+	texture->image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels.data(), VkExtent3D{ 16, 16, 1 }, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
+	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, texture));
+
+	meshComponent->SetRenderObject(renderObject);
 }
 
 ProjectB::~ProjectB()

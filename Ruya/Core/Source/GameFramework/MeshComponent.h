@@ -1,5 +1,8 @@
 #pragma once
 #include "ActorComponent.h"
+
+#include <Graphics/Renderer/RenderObject.h>
+
 #include "../Graphics/Renderer/Drawable.h"
 
 #include <memory>
@@ -22,14 +25,10 @@ namespace Ruya
 		void Start() override;
 		void Update() override;
 
-		void SetMesh(const std::shared_ptr<Mesh> mesh);
-		void SetMaterial(const std::shared_ptr<Material> material);
+		void SetRenderObject(std::shared_ptr<RenderObject> renderObject);
 
 	private:
 		bool bIsStaticMesh;
-		std::shared_ptr<Mesh> mesh;
-		std::shared_ptr<Material> material;
-
-		std::shared_ptr<IDrawable> drawable;
+		std::shared_ptr<RenderObject> renderObject;
 	};
 }

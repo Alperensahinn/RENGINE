@@ -41,21 +41,6 @@ namespace Ruya
 		rvkCreateSwapChain(this);
 		rvkSetQueues(this);
 
-
-		uint32_t magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
-		uint32_t black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 0));
-		std::array<uint32_t, 16 * 16 > pixels;
-
-		for (int x = 0; x < 16; x++)
-		{
-			for (int y = 0; y < 16; y++)
-			{
-				pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
-			}
-		}
-
-		test_texture = rvkCreateImage(this, pixels.data(), VkExtent3D{ 16, 16, 1 }, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-
 		VkSamplerCreateInfo sampl = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
 
 		sampl.magFilter = VK_FILTER_NEAREST;
@@ -66,21 +51,34 @@ namespace Ruya
 		deletionQueue.PushFunction([=]()
 			{
 				vkDestroySampler(pDevice, defaultSamplerNearest, nullptr);
-				rvkDestroyImage(this, test_texture);
 			});
 
+		for (int i = 0; i < frameOverlap; i++)
+		{
+			std::vector<RVkDescriptorAllocator::PoolSizeRatio> frame_sizes =
+			{
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 },
+			};
 
-		rvkCreateDescriptors(this);
-		CreateTrianglePipeline();
+			frames[i].descriptorAllocator = RVkDescriptorAllocator{};
+			frames[i].descriptorAllocator.InitPool(this, 1000, frame_sizes);
+		}
+
+		std::vector<RVkDescriptorAllocator::PoolSizeRatio> frame_sizes =
+		{
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 3 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 3 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 3 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 },
+		};
+
+		globalDescriptorAllocator.InitPool(this, 1000, frame_sizes);
+
+		rvkCreatePipelines(this);
 		rvkCreateEngineUIDescriptorPool(this);
-
-
-
-
-
-
-
-
 	}
 
 	void RVulkan::WaitDeviceForCleanUp()
@@ -117,7 +115,7 @@ namespace Ruya
 		vkDestroyInstance(pInstance, nullptr);
 	}
 
-	void RVulkan::Draw(EngineUI* pEngineUI, RVkMeshBuffer geometry, math::mat4 viewMatrix)
+	void RVulkan::Draw(EngineUI* pEngineUI, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix)
 	{
 		CHECK_VKRESULT_DEBUG(vkWaitForFences(pDevice, 1, &GetCurrentFrame().renderFence, VK_TRUE, UINT64_MAX));
 		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
@@ -154,7 +152,7 @@ namespace Ruya
 		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		rvkTransitionImage(cmdBuffer, depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-		DrawGeometry(cmdBuffer, geometry, viewMatrix);
+		DrawGeometry(cmdBuffer, meshBuffer, materialInstance, viewMatrix);
 
 		DrawEngineUI(pEngineUI, cmdBuffer, drawImage.imageView);
 
@@ -218,7 +216,7 @@ namespace Ruya
 		vkCmdEndRendering(cmd);
 	}
 
-	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer geometry, math::mat4 viewMatrix)
+	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix)
 	{
 		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingAttachmentInfo depthAttachment = rvkDepthAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
@@ -226,17 +224,9 @@ namespace Ruya
 		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
-		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, opaquePipeline);
+		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialInstance.pipeline->pipeline);
 
-		VkDescriptorSet imageSet = GetCurrentFrame().descriptorAllocator.Allocate(this, singleImageDescriptorLayout, nullptr);
-		{
-			RVkDescriptorWriter writer;
-			writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, test_texture.imageView, defaultSamplerNearest, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-			writer.UpdateDescriptorSets(this, imageSet);
-		}
-
-		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipelineLayout, 0, 1, &imageSet, 0, nullptr);
+		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialInstance.pipeline->layout, 0, 1, &materialInstance.materialSet, 0, nullptr);
 
 		VkViewport viewport = {};
 		viewport.x = 0;
@@ -262,65 +252,14 @@ namespace Ruya
 
 		RVkDrawPushConstants push_constants;
 		push_constants.worldMatrix = proj * viewMatrix * model;
-		push_constants.vertexBuffer = geometry.vertexBufferAddress;
+		push_constants.vertexBuffer = meshBuffer.vertexBufferAddress;
 
-		vkCmdPushConstants(cmdBuffer, trianglePipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
-		vkCmdBindIndexBuffer(cmdBuffer, geometry.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdPushConstants(cmdBuffer, materialInstance.pipeline->layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
+		vkCmdBindIndexBuffer(cmdBuffer, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(cmdBuffer, geometry.indexCount, 1, 0, 0, 0);
+		vkCmdDrawIndexed(cmdBuffer, meshBuffer.indexCount, 1, 0, 0, 0);
 
 		vkCmdEndRendering(cmdBuffer);
-	}
-
-	void RVulkan::CreateTrianglePipeline()
-	{
-		/*
-		VkShaderModule vertexShader;
-		std::vector<char> colorTriangleVertexCode = Ruya::ReadBinaryFile("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Core\\Source\\Graphics\\Shaders\\ColoredTriangleVertexShader.spv");
-		vertexShader = rvkCreateShaderModule(this, colorTriangleVertexCode);
-
-		VkShaderModule fragmentShader;
-		std::vector<char> colorTriangleFragmentCode = Ruya::ReadBinaryFile("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Core\\Source\\Graphics\\Shaders\\ColoredTriangleFragmentShader.spv");
-		fragmentShader = rvkCreateShaderModule(this, colorTriangleFragmentCode);
-
-		VkPushConstantRange pushConstantBufferRange = {};
-		pushConstantBufferRange.offset = 0;
-		pushConstantBufferRange.size = sizeof(RVkDrawPushConstants);
-		pushConstantBufferRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {};
-		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutCreateInfo.pPushConstantRanges = &pushConstantBufferRange;
-		pipelineLayoutCreateInfo.pushConstantRangeCount = 1;
-		pipelineLayoutCreateInfo.pSetLayouts = &singleImageDescriptorLayout;
-		pipelineLayoutCreateInfo.setLayoutCount = 1;
-
-		CHECK_VKRESULT(vkCreatePipelineLayout(pDevice, &pipelineLayoutCreateInfo, nullptr, &trianglePipelineLayout));
-
-		RVkPipelineBuilder pipelineBuilder;
-		pipelineBuilder.Clear();
-		pipelineBuilder.SetShaders(vertexShader, fragmentShader);
-		pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
-		pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
-		pipelineBuilder.SetCullMode(VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE);
-		pipelineBuilder.SetMultisampling(false);
-		pipelineBuilder.SetBlending(false);
-		pipelineBuilder.SetDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
-		pipelineBuilder.SetColorAttachmentFormat(drawImage.imageFormat);
-		pipelineBuilder.SetDepthFormat(depthImage.imageFormat);
-		pipelineBuilder.pipelineLayout = trianglePipelineLayout;
-
-		opaquePipeline = pipelineBuilder.BuildPipeline(this);
-
-		vkDestroyShaderModule(pDevice, vertexShader, nullptr);
-		vkDestroyShaderModule(pDevice, fragmentShader, nullptr);
-
-		deletionQueue.PushFunction([=]()
-			{
-				vkDestroyPipelineLayout(pDevice, trianglePipelineLayout, nullptr);
-				vkDestroyPipeline(pDevice, opaquePipeline, nullptr);
-			});
-			*/
 	}
 
 
@@ -847,48 +786,6 @@ namespace Ruya
 		RLOG("[VULKAN] Vulkan memory allocator created.")
 	}
 
-	void rvkCreateDescriptors(RVulkan* pRVulkan)
-	{
-		RVkDescriptorWriter writer;
-
-		for (int i = 0; i < frameOverlap; i++) 
-		{
-			std::vector<RVkDescriptorAllocator::PoolSizeRatio> frame_sizes = 
-			{
-				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 }
-			};
-
-			pRVulkan->frames[i].descriptorAllocator = RVkDescriptorAllocator{};
-			pRVulkan->frames[i].descriptorAllocator.InitPool(pRVulkan, 1000, frame_sizes);
-
-			pRVulkan->deletionQueue.PushFunction([=]() 
-			{
-					pRVulkan->frames[i].descriptorAllocator.DestroyPool(pRVulkan);
-				});
-		}
-
-		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
-		descriptorSetLayoutBinding.binding = 0;
-		descriptorSetLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		descriptorSetLayoutBinding.descriptorCount = 1;
-		descriptorSetLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		descriptorSetLayoutBinding.pImmutableSamplers = &pRVulkan->defaultSamplerNearest;
-
-		VkDescriptorSetLayoutCreateInfo createInfo = {};
-		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		createInfo.bindingCount = 1;
-		createInfo.pBindings = &descriptorSetLayoutBinding;
-
-		CHECK_VKRESULT(vkCreateDescriptorSetLayout(pRVulkan->pDevice, &createInfo, nullptr, &pRVulkan->singleImageDescriptorLayout));
-
-		pRVulkan->deletionQueue.PushFunction([=]()
-			{
-				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->singleImageDescriptorLayout, nullptr);
-			});
-
-		RLOG("[VULKAN] Descriptor sets created.");
-	}
-
 	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
 	{
 		VkCommandBufferBeginInfo commandBufferBeginInfo = {};
@@ -1318,6 +1215,11 @@ namespace Ruya
 		vmaDestroyImage(pRVulkan->vmaAllocator, img.image, img.allocation);
 	}
 
+	void rvkCreatePipelines(RVulkan* pRVulkan)
+	{
+		pRVulkan->metallicRoughnessPipeline.BuildPipelines(pRVulkan);
+	}
+
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
 	{
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
@@ -1711,18 +1613,15 @@ namespace Ruya
 		pushConstantRange.size = sizeof(RVkDrawPushConstants);
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		RVkDescriptorLayoutBuilder descriptorLayoutBuilder1;
-		descriptorLayoutBuilder1.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-		pRVulkan->gpuSceneDataDescriptorSetLayout = descriptorLayoutBuilder1.Build(pRVulkan, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
-
 		RVkDescriptorLayoutBuilder descriptorLayoutBuilder2;
 		descriptorLayoutBuilder2.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		materialLayout = descriptorLayoutBuilder2.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		VkDescriptorSetLayout layouts[] = { pRVulkan->gpuSceneDataDescriptorSetLayout, materialLayout };
+		VkDescriptorSetLayout layouts[] = { materialLayout };
 
 		VkPipelineLayoutCreateInfo meshLayoutInfo = {};
-		meshLayoutInfo.setLayoutCount = 2;
+		meshLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		meshLayoutInfo.setLayoutCount = 1;
 		meshLayoutInfo.pSetLayouts = layouts;
 		meshLayoutInfo.pushConstantRangeCount = 1;
 		meshLayoutInfo.pPushConstantRanges = &pushConstantRange;
@@ -1753,6 +1652,7 @@ namespace Ruya
 
 	void RVkMetallicRoughness::ClearResources(RVulkan* pRVulkan)
 	{
+
 	}
 
 	RVkMaterialInstance RVkMetallicRoughness::WriteMaterial(RVulkan* pRVulkan, MaterialPass pass, const MaterialResources& resources, RVkDescriptorAllocator& descriptorAllocator)
@@ -1767,7 +1667,7 @@ namespace Ruya
 		matData.materialSet = descriptorAllocator.Allocate(pRVulkan, materialLayout, nullptr);
 
 		writer.Clear();
-		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.colorImage.imageView, resources.colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.albedoImage.imageView, resources.albedoSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		writer.UpdateDescriptorSets(pRVulkan, matData.materialSet);
 

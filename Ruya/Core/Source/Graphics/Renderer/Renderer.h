@@ -2,6 +2,9 @@
 #include "../Vulkan/RVulkan.h"
 #include "../../EngineUI/EngineUI.h"
 #include "../../Collections/RDeletionQueue.h"
+#include "RenderObject.h"
+#include "Texture.h"
+#include "../Mesh.h"
 
 struct GLFWwindow;
 
@@ -10,7 +13,6 @@ namespace Ruya
 	class RVulkan;
 	class Camera;
 	class RenderQueue;
-	struct IDrawable;
 
 	class Renderer
 	{
@@ -25,10 +27,10 @@ namespace Ruya
 		void DrawFrame();
 		RVulkan* GetRendererBackend();
 
-		std::shared_ptr<IDrawable> LoadMesh(std::shared_ptr<Mesh> mesh);
+		RenderObject CreateRenderObject(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture);
 		void BindCamera(Camera* camera);
 
-		void AddToRenderQueue(std::shared_ptr<IDrawable> mesh);
+		void AddToRenderQueue(std::shared_ptr<RenderObject> renderObject);
 
 	private:
 		void Init(GLFWwindow& window);
@@ -37,7 +39,7 @@ namespace Ruya
 	public:
 		RDeletionQueue deletionQueue;
 
-	private:
+	public:
 		RVulkan* pRVulkan;
 		EngineUI* pEngineUI;
 

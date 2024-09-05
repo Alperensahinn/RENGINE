@@ -29,9 +29,9 @@ namespace Ruya
 
 		while(!renderQueue->IsEmpty())
 		{
-			std::shared_ptr<IDrawable> mesh = renderQueue->Pop();
-
-			pRVulkan->Draw(pEngineUI, mesh->meshBuffer, camera->GetViewMatrix());
+			std::shared_ptr<RenderObject> renderObject = renderQueue->Pop();
+			
+			pRVulkan->Draw(pEngineUI, renderObject->mesh.meshBuffer, renderObject->material.material, camera->GetViewMatrix());
 		}
 	}
 
@@ -40,22 +40,18 @@ namespace Ruya
 		return pRVulkan;
 	}
 
-	std::shared_ptr<IDrawable> Renderer::LoadMesh(std::shared_ptr<Mesh> mesh)
+	RenderObject Renderer::CreateRenderObject(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture)
 	{	
-		auto vertices = mesh->vertices;
-		auto indices = mesh->indices;
+		RenderObject renderObject;
+		renderObject.mesh.meshBuffer = rvkLoadMesh(pRVulkan, mesh->vertices, mesh->indices);
 
-		std::shared_ptr<IDrawable> drawable = std::make_shared<IDrawable>();
+		RVkMetallicRoughness::MaterialResources materialResources = {};
+		materialResources.albedoImage = texture->image;
+		materialResources.albedoSampler = pRVulkan->defaultSamplerNearest;
 
-		drawable->meshBuffer = rvkLoadMesh(pRVulkan, vertices, indices);
+		renderObject.material.material = pRVulkan->metallicRoughnessPipeline.WriteMaterial(pRVulkan, MaterialPass::MainColor, materialResources, pRVulkan->globalDescriptorAllocator);
 
-		pRVulkan->deletionQueue.PushFunction([=]() 
-			{
-			rvkDestoryBuffer(pRVulkan, drawable->meshBuffer.vertexBuffer);
-			rvkDestoryBuffer(pRVulkan, drawable->meshBuffer.indexBuffer);
-			});
-
-		return drawable;
+		return renderObject;
 	}
 
 	void Renderer::BindCamera(Camera* camera)
@@ -63,9 +59,9 @@ namespace Ruya
 		this->camera = camera;
 	}
 
-	void Renderer::AddToRenderQueue(std::shared_ptr<IDrawable> mesh)
+	void Renderer::AddToRenderQueue(std::shared_ptr<RenderObject> renderObject)
 	{
-		renderQueue->Push(mesh);
+		renderQueue->Push(renderObject);
 	}
 
 	void Renderer::Init(GLFWwindow& window)
