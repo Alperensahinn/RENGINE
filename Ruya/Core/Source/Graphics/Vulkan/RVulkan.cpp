@@ -226,7 +226,7 @@ namespace Ruya
 		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
-		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, trianglePipeline);
+		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, opaquePipeline);
 
 		VkDescriptorSet imageSet = GetCurrentFrame().descriptorAllocator.Allocate(this, singleImageDescriptorLayout, nullptr);
 		{
@@ -274,6 +274,7 @@ namespace Ruya
 
 	void RVulkan::CreateTrianglePipeline()
 	{
+		/*
 		VkShaderModule vertexShader;
 		std::vector<char> colorTriangleVertexCode = Ruya::ReadBinaryFile("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Core\\Source\\Graphics\\Shaders\\ColoredTriangleVertexShader.spv");
 		vertexShader = rvkCreateShaderModule(this, colorTriangleVertexCode);
@@ -309,7 +310,7 @@ namespace Ruya
 		pipelineBuilder.SetDepthFormat(depthImage.imageFormat);
 		pipelineBuilder.pipelineLayout = trianglePipelineLayout;
 
-		trianglePipeline = pipelineBuilder.BuildPipeline(this);
+		opaquePipeline = pipelineBuilder.BuildPipeline(this);
 
 		vkDestroyShaderModule(pDevice, vertexShader, nullptr);
 		vkDestroyShaderModule(pDevice, fragmentShader, nullptr);
@@ -317,8 +318,9 @@ namespace Ruya
 		deletionQueue.PushFunction([=]()
 			{
 				vkDestroyPipelineLayout(pDevice, trianglePipelineLayout, nullptr);
-				vkDestroyPipeline(pDevice, trianglePipeline, nullptr);
+				vkDestroyPipeline(pDevice, opaquePipeline, nullptr);
 			});
+			*/
 	}
 
 
@@ -1692,5 +1694,83 @@ namespace Ruya
 		VkDescriptorPool pool;
 		vkCreateDescriptorPool(pRVulkan->pDevice, &descriptorPoolCreateInfo, nullptr, &pool);
 		return pool;
+	}
+
+	void RVkMetallicRoughness::BuildPipelines(RVulkan* pRVulkan)
+	{
+		VkShaderModule vertexShader;
+		std::vector<char> colorTriangleVertexCode = Ruya::ReadBinaryFile("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Core\\Source\\Graphics\\Shaders\\ColoredTriangleVertexShader.spv");
+		vertexShader = rvkCreateShaderModule(pRVulkan, colorTriangleVertexCode);
+
+		VkShaderModule fragmentShader;
+		std::vector<char> colorTriangleFragmentCode = Ruya::ReadBinaryFile("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Core\\Source\\Graphics\\Shaders\\ColoredTriangleFragmentShader.spv");
+		fragmentShader = rvkCreateShaderModule(pRVulkan, colorTriangleFragmentCode);
+
+		VkPushConstantRange pushConstantRange = {};
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = sizeof(RVkDrawPushConstants);
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+		RVkDescriptorLayoutBuilder descriptorLayoutBuilder1;
+		descriptorLayoutBuilder1.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+		pRVulkan->gpuSceneDataDescriptorSetLayout = descriptorLayoutBuilder1.Build(pRVulkan, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		RVkDescriptorLayoutBuilder descriptorLayoutBuilder2;
+		descriptorLayoutBuilder2.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		materialLayout = descriptorLayoutBuilder2.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		VkDescriptorSetLayout layouts[] = { pRVulkan->gpuSceneDataDescriptorSetLayout, materialLayout };
+
+		VkPipelineLayoutCreateInfo meshLayoutInfo = {};
+		meshLayoutInfo.setLayoutCount = 2;
+		meshLayoutInfo.pSetLayouts = layouts;
+		meshLayoutInfo.pushConstantRangeCount = 1;
+		meshLayoutInfo.pPushConstantRanges = &pushConstantRange;
+
+		VkPipelineLayout newLayout;
+		CHECK_VKRESULT(vkCreatePipelineLayout(pRVulkan->pDevice, &meshLayoutInfo, nullptr, &newLayout));
+
+		opaquePipeline.layout = newLayout;
+
+		RVkPipelineBuilder pipelineBuilder;
+		pipelineBuilder.Clear();
+		pipelineBuilder.SetShaders(vertexShader, fragmentShader);
+		pipelineBuilder.SetInputTopology(VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST);
+		pipelineBuilder.SetPolygonMode(VK_POLYGON_MODE_FILL);
+		pipelineBuilder.SetCullMode(VK_CULL_MODE_FRONT_BIT, VK_FRONT_FACE_CLOCKWISE);
+		pipelineBuilder.SetMultisampling(false);
+		pipelineBuilder.SetBlending(false);
+		pipelineBuilder.SetDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
+		pipelineBuilder.SetColorAttachmentFormat(pRVulkan->drawImage.imageFormat);
+		pipelineBuilder.SetDepthFormat(pRVulkan->depthImage.imageFormat);
+		pipelineBuilder.pipelineLayout = newLayout;
+
+		opaquePipeline.pipeline = pipelineBuilder.BuildPipeline(pRVulkan);
+
+		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
+		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
+	}
+
+	void RVkMetallicRoughness::ClearResources(RVulkan* pRVulkan)
+	{
+	}
+
+	RVkMaterialInstance RVkMetallicRoughness::WriteMaterial(RVulkan* pRVulkan, MaterialPass pass, const MaterialResources& resources, RVkDescriptorAllocator& descriptorAllocator)
+	{
+		RVkMaterialInstance matData;
+		matData.passType = pass;
+		if (pass == MaterialPass::MainColor) 
+		{
+			matData.pipeline = &opaquePipeline;
+		}
+
+		matData.materialSet = descriptorAllocator.Allocate(pRVulkan, materialLayout, nullptr);
+
+		writer.Clear();
+		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.colorImage.imageView, resources.colorSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+		writer.UpdateDescriptorSets(pRVulkan, matData.materialSet);
+
+		return matData;
 	}
 }

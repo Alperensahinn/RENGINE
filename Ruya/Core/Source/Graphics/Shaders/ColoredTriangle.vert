@@ -2,6 +2,8 @@
 #extension GL_KHR_vulkan_glsl : enable
 #extension GL_EXT_buffer_reference : require
 
+#include "InputStructures.glsl"
+
 layout (location = 0) out vec3 outColor;
 layout (location = 1) out vec2 outUV;
 
@@ -28,7 +30,10 @@ void main()
 {	
 	Vertex v = PushConstants.vertexBuffer.vertices[gl_VertexIndex];
 
-	gl_Position = PushConstants.render_matrix * vec4(v.position, 1.0f);
+	vec4 position = vec4(v.position, 1.0f);
+
+	gl_Position = sceneData.viewproj * PushConstants.render_matrix * position;
+
 	outColor = vec3(v.uv_x, 0.0f, v.uv_y);
 	outUV.x = v.uv_x;
 	outUV.y = v.uv_y;

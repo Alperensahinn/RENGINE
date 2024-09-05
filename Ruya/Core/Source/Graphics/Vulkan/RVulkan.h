@@ -15,6 +15,13 @@ namespace Ruya
 	class RVulkan;
 	class EngineUI;
 
+	enum class MaterialPass : uint8_t 
+	{
+		MainColor,
+		Transparent,
+		Other
+	};
+
 	struct RVkMaterialPipeline
 	{
 		VkPipeline pipeline;
@@ -25,7 +32,7 @@ namespace Ruya
 	{
 		RVkMaterialPipeline* pipeline;
 		VkDescriptorSet materialSet;
-		//MaterialPass passType;
+		MaterialPass passType;
 	};
 
 	struct RVkRenderObject
@@ -158,9 +165,17 @@ namespace Ruya
 		uint32_t indexCount;
 	};
 
-	struct RVkDrawPushConstants {
+	struct RVkDrawPushConstants 
+	{
 		math::mat4 worldMatrix;
 		VkDeviceAddress vertexBuffer;
+	};
+
+	struct RVkSceneData
+	{
+		math::mat4 view;
+		math::mat4 proj;
+		math::mat4 viewproj;
 	};
 
 	struct RVkDescriptorWriter
@@ -174,6 +189,36 @@ namespace Ruya
 		void UpdateDescriptorSets(RVulkan* pRVulkan, VkDescriptorSet dstSet);
 		void Clear();
 	};
+
+	struct RVkMetallicRoughness
+	{
+		RVkMaterialPipeline opaquePipeline;
+
+		VkDescriptorSetLayout materialLayout;
+
+		struct MaterialConstants {
+			glm::vec4 colorFactors;
+			glm::vec4 metal_rough_factors;
+			glm::vec4 extra[14];
+		};
+
+		struct MaterialResources {
+			RVkAllocatedImage colorImage;
+			VkSampler colorSampler;
+			RVkAllocatedImage metalRoughImage;
+			VkSampler metalRoughSampler;
+			VkBuffer dataBuffer;
+			uint32_t dataBufferOffset;
+		};
+
+		RVkDescriptorWriter writer;
+
+		void BuildPipelines(RVulkan* pRVulkan);
+		void ClearResources(RVulkan* pRVulkan);
+
+		RVkMaterialInstance WriteMaterial(RVulkan* pRVulkan, MaterialPass pass, const MaterialResources& resources, RVkDescriptorAllocator& descriptorAllocator);
+	};
+
 
 	class RVulkan
 	{
@@ -204,7 +249,7 @@ namespace Ruya
 		VkPipeline pGraphicsPipeline;
 
 		VkPipelineLayout trianglePipelineLayout;
-		VkPipeline trianglePipeline;
+		VkPipeline opaquePipeline;
 
 		RVkAllocatedImage drawImage;
 		RVkAllocatedImage depthImage;
