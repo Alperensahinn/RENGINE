@@ -30,6 +30,6 @@ namespace Ruya
 		std::shared_ptr<Mesh> mesh;
 		std::shared_ptr<Material> material;
 
-		std::shared_ptr<Drawable> drawable;
+		std::shared_ptr<IDrawable> drawable;
 	};
 }

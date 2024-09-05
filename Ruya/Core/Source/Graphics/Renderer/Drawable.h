@@ -3,7 +3,7 @@
 
 namespace Ruya
 {
-	struct Drawable
+	struct IDrawable
 	{
 		RVkMeshBuffer meshBuffer;
 	};

@@ -15,6 +15,31 @@ namespace Ruya
 	class RVulkan;
 	class EngineUI;
 
+	struct RVkMaterialPipeline
+	{
+		VkPipeline pipeline;
+		VkPipelineLayout layout;
+	};
+
+	struct RVkMaterialInstance
+	{
+		RVkMaterialPipeline* pipeline;
+		VkDescriptorSet materialSet;
+		//MaterialPass passType;
+	};
+
+	struct RVkRenderObject
+	{
+		uint32_t indexCount;
+		uint32_t firstIndex;
+		VkBuffer indexBuffer;
+
+		RVkMaterialInstance* material;
+
+		glm::mat4 transform;
+		VkDeviceAddress vertexBufferAddress;
+	};
+
 	struct GPUSceneData
 	{
 		math::mat4 view;

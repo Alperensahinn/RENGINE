@@ -10,7 +10,7 @@ namespace Ruya
 	class RVulkan;
 	class Camera;
 	class RenderQueue;
-	struct Drawable;
+	struct IDrawable;
 
 	class Renderer
 	{
@@ -25,10 +25,10 @@ namespace Ruya
 		void DrawFrame();
 		RVulkan* GetRendererBackend();
 
-		std::shared_ptr<Drawable> LoadMesh(std::shared_ptr<Mesh> mesh);
+		std::shared_ptr<IDrawable> LoadMesh(std::shared_ptr<Mesh> mesh);
 		void BindCamera(Camera* camera);
 
-		void AddToRenderQueue(std::shared_ptr<Drawable> mesh);
+		void AddToRenderQueue(std::shared_ptr<IDrawable> mesh);
 
 	private:
 		void Init(GLFWwindow& window);

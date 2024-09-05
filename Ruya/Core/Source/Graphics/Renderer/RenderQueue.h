@@ -16,12 +16,12 @@ namespace Ruya
 		RenderQueue& operator=(const RenderQueue&) = delete;
 
 	public:
-		std::shared_ptr<Drawable> Pop();
-		void Push(std::shared_ptr<Drawable> mesh);
+		std::shared_ptr<IDrawable> Pop();
+		void Push(std::shared_ptr<IDrawable> mesh);
 
 		bool IsEmpty();;
 
 	private:
-		std::queue<std::shared_ptr<Drawable>> meshQueue;
+		std::queue<std::shared_ptr<IDrawable>> meshQueue;
 	};
 }
