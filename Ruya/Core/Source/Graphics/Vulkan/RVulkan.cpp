@@ -879,6 +879,11 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateDescriptorSetLayout(pRVulkan->pDevice, &createInfo, nullptr, &pRVulkan->singleImageDescriptorLayout));
 
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->singleImageDescriptorLayout, nullptr);
+			});
+
 		RLOG("[VULKAN] Descriptor sets created.");
 	}
 
