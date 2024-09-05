@@ -61,7 +61,17 @@ namespace Ruya
 		void ClearDescriptors(RVulkan* pRVulkan);
 		void DestroyPool(RVulkan* pRVulkan);
 
-		VkDescriptorSet Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout);
+		VkDescriptorSet Allocate(RVulkan* pRVulkan, VkDescriptorSetLayout layout, void* pNext);
+
+	private:
+		VkDescriptorPool GetPool(RVulkan* pRVulkan);
+		VkDescriptorPool CreatePool(RVulkan* pRVulkan, uint32_t setCount, std::span<PoolSizeRatio> poolRatios);
+
+
+		std::vector<PoolSizeRatio> ratios;
+		std::vector<VkDescriptorPool> fullPools;
+		std::vector<VkDescriptorPool> emptyPools;
+		uint32_t setsPerPool;
 	};
 
 	struct RVkFrameData
