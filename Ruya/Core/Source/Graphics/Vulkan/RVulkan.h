@@ -274,7 +274,6 @@ namespace Ruya
 		VkDescriptorSetLayout gpuSceneDataDescriptorSetLayout;
 
 		RVkMetallicRoughness metallicRoughnessPipeline;
-		RVkMaterialInstance defaultData;
 		VkSampler defaultSamplerNearest;
 
 

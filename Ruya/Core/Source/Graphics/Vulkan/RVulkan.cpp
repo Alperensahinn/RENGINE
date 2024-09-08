@@ -65,6 +65,11 @@ namespace Ruya
 
 			frames[i].descriptorAllocator = RVkDescriptorAllocator{};
 			frames[i].descriptorAllocator.InitPool(this, 1000, frame_sizes);
+
+			deletionQueue.PushFunction([=]()
+				{
+					frames[i].descriptorAllocator.DestroyPool(this);
+				});
 		}
 
 		std::vector<RVkDescriptorAllocator::PoolSizeRatio> frame_sizes =
@@ -76,6 +81,11 @@ namespace Ruya
 		};
 
 		globalDescriptorAllocator.InitPool(this, 1000, frame_sizes);
+
+		deletionQueue.PushFunction([=]()
+			{
+				globalDescriptorAllocator.DestroyPool(this);
+			});
 
 		rvkCreatePipelines(this);
 		rvkCreateEngineUIDescriptorPool(this);
@@ -1173,6 +1183,11 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewInfo, nullptr, &(image.imageView)));
 
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				rvkDestroyImage(pRVulkan, image);
+			});
+
 		return image;
 	}
 
@@ -1206,6 +1221,11 @@ namespace Ruya
 
 		rvkDestoryBuffer(pRVulkan, stgBuffer);
 
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				rvkDestroyImage(pRVulkan, image);
+			});
+
 		return image;
 	}
 
@@ -1218,6 +1238,11 @@ namespace Ruya
 	void rvkCreatePipelines(RVulkan* pRVulkan)
 	{
 		pRVulkan->metallicRoughnessPipeline.BuildPipelines(pRVulkan);
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				pRVulkan->metallicRoughnessPipeline.ClearResources(pRVulkan);
+			});
 	}
 
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
@@ -1648,11 +1673,14 @@ namespace Ruya
 
 		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
 		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
+
 	}
 
 	void RVkMetallicRoughness::ClearResources(RVulkan* pRVulkan)
 	{
-
+		vkDestroyDescriptorSetLayout(pRVulkan->pDevice, materialLayout, nullptr);
+		vkDestroyPipelineLayout(pRVulkan->pDevice, opaquePipeline.layout, nullptr);
+		vkDestroyPipeline(pRVulkan->pDevice, opaquePipeline.pipeline, nullptr);
 	}
 
 	RVkMaterialInstance RVkMetallicRoughness::WriteMaterial(RVulkan* pRVulkan, MaterialPass pass, const MaterialResources& resources, RVkDescriptorAllocator& descriptorAllocator)
