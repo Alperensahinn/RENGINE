@@ -118,14 +118,8 @@
     <ClInclude Include="Source\GameFramework\RObject.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Graphics\DefaultObjects\DefaultCube.h">
-      <Filter>Graphics\DefaultObjects</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Graphics\Mesh.h">
       <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Graphics\Renderer\Drawable.h">
-      <Filter>Graphics\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Renderer\RenderQueue.h">
       <Filter>Graphics\Renderer</Filter>

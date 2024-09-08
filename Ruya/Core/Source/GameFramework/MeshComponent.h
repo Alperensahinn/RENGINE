@@ -3,8 +3,6 @@
 
 #include <Graphics/Renderer/RenderObject.h>
 
-#include "../Graphics/Renderer/Drawable.h"
-
 #include <memory>
 
 namespace Ruya

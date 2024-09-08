@@ -2,7 +2,6 @@
 #include "../Mesh.h"
 #include <queue>
 #include <memory>
-#include "Drawable.h"
 #include <Graphics/Vulkan/RVulkan.h>
 #include "RenderObject.h"
 

@@ -15,6 +15,13 @@ namespace Ruya
 	class RVulkan;
 	class EngineUI;
 
+	struct RVkRenderContext
+	{
+		VkDevice pDevice;
+		VmaAllocator pVmaAllocator;
+	};
+
+
 	enum class MaterialPass : uint8_t 
 	{
 		MainColor,
@@ -97,6 +104,12 @@ namespace Ruya
 
 		RDeletionQueue deletionQueue;
 		RVkDescriptorAllocator descriptorAllocator;
+
+		void ResetFrame(RVulkan* pRVulkan);
+		uint32_t GetNextImage(RVulkan* pRVulkan);
+		void BeginFrame(RVulkan* pRVulkan);
+		void EndFrame(RVulkan* pRVulkan);
+		void SubmitCommandBuffer(RVulkan* pRVulkan);
 	};
 
 	struct RVkAllocatedImage
@@ -247,6 +260,7 @@ namespace Ruya
 		VkDescriptorSet drawImageDescriptors;
 		VkDescriptorSetLayout drawImageDescriptorLayout;
 		VkExtent2D drawExtent;
+		uint32_t currentImageIndex;
 
 		VmaAllocator vmaAllocator;
 		RDeletionQueue deletionQueue;
@@ -276,6 +290,8 @@ namespace Ruya
 		RVkMetallicRoughness metallicRoughnessPipeline;
 		VkSampler defaultSamplerNearest;
 
+	private:
+		VkRenderingInfo renderInfo;
 
 	public:
 		RVulkan(GLFWwindow& window);
@@ -289,14 +305,15 @@ namespace Ruya
 		void WaitDeviceForCleanUp();
 		void CleanUp();
 
-		void Draw(EngineUI* pEngineUI, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
+
+		void BeginDraw();
+		void Draw(RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
+		void DrawEngineUI(EngineUI* pEngineUI);
+		void EndDraw();
+
 		RVkFrameData& GetCurrentFrame();
 
 		void ResizeSwapChain();
-
-	private:
-		void DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView);
-		void DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
 	};
 
 	void rvkCreateInstance(RVulkan* pRVulkan);
@@ -336,6 +353,9 @@ namespace Ruya
 	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, void* data, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
 	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
 	void rvkCreatePipelines(RVulkan* pRVulkan);
+
+
+	void rvkWaitFences(RVulkan* pRVulkan, VkFence fence);
 }
 
 

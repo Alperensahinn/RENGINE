@@ -159,9 +159,7 @@
     <ClInclude Include="Source\GameFramework\MeshComponent.h" />
     <ClInclude Include="Source\GameFramework\RGame.h" />
     <ClInclude Include="Source\GameFramework\RObject.h" />
-    <ClInclude Include="Source\Graphics\DefaultObjects\DefaultCube.h" />
     <ClInclude Include="Source\Graphics\Mesh.h" />
-    <ClInclude Include="Source\Graphics\Renderer\Drawable.h" />
     <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h" />
     <ClInclude Include="Source\Graphics\Renderer\Material.h" />
     <ClInclude Include="Source\Graphics\Renderer\RenderObject.h" />

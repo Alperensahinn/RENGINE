@@ -125,62 +125,75 @@ namespace Ruya
 		vkDestroyInstance(pInstance, nullptr);
 	}
 
-	void RVulkan::Draw(EngineUI* pEngineUI, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix)
+	void RVulkan::BeginDraw()
 	{
-		CHECK_VKRESULT_DEBUG(vkWaitForFences(pDevice, 1, &GetCurrentFrame().renderFence, VK_TRUE, UINT64_MAX));
-		CHECK_VKRESULT_DEBUG(vkResetFences(pDevice, 1, &GetCurrentFrame().renderFence));
+		RVkFrameData frameData = GetCurrentFrame();
 
-		GetCurrentFrame().deletionQueue.flush();
-		GetCurrentFrame().descriptorAllocator.ClearDescriptors(this);
+		rvkWaitFences(this, frameData.renderFence);
 
-		uint32_t imageIndex;
-		VkResult nextImageResult = vkAcquireNextImageKHR(pDevice, pSwapChain, UINT64_MAX, GetCurrentFrame().swapchainSemaphore, nullptr, &imageIndex);
+		frameData.ResetFrame(this);
 
-		if(nextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
-		{
-			resizeRequest = true;
+		currentImageIndex = frameData.GetNextImage(this);
+		if (currentImageIndex == -1)
 			return;
-		}
 
-		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
-		CHECK_VKRESULT_DEBUG(vkResetCommandBuffer(cmdBuffer, 0));
-
-		VkCommandBufferBeginInfo cmdBufferbeginInfo = rvkCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		frameData.BeginFrame(this);
 
 		drawExtent.width = drawImage.imageExtent.width;
 		drawExtent.height = drawImage.imageExtent.height;
 
-		CHECK_VKRESULT_DEBUG(vkBeginCommandBuffer(cmdBuffer, &cmdBufferbeginInfo));
+		VkViewport viewport = {};
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.width = drawExtent.width;
+		viewport.height = drawExtent.height;
+		viewport.minDepth = 1.f;
+		viewport.maxDepth = 0.f;
 
-		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		vkCmdSetViewport(frameData.mainCommandBuffer, 0, 1, &viewport);
 
-		VkClearColorValue clearValue = { { 0.0f, 0.0f, 0.0f, 1.0f } };
-		VkImageSubresourceRange clearRange = rvkImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+		VkRect2D scissor = {};
+		scissor.offset.x = 0;
+		scissor.offset.y = 0;
+		scissor.extent.width = drawExtent.width;
+		scissor.extent.height = drawExtent.height;
 
-		vkCmdClearColorImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		vkCmdSetScissor(frameData.mainCommandBuffer, 0, 1, &scissor);
+	}
 
-		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		rvkTransitionImage(cmdBuffer, depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+	void RVulkan::Draw(RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix)
+	{
+		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
-		DrawGeometry(cmdBuffer, meshBuffer, materialInstance, viewMatrix);
+		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkRenderingAttachmentInfo depthAttachment = rvkDepthAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-		DrawEngineUI(pEngineUI, cmdBuffer, drawImage.imageView);
+		renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 
-		rvkTransitionImage(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		vkCmdBeginRendering(cmdBuffer, &renderInfo);
+		
+		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialInstance.pipeline->pipeline);
+		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialInstance.pipeline->layout, 0, 1, &materialInstance.materialSet, 0, nullptr);
 
-		rvkCopyImageToImage(cmdBuffer, drawImage.image, swapChainImages[imageIndex], drawExtent, swapChainExtent);
+		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)1600 / (float)900, 0.1f, 100.0f);
+		glm::mat4 model = glm::mat4(1.0f);
+		proj[1][1] *= -1;
+		RVkDrawPushConstants push_constants;
+		push_constants.worldMatrix = proj * viewMatrix * model;
+		push_constants.vertexBuffer = meshBuffer.vertexBufferAddress;
+		vkCmdPushConstants(cmdBuffer, materialInstance.pipeline->layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
+		
+		vkCmdBindIndexBuffer(cmdBuffer, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
+		vkCmdDrawIndexed(cmdBuffer, meshBuffer.indexCount, 1, 0, 0, 0);
 
-		rvkTransitionImage(cmdBuffer, swapChainImages[imageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		vkCmdEndRendering(cmdBuffer);
+	}
 
-		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(cmdBuffer));
-
-		VkCommandBufferSubmitInfo cmdBufferSubmitInfo = rvkCommandBufferSubmitInfo(cmdBuffer);
-		VkSemaphoreSubmitInfo waitSempSubmitInfo = rvkSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, GetCurrentFrame().swapchainSemaphore);
-		VkSemaphoreSubmitInfo signalSempSubmitInfo = rvkSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, GetCurrentFrame().renderSemaphore);
-		VkSubmitInfo2 submitInfo = rvkSubmitInfo(&cmdBufferSubmitInfo, &signalSempSubmitInfo, &waitSempSubmitInfo);
-
-		CHECK_VKRESULT_DEBUG(vkQueueSubmit2(pGraphicsQueue, 1, &submitInfo, GetCurrentFrame().renderFence));
+	void RVulkan::EndDraw()
+	{
+		RVkFrameData frameData = GetCurrentFrame();
+		frameData.EndFrame(this);
+		frameData.SubmitCommandBuffer(this);
 
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -191,7 +204,7 @@ namespace Ruya
 		presentInfo.pWaitSemaphores = &GetCurrentFrame().renderSemaphore;
 		presentInfo.waitSemaphoreCount = 1;
 
-		presentInfo.pImageIndices = &imageIndex;
+		presentInfo.pImageIndices = &currentImageIndex;
 
 		VkResult queuePresentResult = vkQueuePresentKHR(pGraphicsQueue, &presentInfo);
 
@@ -214,64 +227,19 @@ namespace Ruya
 		resizeRequest = false;
 	}
 
-	void RVulkan::DrawEngineUI(EngineUI* pEngineUI, VkCommandBuffer cmd, VkImageView targetImageView)
+	void RVulkan::DrawEngineUI(EngineUI* pEngineUI)
 	{
-		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(targetImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
+
+		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(swapChainExtent, &colorAttachment, nullptr);
 
-		vkCmdBeginRendering(cmd, &renderInfo);
-
-		pEngineUI->DrawData(cmd);
-
-		vkCmdEndRendering(cmd);
-	}
-
-	void RVulkan::DrawGeometry(VkCommandBuffer cmdBuffer, RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix)
-	{
-		VkRenderingAttachmentInfo colorAttachment = rvkCreateAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		VkRenderingAttachmentInfo depthAttachment = rvkDepthAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
-
-		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
-		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialInstance.pipeline->pipeline);
-
-		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialInstance.pipeline->layout, 0, 1, &materialInstance.materialSet, 0, nullptr);
-
-		VkViewport viewport = {};
-		viewport.x = 0;
-		viewport.y = 0;
-		viewport.width = drawExtent.width;
-		viewport.height = drawExtent.height;
-		viewport.minDepth = 1.f;
-		viewport.maxDepth = 0.f;
-
-		vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
-
-		VkRect2D scissor = {};
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		scissor.extent.width = drawExtent.width;
-		scissor.extent.height = drawExtent.height;
-
-		vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
-
-		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)1600 / (float)900, 0.1f, 100.0f);
-		glm::mat4 model = glm::mat4(1.0f);
-		proj[1][1] *= -1;
-
-		RVkDrawPushConstants push_constants;
-		push_constants.worldMatrix = proj * viewMatrix * model;
-		push_constants.vertexBuffer = meshBuffer.vertexBufferAddress;
-
-		vkCmdPushConstants(cmdBuffer, materialInstance.pipeline->layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
-		vkCmdBindIndexBuffer(cmdBuffer, meshBuffer.indexBuffer.buffer, 0, VK_INDEX_TYPE_UINT32);
-
-		vkCmdDrawIndexed(cmdBuffer, meshBuffer.indexCount, 1, 0, 0, 0);
+		pEngineUI->DrawData(cmdBuffer);
 
 		vkCmdEndRendering(cmdBuffer);
 	}
-
 
 	void rvkCreateInstance(RVulkan* pRVulkan)
 	{
@@ -1245,6 +1213,12 @@ namespace Ruya
 			});
 	}
 
+	void rvkWaitFences(RVulkan* pRVulkan, VkFence fence)
+	{
+		CHECK_VKRESULT_DEBUG(vkWaitForFences(pRVulkan->pDevice, 1, &fence, VK_TRUE, UINT64_MAX));
+		CHECK_VKRESULT_DEBUG(vkResetFences(pRVulkan->pDevice, 1, &fence));
+	}
+
 	void RVkDescriptorLayoutBuilder::AddBinding(uint32_t binding, VkDescriptorType descriptorType)
 	{
 		VkDescriptorSetLayoutBinding descriptorSetLayoutBinding = {};
@@ -1700,5 +1674,59 @@ namespace Ruya
 		writer.UpdateDescriptorSets(pRVulkan, matData.materialSet);
 
 		return matData;
+	}
+	void RVkFrameData::ResetFrame(RVulkan* pRVulkan)
+	{
+		deletionQueue.flush();
+		descriptorAllocator.ClearDescriptors(pRVulkan);
+		CHECK_VKRESULT_DEBUG(vkResetCommandBuffer(mainCommandBuffer, 0));
+	}
+	uint32_t RVkFrameData::GetNextImage(RVulkan* pRVulkan)
+	{
+		uint32_t imageIndex;
+		VkResult nextImageResult = vkAcquireNextImageKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, UINT64_MAX, swapchainSemaphore, nullptr, &imageIndex);
+
+		if (nextImageResult == VK_ERROR_OUT_OF_DATE_KHR)
+		{
+			pRVulkan->resizeRequest = true;
+			return -1;
+		}
+
+		return imageIndex;
+	}
+
+	void RVkFrameData::BeginFrame(RVulkan* pRVulkan)
+	{
+		VkCommandBufferBeginInfo cmdBufferbeginInfo = rvkCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		CHECK_VKRESULT_DEBUG(vkBeginCommandBuffer(mainCommandBuffer, &cmdBufferbeginInfo));
+
+		VkClearColorValue clearValue = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+		VkImageSubresourceRange clearRange = rvkImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+
+		rvkTransitionImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		rvkTransitionImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		rvkTransitionImage(mainCommandBuffer, pRVulkan->depthImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+	}
+
+	void RVkFrameData::EndFrame(RVulkan* pRVulkan)
+	{
+		rvkTransitionImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		rvkTransitionImage(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+		rvkCopyImageToImage(mainCommandBuffer, pRVulkan->drawImage.image, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], pRVulkan->drawExtent, pRVulkan->swapChainExtent);
+
+		rvkTransitionImage(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(mainCommandBuffer));
+	}
+	void RVkFrameData::SubmitCommandBuffer(RVulkan* pRVulkan)
+	{
+		VkCommandBufferSubmitInfo cmdBufferSubmitInfo = rvkCommandBufferSubmitInfo(mainCommandBuffer);
+		VkSemaphoreSubmitInfo waitSempSubmitInfo = rvkSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, swapchainSemaphore);
+		VkSemaphoreSubmitInfo signalSempSubmitInfo = rvkSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, renderSemaphore);
+		VkSubmitInfo2 submitInfo = rvkSubmitInfo(&cmdBufferSubmitInfo, &signalSempSubmitInfo, &waitSempSubmitInfo);
+
+		CHECK_VKRESULT_DEBUG(vkQueueSubmit2(pRVulkan->pGraphicsQueue, 1, &submitInfo, renderFence));
 	}
 }

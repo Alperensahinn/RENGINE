@@ -1,10 +1,8 @@
 #include "Renderer.h"
-#include "../DefaultObjects/DefaultCube.h"
 #include "../../Utilities/FileSystem/FileSystem.h"
 #include "../Mesh.h"
 #include "../../Scene/Camera.h"
 #include "RenderQueue.h"
-#include "Drawable.h"
 #include <memory>
 
 namespace Ruya 
@@ -27,12 +25,18 @@ namespace Ruya
 			pRVulkan->ResizeSwapChain();
 		}
 
+		pRVulkan->BeginDraw();
+
 		while(!renderQueue->IsEmpty())
 		{
 			std::shared_ptr<RenderObject> renderObject = renderQueue->Pop();
 			
-			pRVulkan->Draw(pEngineUI, renderObject->mesh.meshBuffer, renderObject->material.material, camera->GetViewMatrix());
+			pRVulkan->Draw(renderObject->mesh.meshBuffer, renderObject->material.material, camera->GetViewMatrix());
 		}
+
+		pRVulkan->DrawEngineUI(pEngineUI);
+
+		pRVulkan->EndDraw();
 	}
 
 	RVulkan* Renderer::GetRendererBackend()
