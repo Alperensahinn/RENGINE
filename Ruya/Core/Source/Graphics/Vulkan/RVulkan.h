@@ -59,7 +59,7 @@ namespace Ruya
 		VkDeviceAddress vertexBufferAddress;
 	};
 
-	struct GPUSceneData
+	struct RVkGlobalUniformData
 	{
 		math::mat4 view;
 		math::mat4 proj;
@@ -170,9 +170,11 @@ namespace Ruya
 
 	struct RVkAllocatedBuffer
 	{
-		VkBuffer buffer;
-		VmaAllocation allocation;
-		VmaAllocationInfo allocationInfo;
+		VkBuffer vkBuffer;
+		VmaAllocation vmaAllocation;
+		VmaAllocationInfo vmaAllocationInfo;
+
+		void Destroy(RVulkan* pRvulkan);
 	};
 
 	struct RVkMeshBuffer
@@ -185,7 +187,7 @@ namespace Ruya
 
 	struct RVkDrawPushConstants 
 	{
-		math::mat4 worldMatrix;
+		math::mat4 model;
 		VkDeviceAddress vertexBuffer;
 	};
 
@@ -239,14 +241,18 @@ namespace Ruya
 #endif
 	public:
 		VkInstance	pInstance;
+		VkDebugUtilsMessengerEXT pDebugUtilsMessanger;
 		VkPhysicalDevice pPhysicalDevice;
 		VkDevice pDevice;
 		VkSurfaceKHR pSurface;
-
-		VkDebugUtilsMessengerEXT pDebugUtilsMessanger;
-
+		
 		uint32_t graphicsQueueIndex;
+		uint32_t transferQueueIndex;
+		uint32_t computeQueueIndex;
+
 		VkQueue pGraphicsQueue;
+		VkQueue pTransferQueue;
+		VkQueue pComputeQueue;
 		VkQueue pPresentQueue;
 
 		VkSwapchainKHR pSwapChain;
@@ -284,8 +290,8 @@ namespace Ruya
 
 		bool resizeRequest = false;
 
-		GPUSceneData sceneData;
-		VkDescriptorSetLayout gpuSceneDataDescriptorSetLayout;
+		RVkGlobalUniformData globalUniformData;
+		VkDescriptorSetLayout globalUniformDataDescriptorLayout;
 
 		RVkMetallicRoughness metallicRoughnessPipeline;
 		VkSampler defaultSamplerNearest;
@@ -310,50 +316,119 @@ namespace Ruya
 		void Draw(RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
 		void DrawEngineUI(EngineUI* pEngineUI);
 		void EndDraw();
-
 		RVkFrameData& GetCurrentFrame();
 
 		void ResizeSwapChain();
 	};
 
-	void rvkCreateInstance(RVulkan* pRVulkan);
-	bool rvkCheckValidationLayerSupport(RVulkan* pRVulkan);
-	void rvkCreateDebugMessenger(RVulkan* pRVulkan);
-	void rvkDestroyDebugUtilsMessenger(RVulkan* pRVulkan);
-	void rvkSelectPhysicalDevice(RVulkan* pRVulkan);
-	void rvkCheckQueueFamilies(RVulkan* pRVulkan);
-	void rvkCreateDevice(RVulkan* pRVulkan);
-	void rvkSetQueues(RVulkan* pRVulkan);
-	void rvkCreateWindowSurface(RVulkan* pRVulkan);
-	void rvkCreateSwapChain(RVulkan* pRVulkan);
-	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode);
-	void rvkCreateCommandPool(RVulkan* pRVulkan);
-	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
-	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
-	VkCommandBufferBeginInfo rvkCommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
-	void rvkTransitionImage(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
-	VkImageSubresourceRange rvkImageSubresourceRange(VkImageAspectFlags aspectMask);
-	VkCommandBufferSubmitInfo rvkCommandBufferSubmitInfo(VkCommandBuffer cmdBuffer);
-	VkSemaphoreSubmitInfo rvkSemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
-	VkSubmitInfo2 rvkSubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
-	VkImageCreateInfo rvkImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
-	VkImageViewCreateInfo rvkImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
-	void rvkCopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
 	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan);
-	VkRenderingAttachmentInfo rvkCreateAttachmentInfo(VkImageView view, VkClearValue* clear, VkImageLayout layout);
-	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
-	VkPipelineShaderStageCreateInfo rvkCreateShaderStageInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag);
-	RVkAllocatedBuffer rvkCreateBuffer(RVulkan* pRulkan, size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);
-	void rvkDestoryBuffer(RVulkan* pRulkan, RVkAllocatedBuffer& buffer);
-	RVkMeshBuffer rvkLoadMesh(RVulkan* pRVulkan, std::vector<Vertex> vertices, std::vector<uint32_t> indices);
-	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function);
-	VkRenderingAttachmentInfo  rvkDepthAttachmentInfo(VkImageView view, VkImageLayout layout);
-	void rvkResizeSwapChain(RVulkan* pRVulkan);
-	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
-	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, void* data, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
-	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
 	void rvkCreatePipelines(RVulkan* pRVulkan);
 
+
+	//Init functions
+
+	//Create vulkan instance
+	bool rvkCheckValidationLayerSupport(RVulkan* pRVulkan);
+	void rvkCreateInstance(RVulkan* pRVulkan);
+
+	//Setup debug messenger
+	void rvkCreateDebugMessenger(RVulkan* pRVulkan);
+	void rvkDestroyDebugUtilsMessenger(RVulkan* pRVulkan);
+
+	//Get phisycal device and avaiable ques;
+	void rvkSelectPhysicalDevice(RVulkan* pRVulkan);
+
+	void rvkCheckQueueFamilies(RVulkan* pRVulkan);
+
+	//Create device and queues
+	void rvkCreateDevice(RVulkan* pRVulkan);
+
+	void rvkSetQueues(RVulkan* pRVulkan);
+
+	//Create window surface for swap chain
+	void rvkCreateWindowSurface(RVulkan* pRVulkan);
+
+	//create swapchain
+	void rvkCreateSwapChain(RVulkan* pRVulkan);
+
+	//Create command pool and command buffers for all frames and immediate submit
+	void rvkCreateCommandPool(RVulkan* pRVulkan);
+
+	//Create sempahores and fences for all frames and immediate submit
+	void rvkCreateSynchronizationObjects(RVulkan* pRVulkan);
+
+	//Create Vulkan Memory Allocator for allocation resources (Vma libary instance)
+	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
+
+
+	//Helper functions
+
+	//Create shader module from bytecode
+	VkShaderModule rvkCreateShaderModule(RVulkan* pRVulkan, std::vector<char>& shaderCode);
+
+	//Creates and returns command buffer begin info for general usage
+	VkCommandBufferBeginInfo rvkCreateCommandBufferBeginInfo(VkCommandBufferUsageFlags flags);
+
+	//Creates and returns command buffer submit info for general usage
+	VkCommandBufferSubmitInfo rvkCreateCommandBufferSubmitInfo(VkCommandBuffer cmdBuffer);
+	
+	//Creates and returns semaphore submit info for general usage
+	VkSemaphoreSubmitInfo rvkCreateSemaphoreSubmitInfo(VkPipelineStageFlags2 stageMask, VkSemaphore semaphore);
+
+	//Creates and returns queue submit info for general usage
+	VkSubmitInfo2 rvkCreateQueueSubmitInfo(VkCommandBufferSubmitInfo* cmdBufferInfo, VkSemaphoreSubmitInfo* signalSemaphore, VkSemaphoreSubmitInfo* waitSemaphore);
+
+	//Creates and returns rendering attachment info  for general usage
+	VkRenderingAttachmentInfo rvkCreateRenderingAttachmentInfo(VkImageView view, VkClearValue* clear, VkImageLayout layout);
+
+	//Creates and returns rendering attachment info  for depth buffer
+	VkRenderingAttachmentInfo  rvkCreateDepthRenderingAttachmentInfo(VkImageView view, VkImageLayout layout);
+
+	//Creates and returns rendering info  for general usage
+	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
+
+	//Changes image layout
+	void rvkImageLayoutTransition(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
+
+	//Gets image subresource range
+	VkImageSubresourceRange rvkGetImageSubresourceRange(VkImageAspectFlags aspectMask);
+
+	//Creates and returns image create info for general usage
+	VkImageCreateInfo rvkCreateImageCreateInfo(VkFormat format, VkImageUsageFlags imageUsageFlags, VkExtent3D extent);
+
+	//Creates and returns image view info for general usage
+	VkImageViewCreateInfo rvkCreateImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
+
+	//Copies one image to another in gpu memory
+	void rvkCopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
+
+	//Creates image on gpu side
+	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
+	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, void* data, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped = false);
+
+	//Destroy image on gpu side
+	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
+
+	//Creates and returns pipeline shaderStage create info for general usage
+	VkPipelineShaderStageCreateInfo rvkCreatePipelineShaderStageCreateInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag);
+
+	//Creates buffer
+	RVkAllocatedBuffer rvkCreateBuffer(RVulkan* pRulkan, size_t allocSize, VkBufferUsageFlags usageFlags, VmaMemoryUsage memoryUsage);
+
+	//Destroy buffer
+	void rvkDestoryBuffer(RVulkan* pRulkan, RVkAllocatedBuffer& buffer);
+
+	//Creates mesh buffer on gpu side
+	RVkMeshBuffer rvkCreateMeshBuffer(RVulkan* pRVulkan, std::vector<Vertex> vertices, std::vector<uint32_t> indices);
+	
+	//Destroy mesh buffer on gpu side
+	void DestroyMeshBuffer(RVulkan* pRVulkan, RVkMeshBuffer& meshBuffer);
+
+	//Immediately submits data to gpu
+	void rvkImmediateSubmit(RVulkan* pRVulkan, std::function<void(VkCommandBuffer cmd)>&& function);
+
+	//Destroy old and create new swapchain 
+	void rvkResizeSwapChain(RVulkan* pRVulkan);
 
 	void rvkWaitFences(RVulkan* pRVulkan, VkFence fence);
 }

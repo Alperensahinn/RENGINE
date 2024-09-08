@@ -47,7 +47,7 @@ namespace Ruya
 	RenderObject Renderer::CreateRenderObject(std::shared_ptr<Mesh> mesh, std::shared_ptr<Texture> texture)
 	{	
 		RenderObject renderObject;
-		renderObject.mesh.meshBuffer = rvkLoadMesh(pRVulkan, mesh->vertices, mesh->indices);
+		renderObject.mesh.meshBuffer = rvkCreateMeshBuffer(pRVulkan, mesh->vertices, mesh->indices);
 
 		RVkMetallicRoughness::MaterialResources materialResources = {};
 		materialResources.albedoImage = texture->image;
