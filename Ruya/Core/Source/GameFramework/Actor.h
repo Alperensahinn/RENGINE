@@ -27,6 +27,8 @@ namespace Ruya
 		void Start();
 		void Update();
 
+		void CleanUp();
+
 		void SetID(unsigned int id);
 		unsigned int GetID();
 

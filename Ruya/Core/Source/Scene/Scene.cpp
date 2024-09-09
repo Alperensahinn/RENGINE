@@ -31,6 +31,17 @@ void Ruya::Scene::Update()
 	}
 }
 
+void Ruya::Scene::CleanUp()
+{
+	for (auto& pair : actorMap)
+	{
+		if (pair.second)
+		{
+			pair.second->CleanUp();
+		}
+	}
+}
+
 void Ruya::Scene::InitAvaibleActorIDs()
 {
 	avaibleActorIDs.push(0);

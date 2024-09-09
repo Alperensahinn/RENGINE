@@ -17,6 +17,10 @@ void Ruya::ActorComponent::Update()
 
 }
 
+void Ruya::ActorComponent::CleanUp()
+{
+}
+
 void Ruya::ActorComponent::SetUpdateFunctionEnable(bool b)
 {
 	bCanEverUpdate = b;

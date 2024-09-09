@@ -34,15 +34,7 @@ ProjectB::ProjectB()
 	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\Monkey.glb");
 	Ruya::Texture texture;
 	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels.data(), VkExtent3D{ 16, 16, 1 }, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-	
-	VkSamplerCreateInfo samplerCreateInfo = {};
-	samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
-	samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
-	
-	VkSampler sampler;
-	vkCreateSampler(Ruya::Engine::GetInstance().GetRenderer().pRVulkan->pDevice, &samplerCreateInfo, nullptr, &sampler);
-	texture.sampler = sampler;
+	texture.sampler = Ruya::rvkCreateSampler(Ruya::Engine::GetInstance().GetRenderer().pRVulkan);
 
 	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, texture));
 	meshComponent->SetRenderObject(renderObject);

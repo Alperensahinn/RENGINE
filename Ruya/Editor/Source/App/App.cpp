@@ -31,6 +31,6 @@ void REditor::App::Init()
 
 void REditor::App::CleanUp()
 {
-
+	game->CleanUp();
 }
 

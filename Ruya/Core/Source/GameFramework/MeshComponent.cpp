@@ -23,6 +23,13 @@ void Ruya::MeshComponent::Update()
 	Engine::GetInstance().GetRenderer().AddToRenderQueue(renderObject);
 }
 
+void Ruya::MeshComponent::CleanUp()
+{
+	ActorComponent::CleanUp();
+
+	renderObject->Destroy();
+}
+
 void Ruya::MeshComponent::SetRenderObject(std::shared_ptr<RenderObject> renderObject)
 {
 	this->renderObject = renderObject;

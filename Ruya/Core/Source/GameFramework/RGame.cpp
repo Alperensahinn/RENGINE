@@ -48,3 +48,14 @@ void Ruya::RGame::InitAvaibleSceneIDs()
 	avaibleSceneIDs.push(0);
 	maxAvaibleSceneID = 0;
 }
+
+void Ruya::RGame::CleanUp()
+{
+	for (auto& pair : sceneMap) 
+	{
+		if (pair.second) 
+		{
+			pair.second->CleanUp();
+		}
+	}
+}

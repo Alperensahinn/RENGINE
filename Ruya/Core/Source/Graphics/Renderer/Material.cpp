@@ -26,4 +26,9 @@ void Ruya::PBRMaterial::SetResources(MaterialResources resources)
 	writer.UpdateDescriptorSets(Engine::GetInstance().GetRenderer().pRVulkan, descriptorSet);
 }
 
+void Ruya::PBRMaterial::Destroy()
+{
+	resources.albedoTexture.Destroy();
+}
+
 

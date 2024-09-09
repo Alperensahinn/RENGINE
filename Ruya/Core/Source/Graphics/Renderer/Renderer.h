@@ -2,8 +2,6 @@
 #include "../Vulkan/RVulkan.h"
 #include "../../EngineUI/EngineUI.h"
 #include "../../Collections/RDeletionQueue.h"
-#include "RenderObject.h"
-#include "Texture.h"
 #include "../Mesh.h"
 
 struct GLFWwindow;
@@ -13,6 +11,8 @@ namespace Ruya
 	class RVulkan;
 	class Camera;
 	class RenderQueue;
+	struct Texture;
+	struct RenderObject;
 
 	class Renderer
 	{

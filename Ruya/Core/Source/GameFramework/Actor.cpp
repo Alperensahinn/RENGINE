@@ -37,6 +37,21 @@ void Ruya::Actor::Update()
     }
 }
 
+void Ruya::Actor::CleanUp()
+{
+    for (auto& component : components) {
+        if (component) {
+            component->CleanUp();
+        }
+    }
+
+    for (auto& component : updateFunctionEnabledComponents) {
+        if (component) {
+            component->CleanUp();
+        }
+    }
+}
+
 void Ruya::Actor::SetID(unsigned int id)
 {
     this->id = id;

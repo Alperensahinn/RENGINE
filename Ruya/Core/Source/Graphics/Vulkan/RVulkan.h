@@ -139,6 +139,8 @@ namespace Ruya
 		RVkAllocatedBuffer indexBuffer;
 		VkDeviceAddress vertexBufferAddress;
 		uint32_t indexCount;
+
+		void Destroy(RVulkan* pRVulkan);
 	};
 
 	struct RVkDrawPushConstants 
@@ -339,6 +341,10 @@ namespace Ruya
 
 	//Destroy image on gpu side
 	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
+
+	VkSampler rvkCreateSampler(RVulkan* pRVulkan);
+
+	void rvkDestroySampler(RVulkan* pRVulkan, VkSampler sampler);
 
 	//Creates and returns pipeline shaderStage create info for general usage
 	VkPipelineShaderStageCreateInfo rvkCreatePipelineShaderStageCreateInfo(VkShaderModule shaderModule, VkShaderStageFlagBits shaderStageFlag);

@@ -5,6 +5,9 @@
 #include "RenderQueue.h"
 #include <memory>
 
+#include "RenderObject.h"
+#include "Texture.h"
+
 namespace Ruya 
 {
 	Renderer::Renderer(GLFWwindow& window)

@@ -15,6 +15,8 @@ namespace Ruya
 		virtual void Start();
 		virtual void Update();
 
+		virtual void CleanUp();
+
 		void SetUpdateFunctionEnable(bool b);
 		bool GetUpdateFunctionEnabled();
 

@@ -23,6 +23,8 @@ namespace Ruya
 		void Start() override;
 		void Update() override;
 
+		void CleanUp() override;
+
 		void SetRenderObject(std::shared_ptr<RenderObject> renderObject);
 
 	private:

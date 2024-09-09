@@ -20,6 +20,7 @@ namespace Ruya
 		void Start();
 		void Update();
 
+		void CleanUp();
 	public:
 		std::unique_ptr<Scene>& AddScene(std::unique_ptr<Scene> scene);
 		void RemoveScene(unsigned int sceneID);

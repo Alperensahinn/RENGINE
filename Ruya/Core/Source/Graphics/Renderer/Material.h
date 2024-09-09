@@ -18,5 +18,6 @@ namespace Ruya
 
 		void Init(MaterialResources resources);
 		void SetResources(MaterialResources resources);
+		void Destroy();
 	};
 }

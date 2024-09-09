@@ -16,14 +16,15 @@ namespace Ruya
 	public:
 		void Start();
 		void Update();
+		
+		void CleanUp();
+	public:
+		std::unique_ptr<Actor>& AddActor(std::unique_ptr<Actor> actor);
+		void RemoveActor(unsigned int actorID);
 
 	private:
 		void InitAvaibleActorIDs();
 		void InitUpdateFunctionEnabledActors();
-
-	public:
-		std::unique_ptr<Actor>& AddActor(std::unique_ptr<Actor> actor);
-		void RemoveActor(unsigned int actorID);
 
 	private:
 		std::unordered_map<unsigned int, std::unique_ptr<Actor>> actorMap;

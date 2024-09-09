@@ -54,30 +54,6 @@ namespace Ruya
 	void RVulkan::CleanUp()
 	{
 		deletionQueue.flush();
-
-		for (int i = 0; i < frameOverlap; i++)
-		{
-			vkDestroyCommandPool(pDevice, frames[i].commandPool, nullptr);
-			vkDestroySemaphore(pDevice, frames[i].swapchainSemaphore, nullptr);
-			vkDestroySemaphore(pDevice, frames[i].renderSemaphore, nullptr);
-			vkDestroyFence(pDevice, frames[i].renderFence, nullptr);
-		}
-
-		for (int i = 0; i < swapChainImageViews.size(); i++)
-		{
-			vkDestroyImageView(pDevice, swapChainImageViews[i], nullptr);
-		}
-
-		vkDestroySwapchainKHR(pDevice, pSwapChain, nullptr);
-		vkDestroyDevice(pDevice, nullptr);
-
-		if (enableValidationLayers)
-		{
-			rvkDestroyDebugUtilsMessenger(this);
-		}
-
-		vkDestroySurfaceKHR(pInstance, pSurface, nullptr);
-		vkDestroyInstance(pInstance, nullptr);
 	}
 
 	void RVulkan::BeginDraw()
@@ -240,6 +216,11 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateInstance(&createInfo, nullptr, &(pRVulkan->pInstance)));
 
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyInstance(pRVulkan->pInstance, nullptr);
+			});
+
 		RLOG("[VULKAN] Vulkan instance created.")
 	}
 
@@ -293,6 +274,15 @@ namespace Ruya
 		{
 			RERRLOG("[VULKAN ERROR] Failed to find vkCreateDebugUtilsMessengerEXT.")
 		}
+
+		if (pRVulkan->enableValidationLayers)
+		{
+			pRVulkan->deletionQueue.PushFunction([=]()
+				{
+					rvkDestroyDebugUtilsMessenger(pRVulkan);
+				});
+		}
+
 	}
 
 	void rvkDestroyDebugUtilsMessenger(RVulkan* pRVulkan)
@@ -409,6 +399,11 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateDevice(pRVulkan->pPhysicalDevice, &deviceCreateInfo, nullptr, &(pRVulkan->pDevice)));
 
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyDevice(pRVulkan->pDevice, nullptr);
+			});
+
 		RLOG("[VULKAN] Logical device created.");
 	}
 
@@ -430,6 +425,11 @@ namespace Ruya
 		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
 
 		CHECK_VKRESULT(vkCreateWin32SurfaceKHR(pRVulkan->pInstance, &surfaceCreateInfo, nullptr, &(pRVulkan->pSurface)));
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroySurfaceKHR(pRVulkan->pInstance, pRVulkan->pSurface, nullptr);
+			});
 
 		RLOG("[VULKAN] Window surface created.")
 	}
@@ -539,6 +539,12 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateSwapchainKHR(pRVulkan->pDevice, &swapChainCreateInfo, nullptr, &(pRVulkan->pSwapChain)));
 
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroySwapchainKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, nullptr);
+			});
+
+
 		uint32_t swapChainImageCount;
 		CHECK_VKRESULT(vkGetSwapchainImagesKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, &swapChainImageCount, nullptr));
 		pRVulkan->swapChainImages.resize(swapChainImageCount);
@@ -566,6 +572,11 @@ namespace Ruya
 			imageViewCreateInfo.subresourceRange.layerCount = 1;
 
 			CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo, nullptr, &(pRVulkan->swapChainImageViews.data()[i])));
+
+			pRVulkan->deletionQueue.PushFunction([=]()
+				{
+					vkDestroyImageView(pRVulkan->pDevice, pRVulkan->swapChainImageViews[i], nullptr);
+				});
 		}
 
 
@@ -655,6 +666,11 @@ namespace Ruya
 			commandBufferAllocateInfo.commandBufferCount = 1;
 
 			CHECK_VKRESULT(vkAllocateCommandBuffers(pRVulkan->pDevice, &commandBufferAllocateInfo, &(pRVulkan->frames[i].mainCommandBuffer)));
+
+			pRVulkan->deletionQueue.PushFunction([=]()
+				{
+					vkDestroyCommandPool(pRVulkan->pDevice, pRVulkan->frames[i].commandPool, nullptr);
+				});
 		}
 		
 		CHECK_VKRESULT(vkCreateCommandPool(pRVulkan->pDevice, &commandPoolCreateInfo, nullptr, &(pRVulkan->immediateCommandPool)));
@@ -691,6 +707,13 @@ namespace Ruya
 			fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 			CHECK_VKRESULT(vkCreateFence(pRVulkan->pDevice, &fenceCreateInfo, nullptr, &(pRVulkan->frames[i].renderFence)));
+
+			pRVulkan->deletionQueue.PushFunction([=]()
+				{
+					vkDestroySemaphore(pRVulkan->pDevice, pRVulkan->frames[i].swapchainSemaphore, nullptr);
+					vkDestroySemaphore(pRVulkan->pDevice, pRVulkan->frames[i].renderSemaphore, nullptr);
+					vkDestroyFence(pRVulkan->pDevice, pRVulkan->frames[i].renderFence, nullptr);
+				});
 		}
 
 		VkFenceCreateInfo fenceCreateInfo = {};
@@ -729,7 +752,10 @@ namespace Ruya
 
 		CHECK_VKRESULT(vmaCreateAllocator(&allocatorCreateInfo, &(pRVulkan->vmaAllocator)));
 
-		pRVulkan->deletionQueue.PushFunction([vmaAllocator = pRVulkan->vmaAllocator]() {vmaDestroyAllocator(vmaAllocator);});
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vmaDestroyAllocator(pRVulkan->vmaAllocator);
+			});
 
 		RLOG("[VULKAN] Vulkan memory allocator created.")
 	}
@@ -745,6 +771,11 @@ namespace Ruya
 		};
 
 		pRVulkan->descriptorAllocator.InitPool(pRVulkan, 100, ratios);
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				pRVulkan->descriptorAllocator.DestroyPool(pRVulkan);
+			});
 	}
 
 	void rvkCreatePBRPipeline(RVulkan* pRVulkan)
@@ -795,9 +826,17 @@ namespace Ruya
 		pipelineBuilder.pipelineLayout = pipelineLayout;
 
 		pRVulkan->pbrPipeline = pipelineBuilder.BuildPipeline(pRVulkan);
+		
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayout, nullptr);
+				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineLayout, nullptr);
+				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pbrPipeline, nullptr);
+			});
 
 		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
 		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
+
 	}
 
 	VkCommandBufferBeginInfo rvkCreateCommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
@@ -1233,6 +1272,23 @@ namespace Ruya
 	{
 		vkDestroyImageView(pRVulkan->pDevice, img.imageView, nullptr);
 		vmaDestroyImage(pRVulkan->vmaAllocator, img.image, img.allocation);
+	}
+
+	VkSampler rvkCreateSampler(RVulkan* pRVulkan)
+	{
+		VkSamplerCreateInfo samplerCreateInfo = {};
+		samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
+		samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
+
+		VkSampler sampler;
+		vkCreateSampler(pRVulkan->pDevice, &samplerCreateInfo, nullptr, &sampler);
+		return sampler;
+	}
+
+	void rvkDestroySampler(RVulkan* pRVulkan, VkSampler sampler)
+	{
+		vkDestroySampler(pRVulkan->pDevice, sampler, nullptr);
 	}
 
 
@@ -1672,5 +1728,11 @@ namespace Ruya
 		VkSubmitInfo2 submitInfo = rvkCreateQueueSubmitInfo(&cmdBufferSubmitInfo, &signalSempSubmitInfo, &waitSempSubmitInfo);
 
 		CHECK_VKRESULT_DEBUG(vkQueueSubmit2(pRVulkan->pGraphicsQueue, 1, &submitInfo, renderFence));
+	}
+
+	void RVkMeshBuffer::Destroy(RVulkan* pRVulkan)
+	{
+		rvkDestoryBuffer(pRVulkan, vertexBuffer);
+		rvkDestoryBuffer(pRVulkan, indexBuffer);
 	}
 }
