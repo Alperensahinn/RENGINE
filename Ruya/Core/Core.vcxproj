@@ -282,6 +282,7 @@
     <ClCompile Include="Source\GameFramework\RGame.cpp" />
     <ClCompile Include="Source\GameFramework\RObject.cpp" />
     <ClCompile Include="Source\Graphics\Mesh.cpp" />
+    <ClCompile Include="Source\Graphics\Renderer\Material.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\RenderQueue.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\Renderer.cpp" />
     <ClCompile Include="Source\Graphics\Vulkan\RVulkan.cpp" />

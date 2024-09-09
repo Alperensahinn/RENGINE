@@ -3,9 +3,9 @@
 
 namespace Ruya
 {
-	class Texture
+	struct Texture
 	{
-	public:
 		RVkAllocatedImage image;
+		VkSampler sampler;
 	};
 }

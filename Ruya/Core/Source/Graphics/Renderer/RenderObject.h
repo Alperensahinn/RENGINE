@@ -4,10 +4,10 @@
 
 namespace Ruya
 {
-	class RenderObject
+	struct RenderObject
 	{
-	public:
-		GPUMesh mesh;
-		Material material;
+		glm::mat4 transform;
+		PBRMaterial material;
+		RVkMeshBuffer meshBuffer;
 	};
 }

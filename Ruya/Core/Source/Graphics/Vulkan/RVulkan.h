@@ -14,50 +14,8 @@ namespace Ruya
 {
 	class RVulkan;
 	class EngineUI;
+	struct PBRMaterial;
 
-	struct RVkRenderContext
-	{
-		VkDevice pDevice;
-		VmaAllocator pVmaAllocator;
-	};
-
-
-	enum class MaterialPass : uint8_t 
-	{
-		MainColor,
-		Transparent,
-		Other
-	};
-
-	struct RVkMaterialPipeline
-	{
-		VkPipeline pipeline;
-		VkPipelineLayout layout;
-	};
-
-	struct RVkMaterialInstance
-	{
-		RVkMaterialPipeline* pipeline;
-		VkDescriptorSet materialSet;
-		MaterialPass passType;
-	};
-
-	struct RVkMaterial 
-	{
-		RVkMaterialInstance data;
-	};
-
-	struct RVkRenderObject
-	{
-		uint32_t indexCount;
-		uint32_t firstIndex;
-		VkBuffer indexBuffer;
-
-		std::shared_ptr<RVkMaterial> material;
-
-		glm::mat4 transform;
-		VkDeviceAddress vertexBufferAddress;
-	};
 
 	struct RVkGlobalUniformData
 	{
@@ -86,7 +44,6 @@ namespace Ruya
 		VkDescriptorPool GetPool(RVulkan* pRVulkan);
 		VkDescriptorPool CreatePool(RVulkan* pRVulkan, uint32_t setCount, std::span<PoolSizeRatio> poolRatios);
 
-
 		std::vector<PoolSizeRatio> ratios;
 		std::vector<VkDescriptorPool> fullPools;
 		std::vector<VkDescriptorPool> emptyPools;
@@ -103,7 +60,8 @@ namespace Ruya
 		VkFence renderFence = VK_NULL_HANDLE;;
 
 		RDeletionQueue deletionQueue;
-		RVkDescriptorAllocator descriptorAllocator;
+
+		VkDescriptorPool descriptorPool;
 
 		void ResetFrame(RVulkan* pRVulkan);
 		uint32_t GetNextImage(RVulkan* pRVulkan);
@@ -173,8 +131,6 @@ namespace Ruya
 		VkBuffer vkBuffer;
 		VmaAllocation vmaAllocation;
 		VmaAllocationInfo vmaAllocationInfo;
-
-		void Destroy(RVulkan* pRvulkan);
 	};
 
 	struct RVkMeshBuffer
@@ -191,13 +147,6 @@ namespace Ruya
 		VkDeviceAddress vertexBuffer;
 	};
 
-	struct RVkSceneData
-	{
-		math::mat4 view;
-		math::mat4 proj;
-		math::mat4 viewproj;
-	};
-
 	struct RVkDescriptorWriter
 	{
 		std::deque<VkDescriptorImageInfo> imageInfos;
@@ -209,27 +158,6 @@ namespace Ruya
 		void UpdateDescriptorSets(RVulkan* pRVulkan, VkDescriptorSet dstSet);
 		void Clear();
 	};
-
-	struct RVkMetallicRoughness
-	{
-		RVkMaterialPipeline opaquePipeline;
-
-		VkDescriptorSetLayout materialLayout;
-
-		struct MaterialResources 
-		{
-			RVkAllocatedImage albedoImage;
-			VkSampler albedoSampler;
-		};
-
-		RVkDescriptorWriter writer;
-
-		void BuildPipelines(RVulkan* pRVulkan);
-		void ClearResources(RVulkan* pRVulkan);
-
-		RVkMaterialInstance WriteMaterial(RVulkan* pRVulkan, MaterialPass pass, const MaterialResources& resources, RVkDescriptorAllocator& descriptorAllocator);
-	};
-
 
 	class RVulkan
 	{
@@ -246,9 +174,9 @@ namespace Ruya
 		VkDevice pDevice;
 		VkSurfaceKHR pSurface;
 		
-		uint32_t graphicsQueueIndex;
-		uint32_t transferQueueIndex;
-		uint32_t computeQueueIndex;
+		uint32_t graphicsQueueFamilyIndex;
+		uint32_t transferQueueFamilyIndex;
+		uint32_t computeQueueFamilyIndex;
 
 		VkQueue pGraphicsQueue;
 		VkQueue pTransferQueue;
@@ -263,17 +191,15 @@ namespace Ruya
 
 		RVkAllocatedImage drawImage;
 		RVkAllocatedImage depthImage;
-		VkDescriptorSet drawImageDescriptors;
-		VkDescriptorSetLayout drawImageDescriptorLayout;
 		VkExtent2D drawExtent;
 		uint32_t currentImageIndex;
 
 		VmaAllocator vmaAllocator;
 		RDeletionQueue deletionQueue;
-	
-		RVkDescriptorAllocator globalDescriptorAllocator;
 
 		VkDescriptorPool immediateUIPool;
+
+		RVkDescriptorAllocator descriptorAllocator;
 
 		VkFence immediateFence;
 		VkCommandBuffer immediateCommandBuffer;
@@ -293,8 +219,9 @@ namespace Ruya
 		RVkGlobalUniformData globalUniformData;
 		VkDescriptorSetLayout globalUniformDataDescriptorLayout;
 
-		RVkMetallicRoughness metallicRoughnessPipeline;
-		VkSampler defaultSamplerNearest;
+		VkPipeline pbrPipeline;
+		VkPipelineLayout pbrPipelineLayout;
+		VkDescriptorSetLayout pbrPipelineDescriptorSetLayout;
 
 	private:
 		VkRenderingInfo renderInfo;
@@ -313,7 +240,7 @@ namespace Ruya
 
 
 		void BeginDraw();
-		void Draw(RVkMeshBuffer meshBuffer, RVkMaterialInstance materialInstance, math::mat4 viewMatrix);
+		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 viewMatrix);
 		void DrawEngineUI(EngineUI* pEngineUI);
 		void EndDraw();
 		RVkFrameData& GetCurrentFrame();
@@ -322,8 +249,6 @@ namespace Ruya
 	};
 
 	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan);
-	void rvkCreatePipelines(RVulkan* pRVulkan);
-
 
 	//Init functions
 
@@ -359,6 +284,12 @@ namespace Ruya
 
 	//Create Vulkan Memory Allocator for allocation resources (Vma libary instance)
 	void rvkCreateVulkanMemoryAllocator(RVulkan* pRVulkan);
+
+	//Create descriptor allocator
+	void rvkCreateDescriptorAllocator(RVulkan* pRVulkan);
+
+	//Creates PBR pipeline
+	void rvkCreatePBRPipeline(RVulkan* pRVulkan);
 
 
 	//Helper functions
@@ -430,6 +361,7 @@ namespace Ruya
 	//Destroy old and create new swapchain 
 	void rvkResizeSwapChain(RVulkan* pRVulkan);
 
+	//Wait for fences
 	void rvkWaitFences(RVulkan* pRVulkan, VkFence fence);
 }
 

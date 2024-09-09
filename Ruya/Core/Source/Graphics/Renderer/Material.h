@@ -1,12 +1,22 @@
 #pragma once
 #include <Graphics/Vulkan/RVulkan.h>
+#include "Texture.h"
 
 namespace Ruya
 {
-	class Material
+
+	struct PBRMaterial
 	{
-	public:
-		RVkMaterialInstance material;
-		RVkMetallicRoughness::MaterialResources materialResources;
+		struct MaterialResources
+		{
+			Texture albedoTexture;
+		}resources;
+
+		VkDescriptorSet descriptorSet;
+
+		RVkDescriptorWriter writer;
+
+		void Init(MaterialResources resources);
+		void SetResources(MaterialResources resources);
 	};
 }

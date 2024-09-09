@@ -530,5 +530,6 @@
     <ClCompile Include="Source\Window\RWindow.cpp">
       <Filter>Window</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Graphics\Renderer\Material.cpp" />
   </ItemGroup>
 </Project>
