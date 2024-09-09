@@ -31,6 +31,7 @@ void REditor::App::Init()
 
 void REditor::App::CleanUp()
 {
+	Ruya::Engine::GetInstance().GetRenderer().pRVulkan->WaitDeviceForCleanUp();
 	game->CleanUp();
 }
 
