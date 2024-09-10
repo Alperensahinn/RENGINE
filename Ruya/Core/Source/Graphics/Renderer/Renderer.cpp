@@ -28,6 +28,8 @@ namespace Ruya
 			pRVulkan->ResizeSwapChain();
 		}
 
+		pRVulkan->BeginFrame();
+
 		pRVulkan->BeginDraw();
 
 		while(!renderQueue->IsEmpty())
@@ -37,9 +39,11 @@ namespace Ruya
 			pRVulkan->Draw(renderObject->meshBuffer, renderObject->material, camera->GetViewMatrix());
 		}
 
+		pRVulkan->EndDraw();
+
 		pRVulkan->DrawEngineUI(pEngineUI);
 
-		pRVulkan->EndDraw();
+		pRVulkan->EndFrame();
 	}
 
 	RVulkan* Renderer::GetRendererBackend()

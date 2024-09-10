@@ -15,6 +15,8 @@
     <ClInclude Include="Source\Camera\EditorCamera.h">
       <Filter>Camera</Filter>
     </ClInclude>
+    <ClInclude Include="Source\UI\MainViewport.h" />
+    <ClInclude Include="Source\UI\Panel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\App\App.cpp">
@@ -24,5 +26,7 @@
       <Filter>Camera</Filter>
     </ClCompile>
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\UI\MainViewport.cpp" />
+    <ClCompile Include="Source\UI\Panel.cpp" />
   </ItemGroup>
 </Project>

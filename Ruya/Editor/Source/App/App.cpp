@@ -1,5 +1,6 @@
 #include "App.h"
 #include <ProjectB.h>
+#include <UI/MainViewport.h>
 
 void REditor::App::Run()
 {
@@ -11,6 +12,7 @@ void REditor::App::Run()
 		pWindow->PoolEvents();
 		editorCamera->Update();
 		game->Update();
+
 		Ruya::Engine::GetInstance().ProcessFrame();
 	}
 
@@ -27,11 +29,19 @@ void REditor::App::Init()
 	Ruya::Engine::GetInstance().SetMainCamera(editorCamera);
 
 	game = std::make_unique<ProjectB>();
+
+	editorPanels.push_back(new MainViewport());
+
+	Ruya::Engine::GetInstance().SetEditorPanels(editorPanels);
 }
 
 void REditor::App::CleanUp()
 {
 	Ruya::Engine::GetInstance().GetRenderer().pRVulkan->WaitDeviceForCleanUp();
 	game->CleanUp();
+
+	for (auto panel : editorPanels) {
+		delete panel;
+	}
 }
 

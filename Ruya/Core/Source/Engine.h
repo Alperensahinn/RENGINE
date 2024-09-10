@@ -4,6 +4,7 @@
 #include "Scene/Camera.h"
 #include "GameFramework/RGame.h"
 #include "Window/RWindow.h"
+#include "../../Editor/Source/UI/Panel.h"
 
 namespace Ruya
 {
@@ -28,6 +29,8 @@ namespace Ruya
 		void ProcessFrame();
 
 		void SetMainCamera(Camera* camera);
+		void SetEditorPanels(std::vector<REditor::Panel*>& panels);
+		std::vector<REditor::Panel*>& GetEditorPanels();
 
 		RWindow& GetWindow();
 		Renderer& GetRenderer();
@@ -39,5 +42,7 @@ namespace Ruya
 		Renderer* pRenderer;
 		RWindow* pWindow;
 		Camera* mainCamera;
+
+		std::vector <REditor::Panel*> editorPanels;
 	};
 }

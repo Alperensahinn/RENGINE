@@ -1,5 +1,7 @@
 #include "EngineUI.h"
 #include "../Graphics/Renderer/Renderer.h"
+#include <Engine.h>
+#include "../../Editor/Source/UI/Panel.h"
 
 namespace Ruya
 {
@@ -20,7 +22,10 @@ namespace Ruya
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::ShowDemoWindow();
+		for(auto& panel : Engine::GetInstance().GetEditorPanels())
+		{
+			panel->Render();
+		}
 
 		ImGui::Render();
 	}
@@ -36,6 +41,10 @@ namespace Ruya
 
 		ImGui_ImplGlfw_InitForVulkan(&window, true);
 
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+
 		ImGui_ImplVulkan_InitInfo initInfo = {};
 		initInfo.Instance = pRenderer->GetRendererBackend()->pInstance;
 		initInfo.PhysicalDevice = pRenderer->GetRendererBackend()->pPhysicalDevice;
@@ -47,7 +56,7 @@ namespace Ruya
 		initInfo.UseDynamicRendering = true;
 		initInfo.PipelineRenderingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO };
 		initInfo.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
-		initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &(pRenderer->GetRendererBackend()->drawImage.imageFormat);
+		initInfo.PipelineRenderingCreateInfo.pColorAttachmentFormats = &(pRenderer->GetRendererBackend()->swapChainImageFormat);
 		initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 
 		ImGui_ImplVulkan_Init(&initInfo);

@@ -6,7 +6,7 @@
 #include "../../Source/Camera/EditorCamera.h"
 #include <memory>
 #include <Window/RWindow.h>
-
+#include <UI/Panel.h>
 
 namespace REditor
 {
@@ -23,5 +23,7 @@ namespace REditor
 		RWindow* pWindow;
 		std::unique_ptr<Ruya::RGame> game;
 		EditorCamera* editorCamera;
+		
+		std::vector<Panel*> editorPanels;
 	};
 }

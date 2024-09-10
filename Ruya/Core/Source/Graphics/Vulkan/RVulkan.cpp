@@ -55,7 +55,7 @@ namespace Ruya
 		deletionQueue.flush();
 	}
 
-	void RVulkan::BeginDraw()
+	void RVulkan::BeginFrame()
 	{
 		RVkFrameData frameData = GetCurrentFrame();
 
@@ -91,7 +91,7 @@ namespace Ruya
 		vkCmdSetScissor(frameData.mainCommandBuffer, 0, 1, &scissor);
 	}
 
-	void RVulkan::Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 viewMatrix)
+	void RVulkan::BeginDraw()
 	{
 		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
@@ -101,7 +101,12 @@ namespace Ruya
 		renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
-		
+	}
+
+	void RVulkan::Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 viewMatrix)
+	{	
+		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
+
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
 
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 1, &material.descriptorSet, 0, nullptr);
@@ -116,11 +121,15 @@ namespace Ruya
 		
 		vkCmdBindIndexBuffer(cmdBuffer, meshBuffer.indexBuffer.vkBuffer, 0, VK_INDEX_TYPE_UINT32);
 		vkCmdDrawIndexed(cmdBuffer, meshBuffer.indexCount, 1, 0, 0, 0);
-
-		vkCmdEndRendering(cmdBuffer);
 	}
 
 	void RVulkan::EndDraw()
+	{
+		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
+		vkCmdEndRendering(cmdBuffer);
+	}
+
+	void RVulkan::EndFrame()
 	{
 		RVkFrameData frameData = GetCurrentFrame();
 		frameData.EndFrame(this);
@@ -162,7 +171,7 @@ namespace Ruya
 	{
 		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
-		VkRenderingAttachmentInfo colorAttachment = rvkCreateRenderingAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkRenderingAttachmentInfo colorAttachment = rvkCreateRenderingAttachmentInfo(swapChainImageViews[currentImageIndex], nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(swapChainExtent, &colorAttachment, nullptr);
 
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
@@ -418,12 +427,12 @@ namespace Ruya
 
 	void rvkCreateWindowSurface(RVulkan* pRVulkan)
 	{
-		VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {};
-		surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-		surfaceCreateInfo.hwnd = glfwGetWin32Window(&(pRVulkan->window));
-		surfaceCreateInfo.hinstance = GetModuleHandle(nullptr);
-
-		CHECK_VKRESULT(vkCreateWin32SurfaceKHR(pRVulkan->pInstance, &surfaceCreateInfo, nullptr, &(pRVulkan->pSurface)));
+		VkSurfaceKHR surface;
+		if (glfwCreateWindowSurface(pRVulkan->pInstance, &pRVulkan->window, nullptr, &surface) != VK_SUCCESS) {
+			throw std::runtime_error("Failed to create window surface.");
+		}
+		
+		pRVulkan->pSurface = surface;
 
 		pRVulkan->deletionQueue.PushFunction([=]()
 			{
@@ -593,6 +602,7 @@ namespace Ruya
 		drawImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		drawImageUsageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
 		drawImageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		drawImageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
 		VkImageCreateInfo renderImageCreateInfo = rvkCreateImageCreateInfo(pRVulkan->drawImage.imageFormat, drawImageUsageFlags, pRVulkan->drawImage.imageExtent);
 
@@ -825,17 +835,19 @@ namespace Ruya
 		pipelineBuilder.pipelineLayout = pipelineLayout;
 
 		pRVulkan->pbrPipeline = pipelineBuilder.BuildPipeline(pRVulkan);
-		
+
+		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
+		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
+
+		pRVulkan->defaultSampler = Ruya::rvkCreateSampler(pRVulkan);
+
 		pRVulkan->deletionQueue.PushFunction([=]()
 			{
 				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayout, nullptr);
 				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineLayout, nullptr);
 				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pbrPipeline, nullptr);
+				rvkDestroySampler(pRVulkan, pRVulkan->defaultSampler);
 			});
-
-		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
-		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
-
 	}
 
 	VkCommandBufferBeginInfo rvkCreateCommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
@@ -857,6 +869,8 @@ namespace Ruya
 		imageBarrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
 		imageBarrier.oldLayout = currentLayout;
 		imageBarrier.newLayout = newLayout;
+		//imageBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		//imageBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
 		VkImageAspectFlags aspectMask = {};
 		if (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL)
@@ -1700,6 +1714,9 @@ namespace Ruya
 
 		VkClearColorValue clearValue = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 		VkImageSubresourceRange clearRange = rvkGetImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
+		
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
@@ -1709,12 +1726,15 @@ namespace Ruya
 
 	void RVkFrameData::EndFrame(RVulkan* pRVulkan)
 	{
-		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		//rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		//rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
-		rvkCopyImageToImage(mainCommandBuffer, pRVulkan->drawImage.image, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], pRVulkan->drawExtent, pRVulkan->swapChainExtent);
+		//rvkCopyImageToImage(mainCommandBuffer, pRVulkan->drawImage.image, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], pRVulkan->drawExtent, pRVulkan->swapChainExtent);
 
-		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		//rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(mainCommandBuffer));
 	}

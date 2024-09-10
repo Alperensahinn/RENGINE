@@ -225,6 +225,8 @@ namespace Ruya
 		VkPipelineLayout pbrPipelineLayout;
 		VkDescriptorSetLayout pbrPipelineDescriptorSetLayout;
 
+		VkSampler defaultSampler;
+
 	private:
 		VkRenderingInfo renderInfo;
 
@@ -241,10 +243,12 @@ namespace Ruya
 		void CleanUp();
 
 
+		void BeginFrame();
 		void BeginDraw();
 		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 viewMatrix);
-		void DrawEngineUI(EngineUI* pEngineUI);
 		void EndDraw();
+		void DrawEngineUI(EngineUI* pEngineUI);
+		void EndFrame();
 		RVkFrameData& GetCurrentFrame();
 
 		void ResizeSwapChain();

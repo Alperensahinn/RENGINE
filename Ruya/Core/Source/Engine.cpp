@@ -28,6 +28,16 @@ void Ruya::Engine::SetMainCamera(Camera* camera)
 	pRenderer->BindCamera(mainCamera);
 }
 
+void Ruya::Engine::SetEditorPanels(std::vector<REditor::Panel*>& panels)
+{
+	editorPanels = panels;
+}
+
+std::vector<REditor::Panel*>& Ruya::Engine::GetEditorPanels()
+{
+	return editorPanels;
+}
+
 RWindow& Ruya::Engine::GetWindow()
 {
 	return *pWindow;

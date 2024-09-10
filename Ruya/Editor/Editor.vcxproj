@@ -149,11 +149,15 @@
   <ItemGroup>
     <ClInclude Include="Source\App\App.h" />
     <ClInclude Include="Source\Camera\EditorCamera.h" />
+    <ClInclude Include="Source\UI\MainViewport.h" />
+    <ClInclude Include="Source\UI\Panel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\App\App.cpp" />
     <ClCompile Include="Source\Camera\EditorCamera.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\UI\MainViewport.cpp" />
+    <ClCompile Include="Source\UI\Panel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
