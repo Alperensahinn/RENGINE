@@ -16,9 +16,6 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{1653CE33-0220-293F-2B39-17E717655ECD}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Graphics\DefaultObjects">
-      <UniqueIdentifier>{944B5C5F-0083-A4F6-098D-081A7543CBEF}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Graphics\Renderer">
       <UniqueIdentifier>{7C6F0F98-E885-0D2E-31FD-984F9D52DEB5}</UniqueIdentifier>
     </Filter>
@@ -121,6 +118,15 @@
     <ClInclude Include="Source\Graphics\Mesh.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h">
+      <Filter>Graphics\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Renderer\Material.h">
+      <Filter>Graphics\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Renderer\RenderObject.h">
+      <Filter>Graphics\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Graphics\Renderer\RenderQueue.h">
       <Filter>Graphics\Renderer</Filter>
     </ClInclude>
@@ -128,6 +134,9 @@
       <Filter>Graphics\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Renderer\RendererConfig.h">
+      <Filter>Graphics\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Graphics\Renderer\Texture.h">
       <Filter>Graphics\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Vulkan\RVulkan.h">
@@ -442,10 +451,6 @@
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Graphics\Renderer\RenderObject.h" />
-    <ClInclude Include="Source\Graphics\Renderer\Material.h" />
-    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h" />
-    <ClInclude Include="Source\Graphics\Renderer\Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -472,6 +477,9 @@
     </ClCompile>
     <ClCompile Include="Source\Graphics\Mesh.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Graphics\Renderer\Material.cpp">
+      <Filter>Graphics\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Renderer\RenderQueue.cpp">
       <Filter>Graphics\Renderer</Filter>
@@ -530,6 +538,5 @@
     <ClCompile Include="Source\Window\RWindow.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Graphics\Renderer\Material.cpp" />
   </ItemGroup>
 </Project>
