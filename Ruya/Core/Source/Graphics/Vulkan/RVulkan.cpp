@@ -1,7 +1,6 @@
 #include "RVulkan.h"
 #include "../../Utilities/FileSystem/FileSystem.h"
 #include "../../Utilities/Log/RLog.h"
-#include "../../EngineUI/EngineUI.h"
 #include <Graphics/Renderer/Material.h>
 
 #define GLFW_INCLUDE_VULKAN

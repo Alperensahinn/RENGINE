@@ -97,9 +97,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine.h" />
-    <ClInclude Include="Source\EngineUI\EngineUI.h">
-      <Filter>EngineUI</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GameFramework\Actor.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
@@ -451,15 +448,13 @@
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
+    <ClInclude Include="Source\EngineUI\EngineUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine.cpp" />
-    <ClCompile Include="Source\EngineUI\EngineUI.cpp">
-      <Filter>EngineUI</Filter>
-    </ClCompile>
     <ClCompile Include="Source\GameFramework\Actor.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
@@ -538,5 +533,6 @@
     <ClCompile Include="Source\Window\RWindow.cpp">
       <Filter>Window</Filter>
     </ClCompile>
+    <ClCompile Include="Source\EngineUI\EngineUI.cpp" />
   </ItemGroup>
 </Project>
