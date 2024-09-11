@@ -10,10 +10,13 @@ namespace REditor
 		MainViewport();
 		~MainViewport();
 
+		void BeginRender() override;
 		void Render() override;
+		void EndRender() override;
 
 	private:
 		void RenderViewportContent();
+
 
 		VkDescriptorSet drawImageDescriptorSet;
 	};

@@ -12,10 +12,20 @@ REditor::MainViewport::~MainViewport()
 
 void REditor::MainViewport::Render()
 {
-    Panel::Render();
-
-    ImGui::Begin("Main Viewport");
+    BeginRender();
     RenderViewportContent();
+    EndRender();
+}
+
+void REditor::MainViewport::BeginRender()
+{
+    ImGui::Begin("Main Viewport");
+}
+
+void REditor::MainViewport::EndRender()
+{
+    Panel::EndRender();
+
     ImGui::End();
 }
 

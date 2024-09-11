@@ -1,6 +1,7 @@
 #include "App.h"
 #include <ProjectB.h>
 #include <UI/MainViewport.h>
+#include <UI/DockSpace.h>
 
 void REditor::App::Run()
 {
@@ -30,7 +31,10 @@ void REditor::App::Init()
 
 	game = std::make_unique<ProjectB>();
 
-	editorPanels.push_back(new MainViewport());
+
+	editorPanels.push_back(new DockSpace());
+	DockSpace* dockSpace = dynamic_cast<REditor::DockSpace*>(editorPanels.back());
+	dockSpace->childPanels.push_back(new MainViewport());
 
 	Ruya::Engine::GetInstance().SetEditorPanels(editorPanels);
 }

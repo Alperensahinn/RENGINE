@@ -17,6 +17,7 @@
     </ClInclude>
     <ClInclude Include="Source\UI\MainViewport.h" />
     <ClInclude Include="Source\UI\Panel.h" />
+    <ClInclude Include="Source\UI\DockSpace.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\App\App.cpp">
@@ -28,5 +29,6 @@
     <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\UI\MainViewport.cpp" />
     <ClCompile Include="Source\UI\Panel.cpp" />
+    <ClCompile Include="Source\UI\DockSpace.cpp" />
   </ItemGroup>
 </Project>
