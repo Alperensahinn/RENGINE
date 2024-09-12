@@ -1,5 +1,6 @@
 #pragma once
 #include <vector>
+#include <EngineUI/EngineUI.h>
 
 namespace REditor
 {

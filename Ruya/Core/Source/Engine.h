@@ -28,6 +28,9 @@ namespace Ruya
 		void Init(RWindow* window);
 		void ProcessFrame();
 
+		void SetGame(std::shared_ptr<RGame> game);
+		std::shared_ptr<RGame> GetGame();
+
 		void SetMainCamera(Camera* camera);
 		void SetEditorPanels(std::vector<REditor::Panel*>& panels);
 		std::vector<REditor::Panel*>& GetEditorPanels();
@@ -44,5 +47,7 @@ namespace Ruya
 		Camera* mainCamera;
 
 		std::vector <REditor::Panel*> editorPanels;
+
+		std::shared_ptr<RGame> game;
 	};
 }

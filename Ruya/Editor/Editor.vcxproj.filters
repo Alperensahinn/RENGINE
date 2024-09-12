@@ -18,6 +18,10 @@
     <ClInclude Include="Source\UI\MainViewport.h" />
     <ClInclude Include="Source\UI\Panel.h" />
     <ClInclude Include="Source\UI\DockSpace.h" />
+    <ClInclude Include="Source\UI\MenuBar.h" />
+    <ClInclude Include="Source\UI\ActorInspector.h" />
+    <ClInclude Include="Source\UI\SceneOutliner.h" />
+    <ClInclude Include="Source\UI\LeftSideBar.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\App\App.cpp">
@@ -30,5 +34,9 @@
     <ClCompile Include="Source\UI\MainViewport.cpp" />
     <ClCompile Include="Source\UI\Panel.cpp" />
     <ClCompile Include="Source\UI\DockSpace.cpp" />
+    <ClCompile Include="Source\UI\MenuBar.cpp" />
+    <ClCompile Include="Source\UI\ActorInspector.cpp" />
+    <ClCompile Include="Source\UI\SceneOutliner.cpp" />
+    <ClCompile Include="Source\UI\LeftSideBar.cpp" />
   </ItemGroup>
 </Project>

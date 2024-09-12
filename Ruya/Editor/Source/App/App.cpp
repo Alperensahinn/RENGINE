@@ -1,7 +1,11 @@
 #include "App.h"
 #include <ProjectB.h>
-#include <UI/MainViewport.h>
 #include <UI/DockSpace.h>
+#include <UI/MainViewport.h>
+#include <UI/MenuBar.h>
+#include <UI/ActorInspector.h>
+#include <UI/SceneOutliner.h>
+#include <UI/LeftSideBar.h>
 
 void REditor::App::Run()
 {
@@ -29,12 +33,16 @@ void REditor::App::Init()
 	Ruya::Engine::GetInstance().Init(pWindow);
 	Ruya::Engine::GetInstance().SetMainCamera(editorCamera);
 
-	game = std::make_unique<ProjectB>();
-
+	game = std::make_shared<ProjectB>();
+	Ruya::Engine::GetInstance().SetGame(game);
 
 	editorPanels.push_back(new DockSpace());
 	DockSpace* dockSpace = dynamic_cast<REditor::DockSpace*>(editorPanels.back());
+	dockSpace->childPanels.push_back(new MenuBar());
+	dockSpace->childPanels.push_back(new LeftSideBar());
 	dockSpace->childPanels.push_back(new MainViewport());
+	dockSpace->childPanels.push_back(new ActorInspector());
+	dockSpace->childPanels.push_back(new SceneOutliner());
 
 	Ruya::Engine::GetInstance().SetEditorPanels(editorPanels);
 }

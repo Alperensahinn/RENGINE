@@ -4,6 +4,7 @@
 #include "../Utilities/Math/RMath.h"
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace Ruya
 {
@@ -40,6 +41,7 @@ namespace Ruya
 
 	public:
 		Transform transform;
+		std::string name;
 
 	private:
 		unsigned int id;

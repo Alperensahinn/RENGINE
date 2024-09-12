@@ -22,14 +22,15 @@ namespace Ruya
 
 		void CleanUp();
 	public:
-		std::unique_ptr<Scene>& AddScene(std::unique_ptr<Scene> scene);
+		std::shared_ptr<Scene> AddScene(std::shared_ptr<Scene> scene);
 		void RemoveScene(unsigned int sceneID);
+		std::unordered_map<unsigned int, std::shared_ptr<Scene>>& GetScenes();
 
 	private:
 		void InitAvaibleSceneIDs();
 
 	private:
-		std::unordered_map<unsigned int, std::unique_ptr<Scene>> sceneMap;
+		std::unordered_map<unsigned int, std::shared_ptr<Scene>> sceneMap;
 		std::queue<unsigned int> avaibleSceneIDs;
 		unsigned int maxAvaibleSceneID;
 	};

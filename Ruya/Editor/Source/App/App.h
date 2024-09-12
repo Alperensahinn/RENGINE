@@ -21,7 +21,7 @@ namespace REditor
 
 	private:
 		RWindow* pWindow;
-		std::unique_ptr<Ruya::RGame> game;
+		std::shared_ptr<Ruya::RGame> game;
 		EditorCamera* editorCamera;
 		
 		std::vector<Panel*> editorPanels;

@@ -69,14 +69,16 @@ namespace Ruya
 
 		frameData.BeginFrame(this);
 
-		drawExtent.width = drawImage.imageExtent.width;
-		drawExtent.height = drawImage.imageExtent.height;
+		int glfwWindowWidth;
+		int glfwWindowHeight;
+
+		glfwGetFramebufferSize(&window, &glfwWindowWidth, &glfwWindowHeight);
 
 		VkViewport viewport = {};
 		viewport.x = 0;
 		viewport.y = 0;
-		viewport.width = drawExtent.width;
-		viewport.height = drawExtent.height;
+		viewport.width = static_cast<uint32_t>(glfwWindowWidth);
+		viewport.height = static_cast<uint32_t>(glfwWindowHeight);
 		viewport.minDepth = 1.f;
 		viewport.maxDepth = 0.f;
 
@@ -85,8 +87,8 @@ namespace Ruya
 		VkRect2D scissor = {};
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		scissor.extent.width = drawExtent.width;
-		scissor.extent.height = drawExtent.height;
+		scissor.extent.width = static_cast<uint32_t>(glfwWindowWidth);
+		scissor.extent.height = static_cast<uint32_t>(glfwWindowHeight);
 
 		vkCmdSetScissor(frameData.mainCommandBuffer, 0, 1, &scissor);
 	}
@@ -97,6 +99,9 @@ namespace Ruya
 
 		VkRenderingAttachmentInfo colorAttachment = rvkCreateRenderingAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingAttachmentInfo depthAttachment = rvkCreateDepthRenderingAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
+
+		drawExtent.width = 1600;
+		drawExtent.height = 900;
 
 		renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 

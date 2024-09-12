@@ -23,7 +23,7 @@ void Ruya::Scene::Update()
 {
 	for (const auto& pair : actorMap)
 	{
-		const std::unique_ptr<Actor>& actor = pair.second;
+		const std::shared_ptr<Actor>& actor = pair.second;
 		if (actor)
 		{
 			actor->Update();
@@ -60,7 +60,7 @@ void Ruya::Scene::InitUpdateFunctionEnabledActors()
 	}
 }
 
-std::unique_ptr<Ruya::Actor>& Ruya::Scene::AddActor(std::unique_ptr<Actor> actor)
+std::shared_ptr<Ruya::Actor> Ruya::Scene::AddActor(std::shared_ptr<Actor> actor)
 {
 	unsigned int newID = avaibleActorIDs.front();
 	avaibleActorIDs.pop();
@@ -76,4 +76,9 @@ void Ruya::Scene::RemoveActor(unsigned int actorID)
 {
 	actorMap.erase(actorID);
 	avaibleActorIDs.push(actorID);
+}
+
+std::unordered_map<unsigned int, std::shared_ptr<Ruya::Actor>>& Ruya::Scene::GetActors()
+{
+	return actorMap;
 }

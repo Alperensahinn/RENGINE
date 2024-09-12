@@ -25,7 +25,7 @@ void Ruya::RGame::Update()
 	}
 }
 
-std::unique_ptr<Ruya::Scene>& Ruya::RGame::AddScene(std::unique_ptr<Scene> scene)
+std::shared_ptr<Ruya::Scene> Ruya::RGame::AddScene(std::shared_ptr<Scene> scene)
 {
 	unsigned int newID = avaibleSceneIDs.front();
 	avaibleSceneIDs.pop();
@@ -41,6 +41,11 @@ void Ruya::RGame::RemoveScene(unsigned int sceneID)
 {
 	sceneMap.erase(sceneID);
 	avaibleSceneIDs.push(sceneID);
+}
+
+std::unordered_map<unsigned int, std::shared_ptr<Ruya::Scene>>& Ruya::RGame::GetScenes()
+{
+	return sceneMap;
 }
 
 void Ruya::RGame::InitAvaibleSceneIDs()

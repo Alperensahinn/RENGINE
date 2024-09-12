@@ -22,6 +22,16 @@ void Ruya::Engine::ProcessFrame()
 	pRenderer->DrawFrame();
 }
 
+void Ruya::Engine::SetGame(std::shared_ptr<RGame> game)
+{
+	this->game = game;
+}
+
+std::shared_ptr<Ruya::RGame> Ruya::Engine::GetGame()
+{
+	return game;
+}
+
 void Ruya::Engine::SetMainCamera(Camera* camera)
 {
 	mainCamera = camera;

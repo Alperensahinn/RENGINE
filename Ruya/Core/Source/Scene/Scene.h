@@ -19,15 +19,16 @@ namespace Ruya
 		
 		void CleanUp();
 	public:
-		std::unique_ptr<Actor>& AddActor(std::unique_ptr<Actor> actor);
+		std::shared_ptr<Actor> AddActor(std::shared_ptr<Actor> actor);
 		void RemoveActor(unsigned int actorID);
+		std::unordered_map<unsigned int, std::shared_ptr<Actor>>& GetActors();
 
 	private:
 		void InitAvaibleActorIDs();
 		void InitUpdateFunctionEnabledActors();
 
 	private:
-		std::unordered_map<unsigned int, std::unique_ptr<Actor>> actorMap;
+		std::unordered_map<unsigned int, std::shared_ptr<Actor>> actorMap;
 		std::queue<unsigned int> avaibleActorIDs;
 		unsigned int maxAvaibleActorID;
 		std::vector<unsigned int> updateFunctionEnabledActors;
