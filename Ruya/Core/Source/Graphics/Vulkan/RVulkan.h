@@ -102,7 +102,7 @@ namespace Ruya
 		void SetCullMode(VkCullModeFlags cullModeFlags, VkFrontFace frontFace);
 		void SetMultisampling(bool b);
 		void SetBlending(bool b);
-		void SetColorAttachmentFormat(VkFormat format);
+		void SetColorAttachmentFormat(VkFormat* colorAttachmentFormats, uint32_t colorAttachmentCount);
 		void SetDepthFormat(VkFormat format);
 		void SetDepthTest(bool b, VkCompareOp op);
 
@@ -111,12 +111,13 @@ namespace Ruya
 		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyCreateInfo;
 		VkPipelineRasterizationStateCreateInfo rasterizerCreateInfo;
-		VkPipelineColorBlendAttachmentState colorBlendAttachmentState;
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState1;
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState2;
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState3;
 		VkPipelineMultisampleStateCreateInfo multisamplingCreateInfo;
 		VkPipelineLayout pipelineLayout;
 		VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo;
 		VkPipelineRenderingCreateInfo pipelineRenderingCreateInfo;
-		VkFormat colorAttachmentformat;
 	};
 
 	struct RVkAllocatedBuffer
@@ -305,7 +306,7 @@ namespace Ruya
 	//Creates uniform buffer that hold per frame scene data
 	void rvkCreateSceneUniformBuffer(RVulkan* pRVulkan);
 
-	RVkGBuffer rvkCreateGBuffer(RVulkan* pRVulkan);
+	void rvkCreateGBuffer(RVulkan* pRVulkan);
 
 
 	//Helper functions
@@ -332,7 +333,7 @@ namespace Ruya
 	VkRenderingAttachmentInfo  rvkCreateDepthRenderingAttachmentInfo(VkImageView view, VkImageLayout layout);
 
 	//Creates and returns rendering info  for general usage
-	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
+	VkRenderingInfo rvkCreateRenderingInfo(VkExtent2D renderExtent, VkRenderingAttachmentInfo* colorAttachments, uint32_t colorAttachmentCount, VkRenderingAttachmentInfo* depthAttachment);
 
 	//Changes image layout
 	void rvkImageLayoutTransition(VkCommandBuffer cmdBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
