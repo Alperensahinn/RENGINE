@@ -93,13 +93,6 @@ namespace Ruya
 	class RVkPipelineBuilder
 	{
 	public:
-		RVkPipelineBuilder();
-		~RVkPipelineBuilder();
-
-		RVkPipelineBuilder(const RVkPipelineBuilder&) = delete;
-		RVkPipelineBuilder& operator=(const RVkPipelineBuilder&) = delete;
-
-	public:
 		VkPipeline BuildPipeline(RVulkan*  pRVulkan);
 		void Clear();
 		
@@ -223,7 +216,8 @@ namespace Ruya
 
 		VkPipeline pbrPipeline;
 		VkPipelineLayout pbrPipelineLayout;
-		VkDescriptorSetLayout pbrPipelineDescriptorSetLayout;
+		VkDescriptorSetLayout pbrPipelineDescriptorSetLayoutUniform;
+		VkDescriptorSetLayout pbrPipelineDescriptorSetLayoutMaterial;
 
 		VkSampler defaultSampler;
 

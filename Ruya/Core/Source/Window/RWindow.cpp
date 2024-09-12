@@ -34,8 +34,7 @@ void RWindow::InitGLFWWindow()
 {
 	glfwInit();
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
-	//glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
+	glfwWindowHint(GLFW_MAXIMIZED, GLFW_TRUE);
 
 	glfwWindow = glfwCreateWindow(1600, 900, "Ruya", nullptr, nullptr);
 

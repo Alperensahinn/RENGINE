@@ -100,8 +100,8 @@ namespace Ruya
 		VkRenderingAttachmentInfo colorAttachment = rvkCreateRenderingAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingAttachmentInfo depthAttachment = rvkCreateDepthRenderingAttachmentInfo(depthImage.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-		drawExtent.width = 1600;
-		drawExtent.height = 900;
+		drawExtent.width = 1920;
+		drawExtent.height = 1080;
 
 		renderInfo = rvkCreateRenderingInfo(drawExtent, &colorAttachment, &depthAttachment);
 
@@ -114,7 +114,9 @@ namespace Ruya
 
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
 
-		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 1, &material.descriptorSet, 0, nullptr);
+		VkDescriptorSet descriptorSets[] = { material.descriptorSetUniform, material.descriptorSetMaterial };
+
+		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
 		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)1600 / (float)900, 0.1f, 100.0f);
 		glm::mat4 model = glm::mat4(1.0f);
@@ -594,8 +596,8 @@ namespace Ruya
 
 
 		VkExtent3D drawImageExtent = {
-			actualExtent.width,
-			actualExtent.height,
+			1920,
+			1080,
 			1
 		};
 
@@ -807,17 +809,26 @@ namespace Ruya
 		pushConstantRange.size = sizeof(RVkDrawPushConstants);
 		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
-		RVkDescriptorLayoutBuilder descriptorLayoutBuilder;
-		descriptorLayoutBuilder.Clear();
-		descriptorLayoutBuilder.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-		VkDescriptorSetLayout descriptorSetLayout = descriptorLayoutBuilder.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
+		RVkDescriptorLayoutBuilder descriptorLayoutBuilder1;
+		descriptorLayoutBuilder1.Clear();
+		descriptorLayoutBuilder1.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+		VkDescriptorSetLayout descriptorSetLayout1 = descriptorLayoutBuilder1.Build(pRVulkan, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		pRVulkan->pbrPipelineDescriptorSetLayout = descriptorSetLayout;
+		pRVulkan->pbrPipelineDescriptorSetLayoutUniform = descriptorSetLayout1;
+
+		RVkDescriptorLayoutBuilder descriptorLayoutBuilder2;
+		descriptorLayoutBuilder2.Clear();
+		descriptorLayoutBuilder2.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		VkDescriptorSetLayout descriptorSetLayout2 = descriptorLayoutBuilder2.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
+
+		pRVulkan->pbrPipelineDescriptorSetLayoutMaterial = descriptorSetLayout2;
+
+		VkDescriptorSetLayout setLayouts[] = { descriptorSetLayout1 , descriptorSetLayout2 };
 
 		VkPipelineLayoutCreateInfo pipeLineLayoutCreateInfo = {};
 		pipeLineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipeLineLayoutCreateInfo.setLayoutCount = 1;
-		pipeLineLayoutCreateInfo.pSetLayouts = &descriptorSetLayout;
+		pipeLineLayoutCreateInfo.setLayoutCount = 2;
+		pipeLineLayoutCreateInfo.pSetLayouts = setLayouts;
 		pipeLineLayoutCreateInfo.pushConstantRangeCount = 1;
 		pipeLineLayoutCreateInfo.pPushConstantRanges = &pushConstantRange;
 
@@ -848,7 +859,8 @@ namespace Ruya
 
 		pRVulkan->deletionQueue.PushFunction([=]()
 			{
-				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayout, nullptr);
+				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayoutUniform, nullptr);
+				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayoutMaterial, nullptr);
 				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineLayout, nullptr);
 				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pbrPipeline, nullptr);
 				rvkDestroySampler(pRVulkan, pRVulkan->defaultSampler);
@@ -1352,16 +1364,6 @@ namespace Ruya
 		return setLayout;
 	}
 
-
-	RVkPipelineBuilder::RVkPipelineBuilder()
-	{
-
-	}
-
-	RVkPipelineBuilder::~RVkPipelineBuilder()
-	{
-	}
-
 	VkPipeline RVkPipelineBuilder::BuildPipeline(RVulkan* pRVulkan)
 	{
 		VkPipelineViewportStateCreateInfo viewPortStateCreateInfo = {};
@@ -1512,12 +1514,11 @@ namespace Ruya
 
 	void RVkDescriptorWriter::WriteBuffer(uint32_t binding, VkDescriptorType descriptorType, VkBuffer buffer, size_t range, size_t offset)
 	{
-		VkDescriptorBufferInfo bufferInfo = {};
-		bufferInfo.buffer = buffer;
-		bufferInfo.offset = offset;
-		bufferInfo.range = range;
-
-		bufferInfo = bufferInfos.emplace_back(bufferInfo);
+		VkDescriptorBufferInfo& bufferInfo = bufferInfos.emplace_back(VkDescriptorBufferInfo{
+		.buffer = buffer,
+		.offset = offset,
+		.range = range
+			});
 
 		VkWriteDescriptorSet writeDescriptorSet = {};
 		writeDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1556,7 +1557,6 @@ namespace Ruya
 		{
 			write.dstSet = dstSet;
 		}
-
 
 		vkUpdateDescriptorSets(pRVulkan->pDevice, writes.size(), writes.data(), 0, nullptr);
 	}
