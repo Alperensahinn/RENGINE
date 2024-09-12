@@ -76,6 +76,11 @@ namespace Ruya
 
 		glfwGetFramebufferSize(&window, &glfwWindowWidth, &glfwWindowHeight);
 
+		if (glfwWindowWidth == 0 || glfwWindowHeight == 0) {
+			glfwWindowWidth = 1;
+			glfwWindowHeight = 1;
+		}
+
 		VkViewport viewport = {};
 		viewport.x = 0;
 		viewport.y = 0;
