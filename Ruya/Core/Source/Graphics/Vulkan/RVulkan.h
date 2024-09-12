@@ -154,6 +154,14 @@ namespace Ruya
 		void Clear();
 	};
 
+	struct RVkGBuffer
+	{
+		RVkAllocatedImage baseColorTexture;
+		RVkAllocatedImage normalTexture;
+		RVkAllocatedImage positionTexture;
+		RVkAllocatedImage depthTexture;
+	};
+
 	class RVulkan
 	{
 	public:
@@ -188,6 +196,7 @@ namespace Ruya
 		RVkAllocatedImage depthImage;
 		VkExtent2D drawExtent;
 		uint32_t currentImageIndex;
+		RVkGBuffer gBuffer;
 
 		VmaAllocator vmaAllocator;
 		RDeletionQueue deletionQueue;
@@ -295,6 +304,9 @@ namespace Ruya
 
 	//Creates uniform buffer that hold per frame scene data
 	void rvkCreateSceneUniformBuffer(RVulkan* pRVulkan);
+
+	RVkGBuffer rvkCreateGBuffer(RVulkan* pRVulkan);
+
 
 	//Helper functions
 

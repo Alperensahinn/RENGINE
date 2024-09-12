@@ -44,6 +44,7 @@ namespace Ruya
 		rvkCreateDescriptorAllocator(this);
 		rvkCreatePBRPipeline(this);
 		rvkCreateSceneUniformBuffer(this);
+		rvkCreateGBuffer(this);
 	}
 
 	void RVulkan::WaitDeviceForCleanUp()
@@ -891,6 +892,56 @@ namespace Ruya
 			{
 				rvkDestoryBuffer(pRVulkan, pRVulkan->perframeSceneDataBuffer);
 			});
+	}
+
+	RVkGBuffer rvkCreateGBuffer(RVulkan* pRVulkan)
+	{
+		VkImageUsageFlags imageUsageFlags = {};
+		imageUsageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
+		imageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		imageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
+		VkImageCreateInfo imageCreateInfo = rvkCreateImageCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, imageUsageFlags, pRVulkan->drawImage.imageExtent);
+
+		VmaAllocationCreateInfo allocationCreateInfo = {};
+		allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		allocationCreateInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &pRVulkan->gBuffer.baseColorTexture.image, &pRVulkan->gBuffer.baseColorTexture.allocation, nullptr));
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &pRVulkan->gBuffer.positionTexture.image, &pRVulkan->gBuffer.positionTexture.allocation, nullptr));
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &pRVulkan->gBuffer.normalTexture.image, &pRVulkan->gBuffer.normalTexture.allocation, nullptr));
+
+		VkImageViewCreateInfo imageViewCreateInfo1 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.baseColorTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo1, nullptr, &pRVulkan->gBuffer.baseColorTexture.imageView));
+
+		VkImageViewCreateInfo imageViewCreateInfo2 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.normalTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo1, nullptr, &pRVulkan->gBuffer.normalTexture.imageView));
+
+		VkImageViewCreateInfo imageViewCreateInfo3 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.positionTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo1, nullptr, &pRVulkan->gBuffer.positionTexture.imageView));
+
+		//depth
+		VkImageUsageFlags imageUsageFlags_depth = {};
+		imageUsageFlags_depth |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		imageUsageFlags_depth |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		imageUsageFlags_depth |= VK_IMAGE_USAGE_SAMPLED_BIT;
+
+		VkImageCreateInfo imageCreateInfo_depth = rvkCreateImageCreateInfo(VK_FORMAT_D32_SFLOAT, imageUsageFlags_depth, pRVulkan->drawImage.imageExtent);
+
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo_depth, &allocationCreateInfo, &pRVulkan->gBuffer.depthTexture.image, &pRVulkan->gBuffer.depthTexture.allocation, nullptr));
+
+		VkImageViewCreateInfo imageViewCreateInfo_depth = rvkCreateImageViewCreateInfo(VK_FORMAT_D32_SFLOAT, pRVulkan->gBuffer.depthTexture.image, VK_IMAGE_ASPECT_DEPTH_BIT);
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo_depth, nullptr, &pRVulkan->gBuffer.depthTexture.imageView));
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.baseColorTexture);
+				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.normalTexture);
+				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.positionTexture);
+				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.depthTexture);
+			});
+
+		return RVkGBuffer();
 	}
 
 	VkCommandBufferBeginInfo rvkCreateCommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
