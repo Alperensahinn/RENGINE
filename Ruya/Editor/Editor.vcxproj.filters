@@ -7,6 +7,9 @@
     <Filter Include="Camera">
       <UniqueIdentifier>{CE7141AB-BA13-6C81-A3CE-7FD58F0FF3D1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{83755900-6F01-880B-D8AF-880BC45A880B}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\App\App.h">
@@ -15,13 +18,27 @@
     <ClInclude Include="Source\Camera\EditorCamera.h">
       <Filter>Camera</Filter>
     </ClInclude>
-    <ClInclude Include="Source\UI\MainViewport.h" />
-    <ClInclude Include="Source\UI\Panel.h" />
-    <ClInclude Include="Source\UI\DockSpace.h" />
-    <ClInclude Include="Source\UI\MenuBar.h" />
-    <ClInclude Include="Source\UI\ActorInspector.h" />
-    <ClInclude Include="Source\UI\SceneOutliner.h" />
-    <ClInclude Include="Source\UI\LeftSideBar.h" />
+    <ClInclude Include="Source\UI\ActorInspector.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\DockSpace.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\LeftSideBar.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\MainViewport.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\MenuBar.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\Panel.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\SceneOutliner.h">
+      <Filter>UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\App\App.cpp">
@@ -30,13 +47,27 @@
     <ClCompile Include="Source\Camera\EditorCamera.cpp">
       <Filter>Camera</Filter>
     </ClCompile>
+    <ClCompile Include="Source\UI\ActorInspector.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\DockSpace.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\LeftSideBar.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\MainViewport.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\MenuBar.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\Panel.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\SceneOutliner.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
     <ClCompile Include="Source\main.cpp" />
-    <ClCompile Include="Source\UI\MainViewport.cpp" />
-    <ClCompile Include="Source\UI\Panel.cpp" />
-    <ClCompile Include="Source\UI\DockSpace.cpp" />
-    <ClCompile Include="Source\UI\MenuBar.cpp" />
-    <ClCompile Include="Source\UI\ActorInspector.cpp" />
-    <ClCompile Include="Source\UI\SceneOutliner.cpp" />
-    <ClCompile Include="Source\UI\LeftSideBar.cpp" />
   </ItemGroup>
 </Project>

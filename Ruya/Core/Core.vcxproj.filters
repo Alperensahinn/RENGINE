@@ -85,6 +85,9 @@
     <Filter Include="Vendor\imgui">
       <UniqueIdentifier>{3D8F64D2-29F2-F376-D277-2C2DBEB9BFF9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vendor\stb_image">
+      <UniqueIdentifier>{EDE315D3-D9DC-3425-020F-1AAAEE661431}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Window">
       <UniqueIdentifier>{3DEA79DA-298C-A4B0-1247-B804FE872B01}</UniqueIdentifier>
     </Filter>
@@ -97,6 +100,9 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Engine.h" />
+    <ClInclude Include="Source\EngineUI\EngineUI.h">
+      <Filter>EngineUI</Filter>
+    </ClInclude>
     <ClInclude Include="Source\GameFramework\Actor.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
@@ -445,16 +451,21 @@
     <ClInclude Include="Source\Vendor\imgui\imstb_truetype.h">
       <Filter>Vendor\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Vendor\stb_image\stb_image.h">
+      <Filter>Vendor\stb_image</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Source\EngineUI\EngineUI.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Engine.cpp" />
+    <ClCompile Include="Source\EngineUI\EngineUI.cpp">
+      <Filter>EngineUI</Filter>
+    </ClCompile>
     <ClCompile Include="Source\GameFramework\Actor.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
@@ -533,6 +544,6 @@
     <ClCompile Include="Source\Window\RWindow.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Source\EngineUI\EngineUI.cpp" />
+    <ClCompile Include="Source\VendorDefines.cpp" />
   </ItemGroup>
 </Project>

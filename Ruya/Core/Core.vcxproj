@@ -76,7 +76,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -126,7 +126,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -270,6 +270,7 @@
     <ClInclude Include="Source\Vendor\imgui\imstb_rectpack.h" />
     <ClInclude Include="Source\Vendor\imgui\imstb_textedit.h" />
     <ClInclude Include="Source\Vendor\imgui\imstb_truetype.h" />
+    <ClInclude Include="Source\Vendor\stb_image\stb_image.h" />
     <ClInclude Include="Source\Window\RWindow.h" />
   </ItemGroup>
   <ItemGroup>
@@ -292,6 +293,7 @@
     <ClCompile Include="Source\Scene\Scene.cpp" />
     <ClCompile Include="Source\Utilities\FileSystem\FileSystem.cpp" />
     <ClCompile Include="Source\Utilities\Math\RMath.cpp" />
+    <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\Vendor\glm\glm\detail\glm.cpp" />
     <ClCompile Include="Source\Vendor\glm\glm\glm.cppm">
       <ObjectFileName>$(IntDir)\glm1.obj</ObjectFileName>

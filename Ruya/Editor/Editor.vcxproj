@@ -79,7 +79,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Game\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Game\Source;..\Core\Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -99,7 +99,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Game\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Game\Source;..\Core\Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -125,7 +125,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Game\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Game\Source;..\Core\Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -160,7 +160,6 @@
   <ItemGroup>
     <ClCompile Include="Source\App\App.cpp" />
     <ClCompile Include="Source\Camera\EditorCamera.cpp" />
-    <ClCompile Include="Source\main.cpp" />
     <ClCompile Include="Source\UI\ActorInspector.cpp" />
     <ClCompile Include="Source\UI\DockSpace.cpp" />
     <ClCompile Include="Source\UI\LeftSideBar.cpp" />
@@ -168,6 +167,7 @@
     <ClCompile Include="Source\UI\MenuBar.cpp" />
     <ClCompile Include="Source\UI\Panel.cpp" />
     <ClCompile Include="Source\UI\SceneOutliner.cpp" />
+    <ClCompile Include="Source\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

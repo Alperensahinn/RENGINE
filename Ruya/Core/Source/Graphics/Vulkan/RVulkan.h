@@ -17,7 +17,7 @@ namespace Ruya
 	struct PBRMaterial;
 
 
-	struct RVkGlobalUniformData
+	struct RVkSceneData
 	{
 		math::mat4 view;
 		math::mat4 proj;
@@ -211,12 +211,14 @@ namespace Ruya
 
 		bool resizeRequest = false;
 
-		RVkGlobalUniformData globalUniformData;
-		VkDescriptorSetLayout globalUniformDataDescriptorLayout;
+		RVkSceneData perframeSceneData;
+		RVkAllocatedBuffer perframeSceneDataBuffer;
+		VkDescriptorSetLayout perframeSceneDataDescriptorSetLayout;
+		VkDescriptorSet perframeSceneDataDescriptorSet;
+		RVkDescriptorWriter perframeSceneDataDescriptorWriter;
 
 		VkPipeline pbrPipeline;
 		VkPipelineLayout pbrPipelineLayout;
-		VkDescriptorSetLayout pbrPipelineDescriptorSetLayoutUniform;
 		VkDescriptorSetLayout pbrPipelineDescriptorSetLayoutMaterial;
 
 		VkSampler defaultSampler;
@@ -291,6 +293,8 @@ namespace Ruya
 	//Creates PBR pipeline
 	void rvkCreatePBRPipeline(RVulkan* pRVulkan);
 
+	//Creates uniform buffer that hold per frame scene data
+	void rvkCreateSceneUniformBuffer(RVulkan* pRVulkan);
 
 	//Helper functions
 
@@ -340,7 +344,9 @@ namespace Ruya
 	//Destroy image on gpu side
 	void rvkDestroyImage(RVulkan* pRVulkan, const RVkAllocatedImage& img);
 
-	VkSampler rvkCreateSampler(RVulkan* pRVulkan);
+	VkSampler rvkCreateSamplerNearest(RVulkan* pRVulkan);
+
+	VkSampler rvkCreateSamplerLinear(RVulkan* pRVulkan);
 
 	void rvkDestroySampler(RVulkan* pRVulkan, VkSampler sampler);
 

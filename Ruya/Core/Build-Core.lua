@@ -14,6 +14,7 @@ project "Core"
       "Source/Vendor/glm",
       "Source/Vendor/glfw-3.4.WIN64/include",
       "Source/Vendor/assimp/Include",
+      "Source/Vendor/stb_image"
    }
 
    libdirs 

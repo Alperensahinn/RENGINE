@@ -76,7 +76,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Core\Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Core\Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -126,7 +126,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;..\Core\Source;..\Core\Source\Vendor\glfw-3.4.WIN64\include;..\Core\Source\Vendor\glm;..\Core\Source\Vendor\assimp\Include;..\Core\Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>

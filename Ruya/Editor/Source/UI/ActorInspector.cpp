@@ -45,7 +45,7 @@ void REditor::ActorInspector::RenderTransformPanel()
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("Position");
 		ImGui::SameLine();
-		if (ImGui::InputFloat3("##Position", rotation))
+		if (ImGui::InputFloat3("##Position", position))
 		{
 
 		}

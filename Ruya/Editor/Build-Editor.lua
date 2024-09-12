@@ -17,7 +17,8 @@ project "Editor"
       "../Core/Source/Vendor/glfw-3.4.WIN64/include",
       "../Core/Source/Vendor/glm",
       "../Core/Source/Vendor/assimp/Include",
-      "../Game/Source"
+      "../Game/Source",
+      "../Core/Source/Vendor/stb_image"
    }
 
    libdirs 

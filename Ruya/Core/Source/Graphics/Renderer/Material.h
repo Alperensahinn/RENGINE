@@ -12,7 +12,6 @@ namespace Ruya
 			Texture albedoTexture;
 		}resources;
 
-		VkDescriptorSet descriptorSetUniform;
 		VkDescriptorSet descriptorSetMaterial;
 
 		RVkDescriptorWriter writer;

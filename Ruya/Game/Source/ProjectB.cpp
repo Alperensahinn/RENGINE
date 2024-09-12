@@ -8,6 +8,7 @@
 #include <Graphics/Renderer/Texture.h>
 #include <Engine.h>
 #include <Graphics/Renderer/Material.h>
+#include <stb_image.h>
 
 ProjectB::ProjectB()
 {
@@ -20,6 +21,7 @@ ProjectB::ProjectB()
 
 	Ruya::MeshComponent* meshComponent = dynamic_cast<Ruya::MeshComponent*>(monkeyMesh.get());
 
+	/*
 	uint32_t magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
 	uint32_t black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 0));
 	std::array<uint32_t, 16 * 16 > pixels;
@@ -31,11 +33,27 @@ ProjectB::ProjectB()
 			pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
 		}
 	}
+	*/
 
-	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\Monkey.glb");
+	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\MandolorianHelmet.fbx");
+	
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_baseColor.png", &width, &height, &channels, STBI_rgb_alpha);
+
+	if (!pixels) 
+	{
+		std::cerr << "Failed to load texture image!" << std::endl;
+		return;
+	}
+
+	VkExtent3D imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+
 	Ruya::Texture texture;
-	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels.data(), VkExtent3D{ 16, 16, 1 }, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-	texture.sampler = Ruya::rvkCreateSampler(Ruya::Engine::GetInstance().GetRenderer().pRVulkan);
+	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels, imageExtent, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+
+	stbi_image_free(pixels);
+
+	texture.sampler = Ruya::rvkCreateSamplerLinear(Ruya::Engine::GetInstance().GetRenderer().pRVulkan);
 
 	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, texture));
 	meshComponent->SetRenderObject(renderObject);

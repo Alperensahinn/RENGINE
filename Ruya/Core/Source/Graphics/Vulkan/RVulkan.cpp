@@ -43,6 +43,7 @@ namespace Ruya
 		rvkCreateEngineUIDescriptorPool(this);
 		rvkCreateDescriptorAllocator(this);
 		rvkCreatePBRPipeline(this);
+		rvkCreateSceneUniformBuffer(this);
 	}
 
 	void RVulkan::WaitDeviceForCleanUp()
@@ -114,7 +115,7 @@ namespace Ruya
 
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
 
-		VkDescriptorSet descriptorSets[] = { material.descriptorSetUniform, material.descriptorSetMaterial };
+		VkDescriptorSet descriptorSets[] = { perframeSceneDataDescriptorSet, material.descriptorSetMaterial };
 
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
@@ -814,7 +815,7 @@ namespace Ruya
 		descriptorLayoutBuilder1.AddBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
 		VkDescriptorSetLayout descriptorSetLayout1 = descriptorLayoutBuilder1.Build(pRVulkan, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		pRVulkan->pbrPipelineDescriptorSetLayoutUniform = descriptorSetLayout1;
+		pRVulkan->perframeSceneDataDescriptorSetLayout = descriptorSetLayout1;
 
 		RVkDescriptorLayoutBuilder descriptorLayoutBuilder2;
 		descriptorLayoutBuilder2.Clear();
@@ -855,15 +856,40 @@ namespace Ruya
 		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
 		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
 
-		pRVulkan->defaultSampler = Ruya::rvkCreateSampler(pRVulkan);
+		pRVulkan->defaultSampler = Ruya::rvkCreateSamplerNearest(pRVulkan);
 
 		pRVulkan->deletionQueue.PushFunction([=]()
 			{
-				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayoutUniform, nullptr);
+				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->perframeSceneDataDescriptorSetLayout, nullptr);
 				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayoutMaterial, nullptr);
 				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineLayout, nullptr);
 				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pbrPipeline, nullptr);
 				rvkDestroySampler(pRVulkan, pRVulkan->defaultSampler);
+			});
+	}
+
+	void rvkCreateSceneUniformBuffer(RVulkan* pRVulkan)
+	{
+		pRVulkan->perframeSceneDataDescriptorSet = pRVulkan->descriptorAllocator.Allocate(pRVulkan, pRVulkan->perframeSceneDataDescriptorSetLayout, nullptr);
+
+		pRVulkan->perframeSceneDataBuffer = Ruya::rvkCreateBuffer(pRVulkan, sizeof(RVkSceneData), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VMA_MEMORY_USAGE_CPU_TO_GPU);
+
+		RVkSceneData bufferData;
+		bufferData.view = math::mat4(1.0f);
+		bufferData.proj = math::mat4(1.0f);
+		bufferData.viewproj = math::mat4(1.0f);
+
+		void* data;
+		vmaMapMemory(pRVulkan->vmaAllocator, pRVulkan->perframeSceneDataBuffer.vmaAllocation, &data);
+		memcpy(data, &bufferData, sizeof(RVkSceneData));
+		vmaUnmapMemory(pRVulkan->vmaAllocator, pRVulkan->perframeSceneDataBuffer.vmaAllocation);
+
+		pRVulkan->perframeSceneDataDescriptorWriter.WriteBuffer(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, pRVulkan->perframeSceneDataBuffer.vkBuffer, sizeof(RVkSceneData), 0);
+		pRVulkan->perframeSceneDataDescriptorWriter.UpdateDescriptorSets(pRVulkan, pRVulkan->perframeSceneDataDescriptorSet);
+
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				rvkDestoryBuffer(pRVulkan, pRVulkan->perframeSceneDataBuffer);
 			});
 	}
 
@@ -1304,12 +1330,24 @@ namespace Ruya
 		vmaDestroyImage(pRVulkan->vmaAllocator, img.image, img.allocation);
 	}
 
-	VkSampler rvkCreateSampler(RVulkan* pRVulkan)
+	VkSampler rvkCreateSamplerNearest(RVulkan* pRVulkan)
 	{
 		VkSamplerCreateInfo samplerCreateInfo = {};
 		samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		samplerCreateInfo.magFilter = VK_FILTER_NEAREST;
 		samplerCreateInfo.minFilter = VK_FILTER_NEAREST;
+
+		VkSampler sampler;
+		vkCreateSampler(pRVulkan->pDevice, &samplerCreateInfo, nullptr, &sampler);
+		return sampler;
+	}
+
+	VkSampler rvkCreateSamplerLinear(RVulkan* pRVulkan)
+	{
+		VkSamplerCreateInfo samplerCreateInfo = {};
+		samplerCreateInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+		samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
 
 		VkSampler sampler;
 		vkCreateSampler(pRVulkan->pDevice, &samplerCreateInfo, nullptr, &sampler);
@@ -1717,7 +1755,7 @@ namespace Ruya
 		VkCommandBufferBeginInfo cmdBufferbeginInfo = rvkCreateCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 		CHECK_VKRESULT_DEBUG(vkBeginCommandBuffer(mainCommandBuffer, &cmdBufferbeginInfo));
 
-		VkClearColorValue clearValue = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+		VkClearColorValue clearValue = { { 0.55f, 0.85f, 1.0f, 1.0f } };
 		VkImageSubresourceRange clearRange = rvkGetImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
 		
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
