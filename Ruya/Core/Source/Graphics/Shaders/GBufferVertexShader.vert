@@ -23,7 +23,7 @@ layout(buffer_reference, std430) readonly buffer VertexBuffer{
 
 layout( push_constant ) uniform constants
 {	
-	mat4 render_matrix;
+	mat4 modelMatrix;
 	VertexBuffer vertexBuffer;
 } PushConstants;
 
@@ -36,5 +36,5 @@ void main()
 	outUV = vec2(v.uv_x, v.uv_y);
 
 	vec4 position = vec4(v.position, 1.0f);
-	gl_Position = PushConstants.render_matrix * position;
+	gl_Position = sceneData.projView * PushConstants.modelMatrix * position;
 }

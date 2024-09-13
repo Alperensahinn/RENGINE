@@ -21,7 +21,7 @@ namespace Ruya
 	{
 		math::mat4 view;
 		math::mat4 proj;
-		math::mat4 viewproj;
+		math::mat4 projView;
 	};
 
 	struct RVkDescriptorAllocator
@@ -194,7 +194,6 @@ namespace Ruya
 		VkExtent2D swapChainExtent;
 
 		RVkAllocatedImage drawImage;
-		RVkAllocatedImage depthImage;
 		VkExtent2D drawExtent;
 		uint32_t currentImageIndex;
 		RVkGBuffer gBuffer;
@@ -304,7 +303,7 @@ namespace Ruya
 	void rvkCreatePBRPipeline(RVulkan* pRVulkan);
 
 	//Creates uniform buffer that hold per frame scene data
-	void rvkCreateSceneUniformBuffer(RVulkan* pRVulkan);
+	void rvkCreatePerframeSceneUniformBuffer(RVulkan* pRVulkan);
 
 	void rvkCreateGBuffer(RVulkan* pRVulkan);
 
@@ -383,6 +382,8 @@ namespace Ruya
 
 	//Destroy old and create new swapchain 
 	void rvkResizeSwapChain(RVulkan* pRVulkan);
+
+	void rvkDestroySwapChain(RVulkan* pRVulkan);
 
 	//Wait for fences
 	void rvkWaitFences(RVulkan* pRVulkan, VkFence fence);

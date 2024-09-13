@@ -44,7 +44,7 @@ namespace Ruya
 		rvkCreateEngineUIDescriptorPool(this);
 		rvkCreateDescriptorAllocator(this);
 		rvkCreatePBRPipeline(this);
-		rvkCreateSceneUniformBuffer(this);
+		rvkCreatePerframeSceneUniformBuffer(this);
 	}
 
 	void RVulkan::WaitDeviceForCleanUp()
@@ -55,6 +55,7 @@ namespace Ruya
 	void RVulkan::CleanUp()
 	{
 		deletionQueue.flush();
+		rvkDestroySwapChain(this);
 	}
 
 	void RVulkan::BeginFrame()
@@ -133,10 +134,20 @@ namespace Ruya
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
 		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)1600 / (float)900, 0.1f, 100.0f);
-		glm::mat4 model = glm::mat4(1.0f);
 		proj[1][1] *= -1;
+
+		RVkSceneData bufferData;
+		bufferData.view = viewMatrix;
+		bufferData.proj = proj;
+		bufferData.projView = proj * viewMatrix;
+
+		void* data;
+		vmaMapMemory(vmaAllocator, perframeSceneDataBuffer.vmaAllocation, &data);
+		memcpy(data, &bufferData, sizeof(RVkSceneData));
+		vmaUnmapMemory(vmaAllocator, perframeSceneDataBuffer.vmaAllocation);
+
 		RVkDrawPushConstants push_constants;
-		push_constants.model = proj * viewMatrix * modelMatrix;
+		push_constants.model = modelMatrix;
 		push_constants.vertexBuffer = meshBuffer.vertexBufferAddress;
 		vkCmdPushConstants(cmdBuffer, pbrPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
 		
@@ -590,11 +601,6 @@ namespace Ruya
 
 		CHECK_VKRESULT(vkCreateSwapchainKHR(pRVulkan->pDevice, &swapChainCreateInfo, nullptr, &(pRVulkan->pSwapChain)));
 
-		pRVulkan->deletionQueue.PushFunction([=]()
-			{
-				vkDestroySwapchainKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, nullptr);
-			});
-
 
 		uint32_t swapChainImageCount;
 		CHECK_VKRESULT(vkGetSwapchainImagesKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, &swapChainImageCount, nullptr));
@@ -623,63 +629,7 @@ namespace Ruya
 			imageViewCreateInfo.subresourceRange.layerCount = 1;
 
 			CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo, nullptr, &(pRVulkan->swapChainImageViews.data()[i])));
-
-			pRVulkan->deletionQueue.PushFunction([=]()
-				{
-					vkDestroyImageView(pRVulkan->pDevice, pRVulkan->swapChainImageViews[i], nullptr);
-				});
 		}
-
-
-		VkExtent3D drawImageExtent = {
-			1920,
-			1080,
-			1
-		};
-
-		pRVulkan->drawImage.imageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-		pRVulkan->drawImage.imageExtent = drawImageExtent;
-
-		VkImageUsageFlags drawImageUsageFlags = {};
-		drawImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
-		drawImageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-		drawImageUsageFlags |= VK_IMAGE_USAGE_STORAGE_BIT;
-		drawImageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		drawImageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
-
-		VkImageCreateInfo renderImageCreateInfo = rvkCreateImageCreateInfo(pRVulkan->drawImage.imageFormat, drawImageUsageFlags, pRVulkan->drawImage.imageExtent);
-
-		VmaAllocationCreateInfo rimgAllocCreateInfo = {};
-		rimgAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-		rimgAllocCreateInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &renderImageCreateInfo, &rimgAllocCreateInfo, &(pRVulkan->drawImage.image), &(pRVulkan->drawImage.allocation), nullptr));
-
-		VkImageViewCreateInfo rimgCreateInfo = rvkCreateImageViewCreateInfo(pRVulkan->drawImage.imageFormat, pRVulkan->drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
-
-		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &rimgCreateInfo, nullptr, &(pRVulkan->drawImage.imageView)));
-
-		pRVulkan->depthImage.imageFormat = VK_FORMAT_D32_SFLOAT;
-		pRVulkan->depthImage.imageExtent = drawImageExtent;
-		VkImageUsageFlags depthImageUsages = {};
-		depthImageUsages |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-
-		VkImageCreateInfo dimg_info = rvkCreateImageCreateInfo(pRVulkan->depthImage.imageFormat, depthImageUsages, drawImageExtent);
-
-		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &dimg_info, &rimgAllocCreateInfo, &(pRVulkan->depthImage.image), &(pRVulkan->depthImage.allocation), nullptr));
-
-		VkImageViewCreateInfo dview_info = rvkCreateImageViewCreateInfo(pRVulkan->depthImage.imageFormat, pRVulkan->depthImage.image, VK_IMAGE_ASPECT_DEPTH_BIT);
-
-		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &dview_info, nullptr, &(pRVulkan->depthImage.imageView)));
-
-		pRVulkan->deletionQueue.PushFunction([=]()
-			{
-				vmaDestroyImage(pRVulkan->vmaAllocator, pRVulkan->drawImage.image, pRVulkan->drawImage.allocation);
-				vkDestroyImageView(pRVulkan->pDevice, pRVulkan->drawImage.imageView, nullptr);
-
-				vmaDestroyImage(pRVulkan->vmaAllocator, pRVulkan->depthImage.image, pRVulkan->depthImage.allocation);
-				vkDestroyImageView(pRVulkan->pDevice, pRVulkan->depthImage.imageView, nullptr);
-			});
 
 		RLOG("[VULKAN] Swap chain created.");
 	}
@@ -886,7 +836,7 @@ namespace Ruya
 		VkFormat colorAttachmentFortmats[] = { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT };
 
 		pipelineBuilder.SetColorAttachmentFormat(colorAttachmentFortmats, 3);
-		pipelineBuilder.SetDepthFormat(pRVulkan->depthImage.imageFormat);
+		pipelineBuilder.SetDepthFormat(pRVulkan->gBuffer.depthTexture.imageFormat);
 		pipelineBuilder.pipelineLayout = pipelineLayout;
 
 		pRVulkan->pbrPipeline = pipelineBuilder.BuildPipeline(pRVulkan);
@@ -906,7 +856,7 @@ namespace Ruya
 			});
 	}
 
-	void rvkCreateSceneUniformBuffer(RVulkan* pRVulkan)
+	void rvkCreatePerframeSceneUniformBuffer(RVulkan* pRVulkan)
 	{
 		pRVulkan->perframeSceneDataDescriptorSet = pRVulkan->descriptorAllocator.Allocate(pRVulkan, pRVulkan->perframeSceneDataDescriptorSetLayout, nullptr);
 
@@ -915,7 +865,7 @@ namespace Ruya
 		RVkSceneData bufferData;
 		bufferData.view = math::mat4(1.0f);
 		bufferData.proj = math::mat4(1.0f);
-		bufferData.viewproj = math::mat4(1.0f);
+		bufferData.projView = math::mat4(1.0f);
 
 		void* data;
 		vmaMapMemory(pRVulkan->vmaAllocator, pRVulkan->perframeSceneDataBuffer.vmaAllocation, &data);
@@ -933,6 +883,16 @@ namespace Ruya
 
 	void rvkCreateGBuffer(RVulkan* pRVulkan)
 	{
+		//Draw Image
+		VkExtent3D drawImageExtent = {
+			1920,
+			1080,
+			1
+		};
+
+		pRVulkan->drawImage.imageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+		pRVulkan->drawImage.imageExtent = drawImageExtent;
+
 		VkImageUsageFlags imageUsageFlags = {};
 		imageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		imageUsageFlags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
@@ -940,6 +900,20 @@ namespace Ruya
 		imageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		imageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
+		VkImageCreateInfo renderImageCreateInfo = rvkCreateImageCreateInfo(pRVulkan->drawImage.imageFormat, imageUsageFlags, pRVulkan->drawImage.imageExtent);
+
+		VmaAllocationCreateInfo rimgAllocCreateInfo = {};
+		rimgAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+		rimgAllocCreateInfo.requiredFlags = VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &renderImageCreateInfo, &rimgAllocCreateInfo, &(pRVulkan->drawImage.image), &(pRVulkan->drawImage.allocation), nullptr));
+
+		VkImageViewCreateInfo drawImageCreateInfo = rvkCreateImageViewCreateInfo(pRVulkan->drawImage.imageFormat, pRVulkan->drawImage.image, VK_IMAGE_ASPECT_COLOR_BIT);
+
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &drawImageCreateInfo, nullptr, &(pRVulkan->drawImage.imageView)));
+
+
+		//G Buffer Images
 		VkImageCreateInfo imageCreateInfo = rvkCreateImageCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, imageUsageFlags, pRVulkan->drawImage.imageExtent);
 
 		VmaAllocationCreateInfo allocationCreateInfo = {};
@@ -959,6 +933,7 @@ namespace Ruya
 		VkImageViewCreateInfo imageViewCreateInfo3 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.positionTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo3, nullptr, &pRVulkan->gBuffer.positionTexture.imageView));
 
+
 		//depth
 		VkImageUsageFlags imageUsageFlags_depth = {};
 		imageUsageFlags_depth |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
@@ -972,13 +947,19 @@ namespace Ruya
 		VkImageViewCreateInfo imageViewCreateInfo_depth = rvkCreateImageViewCreateInfo(VK_FORMAT_D32_SFLOAT, pRVulkan->gBuffer.depthTexture.image, VK_IMAGE_ASPECT_DEPTH_BIT);
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo_depth, nullptr, &pRVulkan->gBuffer.depthTexture.imageView));
 
+		pRVulkan->gBuffer.depthTexture.imageFormat = VK_FORMAT_D32_SFLOAT;
+
 		pRVulkan->deletionQueue.PushFunction([=]()
 			{
+				vmaDestroyImage(pRVulkan->vmaAllocator, pRVulkan->drawImage.image, pRVulkan->drawImage.allocation);
+				vkDestroyImageView(pRVulkan->pDevice, pRVulkan->drawImage.imageView, nullptr);
+
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.baseColorTexture);
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.normalTexture);
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.positionTexture);
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.depthTexture);
 			});
+
 	}
 
 	VkCommandBufferBeginInfo rvkCreateCommandBufferBeginInfo(VkCommandBufferUsageFlags flags)
@@ -1341,9 +1322,18 @@ namespace Ruya
 	void rvkResizeSwapChain(RVulkan* pRVulkan)
 	{
 		vkDeviceWaitIdle(pRVulkan->pDevice);
-
-		vkDestroySwapchainKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, nullptr);
+		rvkDestroySwapChain(pRVulkan);
 		rvkCreateSwapChain(pRVulkan);
+	}
+
+	void rvkDestroySwapChain(RVulkan* pRVulkan)
+	{
+		vkDestroySwapchainKHR(pRVulkan->pDevice, pRVulkan->pSwapChain, nullptr);
+
+		for (int i = 0; i < pRVulkan->swapChainImages.size(); i++)
+		{
+			vkDestroyImageView(pRVulkan->pDevice, pRVulkan->swapChainImageViews[i], nullptr);
+		}
 	}
 
 	RVkAllocatedImage rvkCreateImage(RVulkan* pRVulkan, VkExtent3D extent, VkFormat format, VkImageUsageFlags usageFlags, bool mipmapped)
