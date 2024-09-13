@@ -1,7 +1,10 @@
 #pragma once
+#include <memory>
 
 namespace Ruya
 {
+	class Actor;
+
 	class ActorComponent
 	{
 	public:
@@ -20,7 +23,11 @@ namespace Ruya
 		void SetUpdateFunctionEnable(bool b);
 		bool GetUpdateFunctionEnabled();
 
+		void SetActor(Actor* actor);
+		Actor& GetActor();
+
 	private:
 		bool bCanEverUpdate;
+		Actor* actor;
 	};
 }

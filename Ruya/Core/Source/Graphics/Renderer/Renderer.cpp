@@ -36,7 +36,7 @@ namespace Ruya
 		{
 			std::shared_ptr<RenderObject> renderObject = renderQueue->Pop();
 			
-			pRVulkan->Draw(renderObject->meshBuffer, renderObject->material, camera->GetViewMatrix());
+			pRVulkan->Draw(renderObject->meshBuffer, renderObject->material, renderObject->modelMatrix, camera->GetViewMatrix());
 		}
 
 		pRVulkan->EndDraw();

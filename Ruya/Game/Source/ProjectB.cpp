@@ -21,20 +21,6 @@ ProjectB::ProjectB()
 
 	Ruya::MeshComponent* meshComponent = dynamic_cast<Ruya::MeshComponent*>(monkeyMesh.get());
 
-	/*
-	uint32_t magenta = glm::packUnorm4x8(glm::vec4(1, 0, 1, 1));
-	uint32_t black = glm::packUnorm4x8(glm::vec4(0, 0, 0, 0));
-	std::array<uint32_t, 16 * 16 > pixels;
-
-	for (int x = 0; x < 16; x++)
-	{
-		for (int y = 0; y < 16; y++)
-		{
-			pixels[y * 16 + x] = ((x % 2) ^ (y % 2)) ? magenta : black;
-		}
-	}
-	*/
-
 	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\MandolorianHelmet.fbx");
 	
 	int width, height, channels;

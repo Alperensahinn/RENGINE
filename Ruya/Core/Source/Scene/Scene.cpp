@@ -21,13 +21,9 @@ void Ruya::Scene::Start()
 
 void Ruya::Scene::Update()
 {
-	for (const auto& pair : actorMap)
+	for (const auto& actor : updateFunctionEnabledActors)
 	{
-		const std::shared_ptr<Actor>& actor = pair.second;
-		if (actor)
-		{
-			actor->Update();
-		}
+		actor->Update();
 	}
 }
 
@@ -55,7 +51,7 @@ void Ruya::Scene::InitUpdateFunctionEnabledActors()
 		const auto& actor = pair.second;
 		if (actor->GetUpdateFunctionEnabled())
 		{
-			updateFunctionEnabledActors.push_back(actor->GetID());
+			updateFunctionEnabledActors.push_back(actor);
 		}
 	}
 }

@@ -31,6 +31,6 @@ namespace Ruya
 		std::unordered_map<unsigned int, std::shared_ptr<Actor>> actorMap;
 		std::queue<unsigned int> avaibleActorIDs;
 		unsigned int maxAvaibleActorID;
-		std::vector<unsigned int> updateFunctionEnabledActors;
+		std::vector<std::shared_ptr<Actor>> updateFunctionEnabledActors;
 	};
 }

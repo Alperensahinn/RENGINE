@@ -251,7 +251,7 @@ namespace Ruya
 
 		void BeginFrame();
 		void BeginDraw();
-		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 viewMatrix);
+		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix);
 		void EndDraw();
 		void DrawEngineUI(EngineUI* pEngineUI);
 		void EndFrame();

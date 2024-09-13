@@ -120,13 +120,13 @@ namespace Ruya
 		renderInfo = rvkCreateRenderingInfo(drawExtent, colorAttachments, 3, &depthAttachment);
 
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
-	}
-
-	void RVulkan::Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 viewMatrix)
-	{	
-		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
+	}
+
+	void RVulkan::Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix)
+	{	
+		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
 		VkDescriptorSet descriptorSets[] = { perframeSceneDataDescriptorSet, material.descriptorSetMaterial };
 
@@ -136,7 +136,7 @@ namespace Ruya
 		glm::mat4 model = glm::mat4(1.0f);
 		proj[1][1] *= -1;
 		RVkDrawPushConstants push_constants;
-		push_constants.model = proj * viewMatrix * model;
+		push_constants.model = proj * viewMatrix * modelMatrix;
 		push_constants.vertexBuffer = meshBuffer.vertexBufferAddress;
 		vkCmdPushConstants(cmdBuffer, pbrPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RVkDrawPushConstants), &push_constants);
 		
@@ -325,22 +325,44 @@ namespace Ruya
 
 	void rvkSelectPhysicalDevice(RVulkan* pRVulkan)
 	{
-		unsigned int physicalDevicesCount;
+		unsigned int physicalDevicesCount = 0;
 		CHECK_VKRESULT(vkEnumeratePhysicalDevices(pRVulkan->pInstance, &physicalDevicesCount, nullptr));
 
 		if (physicalDevicesCount == 0)
 		{
-			RERRLOG("[VULKAN ERROR] Failed to find Vulkan physical device.")
+			RERRLOG("[VULKAN ERROR] Failed to find Vulkan physical device.");
+			return;
 		}
 
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDevicesCount);
 		CHECK_VKRESULT(vkEnumeratePhysicalDevices(pRVulkan->pInstance, &physicalDevicesCount, physicalDevices.data()));
 
-		pRVulkan->pPhysicalDevice = physicalDevices[0];
+		VkPhysicalDevice selectedPhysicalDevice = VK_NULL_HANDLE;
+		VkPhysicalDeviceProperties selectedDeviceProperties;
 
-		VkPhysicalDeviceProperties physicalDeviceProperties;
-		vkGetPhysicalDeviceProperties(pRVulkan->pPhysicalDevice, &physicalDeviceProperties);
-		RLOG("[VULKAN] Vulkan physical device selected: " << physicalDeviceProperties.deviceName)
+		for (const auto& physicalDevice : physicalDevices)
+		{
+			VkPhysicalDeviceProperties deviceProperties;
+			vkGetPhysicalDeviceProperties(physicalDevice, &deviceProperties);
+
+			if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+			{
+				selectedPhysicalDevice = physicalDevice;
+				selectedDeviceProperties = deviceProperties;
+				break;
+			}
+		}
+
+		if (selectedPhysicalDevice == VK_NULL_HANDLE)
+		{
+			RERRLOG("[VULKAN WARNING] No discrete GPU found, selecting first available device.");
+			selectedPhysicalDevice = physicalDevices[0];
+			vkGetPhysicalDeviceProperties(selectedPhysicalDevice, &selectedDeviceProperties);
+		}
+
+		pRVulkan->pPhysicalDevice = selectedPhysicalDevice;
+
+		RLOG("[VULKAN] Vulkan physical device selected: " << selectedDeviceProperties.deviceName);
 	}
 
 	void rvkCheckQueueFamilies(RVulkan* pRVulkan)

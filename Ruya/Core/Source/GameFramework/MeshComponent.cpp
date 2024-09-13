@@ -20,6 +20,8 @@ void Ruya::MeshComponent::Update()
 {
 	ActorComponent::Update();
 	
+	renderObject->modelMatrix = GetActor().GetWorldMatrix();
+
 	Engine::GetInstance().GetRenderer().AddToRenderQueue(renderObject);
 }
 

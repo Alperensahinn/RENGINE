@@ -39,14 +39,24 @@ namespace Ruya
 		void SetUpdateFunctionEnable(bool b);
 		bool GetUpdateFunctionEnabled();
 
+		void SetStatic(bool b);
+		bool IsStatic();
+
+		math::mat4 GetWorldMatrix();
+
 	public:
-		Transform transform;
 		std::string name;
+		Transform transform;
+
+	private:
+		math::mat4 worldMatrix;
 
 	private:
 		unsigned int id;
 		bool bCanEverUpdate;
+		bool bIsStatic;
 		std::vector<std::unique_ptr<ActorComponent>> components;
 		std::vector <std::unique_ptr<ActorComponent>> updateFunctionEnabledComponents;
+		std::vector<std::shared_ptr<Actor>> childActors;
 	};
 }

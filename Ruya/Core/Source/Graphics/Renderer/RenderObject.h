@@ -7,7 +7,7 @@ namespace Ruya
 {
 	struct RenderObject
 	{
-		glm::mat4 transform;
+		glm::mat4 modelMatrix;
 		PBRMaterial material;
 		RVkMeshBuffer meshBuffer;
 
