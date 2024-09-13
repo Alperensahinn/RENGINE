@@ -39,7 +39,7 @@
 #define VK_VALIDATION_LOG(exp)                                     \
     {                                                              \
             std::cout << "[VULKAN VALIDATION LAYER] "        \
-                      << exp << std::endl;                         \
+                      << exp << "\n" << std::endl;                         \
     }
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(

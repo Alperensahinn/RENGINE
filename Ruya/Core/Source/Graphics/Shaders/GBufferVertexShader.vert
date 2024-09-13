@@ -4,7 +4,7 @@
 
 #include "InputStructures.glsl"
 
-layout (location = 0) out vec3 outFragPos;
+layout (location = 0) out vec4 outFragPos;
 layout (location = 1) out vec3 outNormal;
 layout (location = 2) out vec2 outUV;
 
@@ -31,10 +31,11 @@ void main()
 {	
 	Vertex v = PushConstants.vertexBuffer.vertices[gl_VertexIndex];
 
-	outFragPos = v.position;
+	vec4 position = vec4(v.position, 1.0f);
+
+	outFragPos = PushConstants.modelMatrix * position;
 	outNormal = v.normal;
 	outUV = vec2(v.uv_x, v.uv_y);
 
-	vec4 position = vec4(v.position, 1.0f);
 	gl_Position = sceneData.projView * PushConstants.modelMatrix * position;
 }

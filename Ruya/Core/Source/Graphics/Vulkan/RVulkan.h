@@ -93,7 +93,7 @@ namespace Ruya
 	class RVkPipelineBuilder
 	{
 	public:
-		VkPipeline BuildPipeline(RVulkan*  pRVulkan);
+		VkPipeline BuildPipeline(RVulkan* pRVulkan, uint32_t passType);
 		void Clear();
 		
 		void SetShaders(VkShaderModule vertexShader, VkShaderModule fragmentShader);
@@ -230,11 +230,12 @@ namespace Ruya
 		VkPipelineLayout pbrPipelineLayout;
 		VkDescriptorSetLayout pbrPipelineDescriptorSetLayoutMaterial;
 
+		VkPipeline lightPassPipeline;
+		VkPipelineLayout lightPassPipelineLayout;
+		VkDescriptorSetLayout lightPassPipelineDescriptorSetLayout;
+		VkDescriptorSet lightPassPipelineDescriptorSet;
+
 		VkSampler defaultSampler;
-
-	private:
-		VkRenderingInfo renderInfo;
-
 	public:
 		RVulkan(GLFWwindow& window);
 		~RVulkan();
@@ -257,6 +258,9 @@ namespace Ruya
 		RVkFrameData& GetCurrentFrame();
 
 		void ResizeSwapChain();
+
+	private:
+		void LightPass();
 	};
 
 	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan);

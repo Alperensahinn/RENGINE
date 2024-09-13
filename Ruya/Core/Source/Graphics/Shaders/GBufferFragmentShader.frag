@@ -2,7 +2,7 @@
 
 #include "InputStructures.glsl"
 
-layout (location = 0) in vec3 infragPos;
+layout (location = 0) in vec4 infragPos;
 layout (location = 1) in vec3 inNormal;
 layout (location = 2) in vec2 inUV;
 
@@ -16,7 +16,7 @@ void main()
 
 	outFragColor = vec4(color, 1.0f);
 
-	outFragPos = vec4(infragPos, 1.0f);
+	outFragPos = infragPos;
 
 	outFragNormal = vec4(inNormal, 1.0f);
 }
