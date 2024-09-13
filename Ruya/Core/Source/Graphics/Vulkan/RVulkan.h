@@ -253,14 +253,12 @@ namespace Ruya
 		void BeginDraw();
 		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix);
 		void EndDraw();
+		void LightPass();
 		void DrawEngineUI(EngineUI* pEngineUI);
 		void EndFrame();
 		RVkFrameData& GetCurrentFrame();
 
 		void ResizeSwapChain();
-
-	private:
-		void LightPass();
 	};
 
 	void rvkCreateEngineUIDescriptorPool(RVulkan* pRVulkan);

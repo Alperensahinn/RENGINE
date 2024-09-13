@@ -41,6 +41,8 @@ namespace Ruya
 
 		pRVulkan->EndDraw();
 
+		pRVulkan->LightPass();
+
 		pRVulkan->DrawEngineUI(pEngineUI);
 
 		pRVulkan->EndFrame();

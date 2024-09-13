@@ -115,8 +115,8 @@ namespace Ruya
 		colorAttachments[1] = colorAttachment1;
 		colorAttachments[2] = colorAttachment2;
 
-		drawExtent.width = 1920;
-		drawExtent.height = 1080;
+		drawExtent.width = drawImage.imageExtent.width;
+		drawExtent.height = drawImage.imageExtent.height;
 
 		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, colorAttachments, 3, &depthAttachment);
 
@@ -168,7 +168,6 @@ namespace Ruya
 	void RVulkan::EndFrame()
 	{
 		RVkFrameData frameData = GetCurrentFrame();
-		//LightPass();
 		frameData.EndFrame(this);
 		frameData.SubmitCommandBuffer(this);
 
@@ -220,9 +219,11 @@ namespace Ruya
 
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, lightPassPipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-		vkCmdDraw(cmdBuffer, 0, 0, 0, 0);
+		vkCmdDraw(cmdBuffer, 6, 1, 0, 0);
 
 		vkCmdEndRendering(cmdBuffer);
+
+		rvkImageLayoutTransition(cmdBuffer, drawImage.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 	}
 
 	void RVulkan::DrawEngineUI(EngineUI* pEngineUI)
@@ -882,7 +883,7 @@ namespace Ruya
 				rvkDestroySampler(pRVulkan, pRVulkan->defaultSampler);
 			});
 
-		/*
+
 		//Light pass
 		VkShaderModule ligthPasssVertexShader;
 		std::vector<char> ligthPasssVertexShaderCode = Ruya::ReadBinaryFile("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Core\\Source\\Graphics\\Shaders\\OpaqueVertexShader.spv");
@@ -944,11 +945,11 @@ namespace Ruya
 		RVkDescriptorWriter writer;
 		pRVulkan->lightPassPipelineDescriptorSet = pRVulkan->descriptorAllocator.Allocate(pRVulkan, pRVulkan->lightPassPipelineDescriptorSetLayout, nullptr);
 		
-		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.baseColorTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.positionTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.normalTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.baseColorTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.positionTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.normalTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_GENERAL);
 		writer.UpdateDescriptorSets(pRVulkan, pRVulkan->lightPassPipelineDescriptorSet);
-		*/
+
 
 		RLOG("[VULKAN] PBR pipeline created.");
 	}
@@ -1977,7 +1978,7 @@ namespace Ruya
 
 		//drawImage
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
-		//vkCmdClearColorImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 	}
 
