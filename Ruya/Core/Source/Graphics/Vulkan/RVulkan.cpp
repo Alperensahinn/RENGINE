@@ -55,7 +55,6 @@ namespace Ruya
 	void RVulkan::CleanUp()
 	{
 		deletionQueue.flush();
-		rvkDestroySwapChain(this);
 	}
 
 	void RVulkan::BeginFrame()
@@ -981,6 +980,11 @@ namespace Ruya
 
 	void rvkCreateGBuffer(RVulkan* pRVulkan)
 	{
+		pRVulkan->deletionQueue.PushFunction([=]()
+			{
+				rvkDestroySwapChain(pRVulkan);;
+			});
+
 		//Draw Image
 		VkExtent3D drawImageExtent = {
 			1920,
