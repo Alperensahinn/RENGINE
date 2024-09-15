@@ -10,6 +10,7 @@ namespace Ruya
 		struct MaterialResources
 		{
 			Texture albedoTexture;
+			Texture normalTexture;
 		}resources;
 
 		VkDescriptorSet descriptorSetMaterial;

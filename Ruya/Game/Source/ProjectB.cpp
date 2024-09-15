@@ -23,25 +23,11 @@ ProjectB::ProjectB()
 
 	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\MandolorianHelmet.fbx");
 	
-	int width, height, channels;
-	stbi_uc* pixels = stbi_load("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_baseColor.png", &width, &height, &channels, STBI_rgb_alpha);
+	Ruya::Texture albedoTexture = Ruya::LoadTexture("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_baseColor.png");
 
-	if (!pixels) 
-	{
-		std::cerr << "Failed to load texture image!" << std::endl;
-		return;
-	}
+	Ruya::Texture normalTexture = Ruya::LoadTexture("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_normal.png");
 
-	VkExtent3D imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
-
-	Ruya::Texture texture;
-	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels, imageExtent, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
-
-	stbi_image_free(pixels);
-
-	texture.sampler = Ruya::rvkCreateSamplerLinear(Ruya::Engine::GetInstance().GetRenderer().pRVulkan);
-
-	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, texture));
+	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, albedoTexture, normalTexture));
 	meshComponent->SetRenderObject(renderObject);
 }
 

@@ -36,7 +36,7 @@ namespace Ruya
 		{
 			std::shared_ptr<RenderObject> renderObject = renderQueue->Pop();
 			
-			pRVulkan->Draw(renderObject->meshBuffer, renderObject->material, renderObject->modelMatrix, camera->GetViewMatrix());
+			pRVulkan->Draw(renderObject->meshBuffer, renderObject->material, renderObject->modelMatrix, camera->GetViewMatrix(), camera->transform.position);
 		}
 
 		pRVulkan->EndDraw();
@@ -53,13 +53,15 @@ namespace Ruya
 		return pRVulkan;
 	}
 
-	RenderObject Renderer::CreateRenderObject(std::shared_ptr<Mesh> mesh, Texture texture)
+	RenderObject Renderer::CreateRenderObject(std::shared_ptr<Mesh> mesh, Texture albedoTexture, Texture normalTexture)
 	{	
 		RenderObject renderObject;
 		renderObject.meshBuffer = rvkCreateMeshBuffer(pRVulkan, mesh->vertices, mesh->indices);
 		
 		PBRMaterial material;
-		material.resources.albedoTexture = texture;
+		material.resources.albedoTexture = albedoTexture;
+		material.resources.normalTexture = normalTexture;
+
 		material.Init(material.resources);
 
 		renderObject.material = material;

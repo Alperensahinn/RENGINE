@@ -17,11 +17,12 @@ namespace Ruya
 	struct PBRMaterial;
 
 
-	struct RVkSceneData
+	struct alignas(16) RVkSceneData
 	{
 		math::mat4 view;
 		math::mat4 proj;
 		math::mat4 projView;
+		math::vec3 viewPos;
 	};
 
 	struct RVkDescriptorAllocator
@@ -235,7 +236,8 @@ namespace Ruya
 		VkDescriptorSetLayout lightPassPipelineDescriptorSetLayout;
 		VkDescriptorSet lightPassPipelineDescriptorSet;
 
-		VkSampler defaultSampler;
+		VkSampler defaultNearestSampler;
+		VkSampler defaultLinearSampler;
 	public:
 		RVulkan(GLFWwindow& window);
 		~RVulkan();
@@ -251,7 +253,7 @@ namespace Ruya
 
 		void BeginFrame();
 		void BeginDraw();
-		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix);
+		void Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix, math::vec3 viewPos);
 		void EndDraw();
 		void LightPass();
 		void DrawEngineUI(EngineUI* pEngineUI);

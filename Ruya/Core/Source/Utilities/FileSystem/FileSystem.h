@@ -6,6 +6,7 @@
 #include <assimp/postprocess.h>
 #include "../../Graphics/Mesh.h"
 #include <memory>
+#include <Graphics/Renderer/Texture.h>
 
 namespace Ruya
 {
@@ -16,4 +17,6 @@ namespace Ruya
 	Mesh ProcessNode(aiNode* node, const aiScene* scene);
 
 	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
+
+	Texture LoadTexture(std::string path);
 }

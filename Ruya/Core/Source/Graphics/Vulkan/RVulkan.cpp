@@ -124,7 +124,7 @@ namespace Ruya
 		vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipeline);
 	}
 
-	void RVulkan::Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix)
+	void RVulkan::Draw(RVkMeshBuffer meshBuffer, PBRMaterial material, math::mat4 modelMatrix, math::mat4 viewMatrix, math::vec3 viewPos)
 	{	
 		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
@@ -139,6 +139,7 @@ namespace Ruya
 		bufferData.view = viewMatrix;
 		bufferData.proj = proj;
 		bufferData.projView = proj * viewMatrix;
+		bufferData.viewPos = viewPos;
 
 		void* data;
 		vmaMapMemory(vmaAllocator, perframeSceneDataBuffer.vmaAllocation, &data);
@@ -832,6 +833,7 @@ namespace Ruya
 		RVkDescriptorLayoutBuilder descriptorLayoutBuilder2;
 		descriptorLayoutBuilder2.Clear();
 		descriptorLayoutBuilder2.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		descriptorLayoutBuilder2.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		VkDescriptorSetLayout descriptorSetLayout2 = descriptorLayoutBuilder2.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		pRVulkan->pbrPipelineDescriptorSetLayoutMaterial = descriptorSetLayout2;
@@ -871,7 +873,8 @@ namespace Ruya
 		vkDestroyShaderModule(pRVulkan->pDevice, vertexShader, nullptr);
 		vkDestroyShaderModule(pRVulkan->pDevice, fragmentShader, nullptr);
 
-		pRVulkan->defaultSampler = Ruya::rvkCreateSamplerNearest(pRVulkan);
+		pRVulkan->defaultNearestSampler = Ruya::rvkCreateSamplerNearest(pRVulkan);
+		pRVulkan->defaultLinearSampler = Ruya::rvkCreateSamplerLinear(pRVulkan);
 
 		pRVulkan->deletionQueue.PushFunction([=]()
 			{
@@ -879,7 +882,8 @@ namespace Ruya
 				vkDestroyDescriptorSetLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineDescriptorSetLayoutMaterial, nullptr);
 				vkDestroyPipelineLayout(pRVulkan->pDevice, pRVulkan->pbrPipelineLayout, nullptr);
 				vkDestroyPipeline(pRVulkan->pDevice, pRVulkan->pbrPipeline, nullptr);
-				rvkDestroySampler(pRVulkan, pRVulkan->defaultSampler);
+				rvkDestroySampler(pRVulkan, pRVulkan->defaultNearestSampler);
+				rvkDestroySampler(pRVulkan, pRVulkan->defaultLinearSampler);
 			});
 
 
@@ -944,9 +948,9 @@ namespace Ruya
 		RVkDescriptorWriter writer;
 		pRVulkan->lightPassPipelineDescriptorSet = pRVulkan->descriptorAllocator.Allocate(pRVulkan, pRVulkan->lightPassPipelineDescriptorSetLayout, nullptr);
 		
-		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.baseColorTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_GENERAL);
-		writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.positionTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_GENERAL);
-		writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.normalTexture.imageView, pRVulkan->defaultSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.baseColorTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.positionTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.normalTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
 		writer.UpdateDescriptorSets(pRVulkan, pRVulkan->lightPassPipelineDescriptorSet);
 
 
@@ -963,6 +967,7 @@ namespace Ruya
 		bufferData.view = math::mat4(1.0f);
 		bufferData.proj = math::mat4(1.0f);
 		bufferData.projView = math::mat4(1.0f);
+		bufferData.viewPos = math::vec3(1.0f);
 
 		void* data;
 		vmaMapMemory(pRVulkan->vmaAllocator, pRVulkan->perframeSceneDataBuffer.vmaAllocation, &data);

@@ -18,5 +18,6 @@ void main()
 
 	outFragPos = infragPos;
 
-	outFragNormal = vec4(inNormal, 1.0f);
+	//outFragNormal = vec4(inNormal, 1.0f);
+	outFragNormal = vec4(texture(normalTexture,inUV).xyz, 1.0f);
 }

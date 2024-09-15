@@ -12,7 +12,6 @@ namespace Ruya
 		void Destroy()
 		{
 			Ruya::rvkDestroyImage(Engine::GetInstance().GetRenderer().pRVulkan, image);
-			Ruya::rvkDestroySampler(Engine::GetInstance().GetRenderer().pRVulkan, sampler);
 		};
 	};
 }

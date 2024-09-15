@@ -27,7 +27,7 @@ namespace Ruya
 		void DrawFrame();
 		RVulkan* GetRendererBackend();
 
-		RenderObject CreateRenderObject(std::shared_ptr<Mesh> mesh, Texture texture);
+		RenderObject CreateRenderObject(std::shared_ptr<Mesh> mesh, Texture albedoTexture, Texture normalTexture);
 		void BindCamera(Camera* camera);
 
 		void AddToRenderQueue(std::shared_ptr<RenderObject> renderObject);

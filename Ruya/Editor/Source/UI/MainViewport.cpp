@@ -3,7 +3,7 @@
 
 REditor::MainViewport::MainViewport() : Panel()
 {
-    drawImageDescriptorSet = ImGui_ImplVulkan_AddTexture(Ruya::Engine::GetInstance().GetRenderer().GetRendererBackend()->defaultSampler, Ruya::Engine::GetInstance().GetRenderer().GetRendererBackend()->drawImage.imageView, VK_IMAGE_LAYOUT_GENERAL);
+    drawImageDescriptorSet = ImGui_ImplVulkan_AddTexture(Ruya::Engine::GetInstance().GetRenderer().GetRendererBackend()->defaultNearestSampler, Ruya::Engine::GetInstance().GetRenderer().GetRendererBackend()->gBuffer.normalTexture.imageView, VK_IMAGE_LAYOUT_GENERAL);
 }
 
 REditor::MainViewport::~MainViewport()

@@ -1,6 +1,8 @@
 #include "FileSystem.h"
 #include <fstream>
 #include "../Log/RLog.h"
+#include <stb_image.h>
+#include <Engine.h>
 
 
 std::vector<char> Ruya::ReadBinaryFile(const std::string& filepath)
@@ -104,6 +106,29 @@ Ruya::Mesh Ruya::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
 
 	return Mesh(vertices, indices);
+}
+
+Ruya::Texture Ruya::LoadTexture(std::string path)
+{
+	Ruya::Texture texture;
+
+	int width, height, channels;
+	stbi_uc* pixels = stbi_load(path.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+
+	if (!pixels)
+	{
+		RERRLOG("[File System] Failed to load texture image: " << path);
+		return texture;
+	}
+
+	VkExtent3D imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+
+	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels, imageExtent, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	texture.sampler = Ruya::Engine::GetInstance().GetRenderer().GetRendererBackend()->defaultLinearSampler;
+
+	stbi_image_free(pixels);
+
+	return texture;
 }
 
 
