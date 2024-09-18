@@ -19,6 +19,8 @@ void REditor::EditorCamera::Update()
 
     if(RInput::GetMouseButton(RInput::MouseButton::RIGHT))
     {
+        int windowWidth, windowHeight;
+
         RInput::SetCursorEnabled(false);
 
         const float cameraSpeed = 2.0f * Time::GetDeltaTime();
@@ -66,6 +68,8 @@ void REditor::EditorCamera::Update()
     }
     
     else
+    {
+        Ruya::RInput::firstMouse = true;
         RInput::SetCursorEnabled(true);
-
+    }
 }

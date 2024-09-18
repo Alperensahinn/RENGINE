@@ -12,6 +12,7 @@ float Ruya::RInput::mouse_offset_y_last = 0.0f;
 
 Ruya::RInput::RInput()
 {
+
 }
 
 Ruya::RInput::~RInput()
@@ -62,6 +63,13 @@ Ruya::math::vec2 Ruya::RInput::GetMouseDelta()
 
 	glfwGetCursorPos(&Engine::GetInstance().GetWindow().GetWindow(), &xpos, &ypos);
 
+	if (firstMouse)
+	{
+		mouseLastX = xpos;
+		mouseLastY = ypos;
+		firstMouse = false;
+	}
+
 	double deltaX = xpos - mouseLastX;
 	double deltaY = mouseLastY - ypos;
 
@@ -74,8 +82,12 @@ Ruya::math::vec2 Ruya::RInput::GetMouseDelta()
 void Ruya::RInput::SetCursorEnabled(bool isEnabled)
 {
 	if(isEnabled)
+	{
 		glfwSetInputMode(&Engine::GetInstance().GetWindow().GetWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+	}
 
 	else
+	{
 		glfwSetInputMode(&Engine::GetInstance().GetWindow().GetWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }
