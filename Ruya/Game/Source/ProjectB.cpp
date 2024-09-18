@@ -15,7 +15,7 @@ ProjectB::ProjectB()
 	std::shared_ptr<Ruya::Scene> mainScene = AddScene(std::make_shared<Ruya::Scene>());
 
 	std::shared_ptr<Ruya::Actor> monkey = mainScene->AddActor(std::make_shared<Ruya::Actor>());
-	monkey->name = "Monkey";
+	monkey->name = "MandolorianHelmet";
 
 	std::unique_ptr<Ruya::ActorComponent>& monkeyMesh = monkey->AddComponent(std::make_unique<Ruya::MeshComponent>());
 

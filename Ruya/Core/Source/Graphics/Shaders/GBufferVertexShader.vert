@@ -34,7 +34,7 @@ void main()
 	vec4 position = vec4(v.position, 1.0f);
 
 	outFragPos = PushConstants.modelMatrix * position;
-	outNormal = mat3(transpose(inverse(PushConstants.modelMatrix))) * v.normal;
+	outNormal = v.normal;
 	outUV = vec2(v.uv_x, v.uv_y);
 
 	gl_Position = sceneData.projView * PushConstants.modelMatrix * position;
