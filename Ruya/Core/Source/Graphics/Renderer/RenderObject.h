@@ -1,5 +1,4 @@
 #pragma once
-#include "GPUMesh.h"
 #include "Material.h"
 #include <Engine.h>
 

@@ -481,9 +481,6 @@
     <ClCompile Include="Source\GameFramework\RObject.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Graphics\Mesh.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Graphics\Renderer\Material.cpp">
       <Filter>Graphics\Renderer</Filter>
     </ClCompile>

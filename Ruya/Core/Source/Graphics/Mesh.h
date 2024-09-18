@@ -10,6 +10,10 @@ namespace Ruya
 		glm::vec3 normal;
 		float uv_y;
 		glm::vec4 color;
+		glm::vec3 tangent;
+		float pad0;
+		glm::vec3 biTangent;
+		float pad1;
 	};
 
 	struct Mesh

@@ -25,13 +25,13 @@ void main()
     vec3 ambient = ambientStrength * lightColor;
 
     //directional
-    vec3 norm = normalize(normal);
+    vec3 norm = normal;
     vec3 lightDir = normalize(lightPos - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 
     //specular
-    float specularStrength = 5.0;
+    float specularStrength = 1.0;
     vec3 viewDir = normalize(sceneData.viewPos - fragPos);
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
