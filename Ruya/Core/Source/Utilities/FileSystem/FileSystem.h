@@ -18,5 +18,5 @@ namespace Ruya
 
 	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
 
-	Texture LoadTexture(std::string path);
+	Texture LoadTexture(std::string path, VkFormat format);
 }

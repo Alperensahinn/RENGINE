@@ -53,7 +53,7 @@ namespace Ruya
 		return pRVulkan;
 	}
 
-	RenderObject Renderer::CreateRenderObject(std::shared_ptr<Mesh> mesh, Texture albedoTexture, Texture normalTexture)
+	RenderObject Renderer::CreateRenderObject(std::shared_ptr<Mesh> mesh, Texture albedoTexture, Texture normalTexture, Texture roughnessMetalicTexture)
 	{	
 		RenderObject renderObject;
 		renderObject.meshBuffer = rvkCreateMeshBuffer(pRVulkan, mesh->vertices, mesh->indices);
@@ -61,6 +61,7 @@ namespace Ruya
 		PBRMaterial material;
 		material.resources.albedoTexture = albedoTexture;
 		material.resources.normalTexture = normalTexture;
+		material.resources.roughnessMetalicTexture = roughnessMetalicTexture;
 
 		material.Init(material.resources);
 

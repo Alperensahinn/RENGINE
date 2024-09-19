@@ -107,17 +107,16 @@ namespace Ruya
 		VkRenderingAttachmentInfo colorAttachment0 = rvkCreateRenderingAttachmentInfo(gBuffer.baseColorTexture.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingAttachmentInfo colorAttachment1 = rvkCreateRenderingAttachmentInfo(gBuffer.positionTexture.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingAttachmentInfo colorAttachment2 = rvkCreateRenderingAttachmentInfo(gBuffer.normalTexture.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkRenderingAttachmentInfo colorAttachment3 = rvkCreateRenderingAttachmentInfo(gBuffer.roughnessTexture.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+		VkRenderingAttachmentInfo colorAttachment4 = rvkCreateRenderingAttachmentInfo(gBuffer.metalicTexture.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 		VkRenderingAttachmentInfo depthAttachment = rvkCreateDepthRenderingAttachmentInfo(gBuffer.depthTexture.imageView, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);
 
-		VkRenderingAttachmentInfo colorAttachments[3]; 
-		colorAttachments[0] = colorAttachment0;
-		colorAttachments[1] = colorAttachment1;
-		colorAttachments[2] = colorAttachment2;
+		VkRenderingAttachmentInfo colorAttachments[5] = { colorAttachment0, colorAttachment1, colorAttachment2, colorAttachment3, colorAttachment4};
 
 		drawExtent.width = drawImage.imageExtent.width;
 		drawExtent.height = drawImage.imageExtent.height;
 
-		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, colorAttachments, 3, &depthAttachment);
+		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, colorAttachments, 5, &depthAttachment);
 
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
@@ -132,7 +131,7 @@ namespace Ruya
 
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)1600 / (float)900, 0.1f, 100.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)drawExtent.width / (float)drawExtent.height, 0.1f, 100.0f);
 		proj[1][1] *= -1;
 
 		RVkSceneData bufferData;
@@ -163,6 +162,8 @@ namespace Ruya
 		rvkImageLayoutTransition(cmdBuffer, gBuffer.baseColorTexture.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 		rvkImageLayoutTransition(cmdBuffer, gBuffer.positionTexture.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 		rvkImageLayoutTransition(cmdBuffer, gBuffer.normalTexture.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+		rvkImageLayoutTransition(cmdBuffer, gBuffer.roughnessTexture.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
+		rvkImageLayoutTransition(cmdBuffer, gBuffer.metalicTexture.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
 	}
 
 	void RVulkan::EndFrame()
@@ -834,6 +835,7 @@ namespace Ruya
 		descriptorLayoutBuilder2.Clear();
 		descriptorLayoutBuilder2.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		descriptorLayoutBuilder2.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		descriptorLayoutBuilder2.AddBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		VkDescriptorSetLayout descriptorSetLayout2 = descriptorLayoutBuilder2.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		pRVulkan->pbrPipelineDescriptorSetLayoutMaterial = descriptorSetLayout2;
@@ -862,9 +864,9 @@ namespace Ruya
 		pipelineBuilder.SetBlending(false);
 		pipelineBuilder.SetDepthTest(true, VK_COMPARE_OP_GREATER_OR_EQUAL);
 
-		VkFormat colorAttachmentFortmats[] = { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT };
+		VkFormat colorAttachmentFortmats[] = { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT };
 
-		pipelineBuilder.SetColorAttachmentFormat(colorAttachmentFortmats, 3);
+		pipelineBuilder.SetColorAttachmentFormat(colorAttachmentFortmats, 5);
 		pipelineBuilder.SetDepthFormat(pRVulkan->gBuffer.depthTexture.imageFormat);
 		pipelineBuilder.pipelineLayout = pipelineLayout;
 
@@ -901,6 +903,8 @@ namespace Ruya
 		lightPassDescriptorLayoutBuilder.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		lightPassDescriptorLayoutBuilder.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		lightPassDescriptorLayoutBuilder.AddBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		lightPassDescriptorLayoutBuilder.AddBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+		lightPassDescriptorLayoutBuilder.AddBinding(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
 		VkDescriptorSetLayout lightPassDescriptorSetLayout = lightPassDescriptorLayoutBuilder.Build(pRVulkan, VK_SHADER_STAGE_FRAGMENT_BIT);
 
 		pRVulkan->lightPassPipelineDescriptorSetLayout = lightPassDescriptorSetLayout;
@@ -951,6 +955,8 @@ namespace Ruya
 		writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.baseColorTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
 		writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.positionTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
 		writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.normalTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.roughnessTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
+		writer.WriteImage(4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, pRVulkan->gBuffer.metalicTexture.imageView, pRVulkan->defaultNearestSampler, VK_IMAGE_LAYOUT_GENERAL);
 		writer.UpdateDescriptorSets(pRVulkan, pRVulkan->lightPassPipelineDescriptorSet);
 
 
@@ -1030,6 +1036,8 @@ namespace Ruya
 		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &(pRVulkan->gBuffer.baseColorTexture.image), &(pRVulkan->gBuffer.baseColorTexture.allocation), nullptr));
 		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &(pRVulkan->gBuffer.positionTexture.image), &(pRVulkan->gBuffer.positionTexture.allocation), nullptr));
 		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &(pRVulkan->gBuffer.normalTexture.image), &(pRVulkan->gBuffer.normalTexture.allocation), nullptr));
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &(pRVulkan->gBuffer.roughnessTexture.image), &(pRVulkan->gBuffer.roughnessTexture.allocation), nullptr));
+		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo, &allocationCreateInfo, &(pRVulkan->gBuffer.metalicTexture.image), &(pRVulkan->gBuffer.metalicTexture.allocation), nullptr));
 
 		VkImageViewCreateInfo imageViewCreateInfo1 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.baseColorTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo1, nullptr, &(pRVulkan->gBuffer.baseColorTexture.imageView)));
@@ -1040,6 +1048,11 @@ namespace Ruya
 		VkImageViewCreateInfo imageViewCreateInfo3 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.positionTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
 		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo3, nullptr, &pRVulkan->gBuffer.positionTexture.imageView));
 
+		VkImageViewCreateInfo imageViewCreateInfo4 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.roughnessTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo4, nullptr, &pRVulkan->gBuffer.roughnessTexture.imageView));
+
+		VkImageViewCreateInfo imageViewCreateInfo5 = rvkCreateImageViewCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, pRVulkan->gBuffer.metalicTexture.image, VK_IMAGE_ASPECT_COLOR_BIT);
+		CHECK_VKRESULT(vkCreateImageView(pRVulkan->pDevice, &imageViewCreateInfo5, nullptr, &pRVulkan->gBuffer.metalicTexture.imageView));
 
 		//depth
 		VkImageUsageFlags imageUsageFlags_depth = {};
@@ -1065,6 +1078,8 @@ namespace Ruya
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.normalTexture);
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.positionTexture);
 				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.depthTexture);
+				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.roughnessTexture);
+				rvkDestroyImage(pRVulkan, pRVulkan->gBuffer.metalicTexture);
 			});
 
 	}
@@ -1603,8 +1618,8 @@ namespace Ruya
 
 		if(passType == 0)
 		{
-			VkPipelineColorBlendAttachmentState colorBlendAttachmentStates[] = { colorBlendAttachmentState1 , colorBlendAttachmentState2 , colorBlendAttachmentState3 };
-			colorBlendStateCreateInfo.attachmentCount = 3;
+			VkPipelineColorBlendAttachmentState colorBlendAttachmentStates[] = { colorBlendAttachmentState1 , colorBlendAttachmentState2 , colorBlendAttachmentState3, colorBlendAttachmentState4, colorBlendAttachmentState5 };
+			colorBlendStateCreateInfo.attachmentCount = 5;
 			colorBlendStateCreateInfo.pAttachments = colorBlendAttachmentStates;
 		}
 
@@ -1655,6 +1670,8 @@ namespace Ruya
 		colorBlendAttachmentState1 = {};
 		colorBlendAttachmentState2 = {};
 		colorBlendAttachmentState3 = {};
+		colorBlendAttachmentState4 = {};
+		colorBlendAttachmentState5 = {};
 		multisamplingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
 		pipelineLayout = {};
 		depthStencilCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
@@ -1712,6 +1729,12 @@ namespace Ruya
 
 			colorBlendAttachmentState3.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 			colorBlendAttachmentState3.blendEnable = VK_FALSE;
+
+			colorBlendAttachmentState4.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			colorBlendAttachmentState4.blendEnable = VK_FALSE;
+
+			colorBlendAttachmentState5.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			colorBlendAttachmentState5.blendEnable = VK_FALSE;
 		}
 	}
 
@@ -1981,6 +2004,14 @@ namespace Ruya
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.normalTexture.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->gBuffer.normalTexture.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.normalTexture.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.roughnessTexture.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->gBuffer.roughnessTexture.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.roughnessTexture.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.metalicTexture.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		vkCmdClearColorImage(mainCommandBuffer, pRVulkan->gBuffer.metalicTexture.image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.metalicTexture.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
 		//depth
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.depthTexture.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL);

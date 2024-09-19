@@ -118,7 +118,7 @@ Ruya::Mesh Ruya::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	return Mesh(vertices, indices);
 }
 
-Ruya::Texture Ruya::LoadTexture(std::string path)
+Ruya::Texture Ruya::LoadTexture(std::string path, VkFormat format)
 {
 	Ruya::Texture texture;
 
@@ -133,7 +133,7 @@ Ruya::Texture Ruya::LoadTexture(std::string path)
 
 	VkExtent3D imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
 
-	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels, imageExtent, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
+	texture.image = Ruya::rvkCreateImage(Ruya::Engine::GetInstance().GetRenderer().pRVulkan, pixels, imageExtent, format, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT);
 	texture.sampler = Ruya::Engine::GetInstance().GetRenderer().GetRendererBackend()->defaultLinearSampler;
 
 	stbi_image_free(pixels);

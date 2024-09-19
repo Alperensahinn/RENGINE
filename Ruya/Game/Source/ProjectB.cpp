@@ -9,6 +9,7 @@
 #include <Engine.h>
 #include <Graphics/Renderer/Material.h>
 #include <stb_image.h>
+#include <filesystem>
 
 ProjectB::ProjectB()
 {
@@ -21,13 +22,20 @@ ProjectB::ProjectB()
 
 	Ruya::MeshComponent* meshComponent = dynamic_cast<Ruya::MeshComponent*>(monkeyMesh.get());
 
-	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\MandolorianHelmet.fbx");
-	
-	Ruya::Texture albedoTexture = Ruya::LoadTexture("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_baseColor.png");
 
-	Ruya::Texture normalTexture = Ruya::LoadTexture("C:\\Users\\aalpe\\Desktop\\RENGINE\\Ruya\\Game\\Source\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_normal.png");
+	std::filesystem::path scriptPath = __FILE__;
 
-	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, albedoTexture, normalTexture));
+	std::filesystem::path solutionPath = scriptPath.parent_path().parent_path();
+
+	std::shared_ptr<Ruya::Mesh> mesh = Ruya::ImportFBXMesh(solutionPath.string() + "\\TestMeshes\\MandolorianHelmet\\MandolorianHelmet.fbx");
+
+	Ruya::Texture albedoTexture = Ruya::LoadTexture(solutionPath.string() + "\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_baseColor.png", VK_FORMAT_R8G8B8A8_SRGB);
+
+	Ruya::Texture normalTexture = Ruya::LoadTexture(solutionPath.string() + "\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_normal.png", VK_FORMAT_R8G8B8A8_UNORM);
+
+	Ruya::Texture roughnessMetalicTexture = Ruya::LoadTexture(solutionPath.string() + "\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_metallicRoughness.png", VK_FORMAT_R8G8B8A8_UNORM);
+
+	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, albedoTexture, normalTexture, roughnessMetalicTexture));
 	meshComponent->SetRenderObject(renderObject);
 }
 

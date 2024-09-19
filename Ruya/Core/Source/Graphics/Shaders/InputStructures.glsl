@@ -9,3 +9,4 @@ layout(std140, set = 0, binding = 0) uniform  SceneData
 
 layout(set = 1, binding = 0) uniform sampler2D albedoTexture;
 layout(set = 1, binding = 1) uniform sampler2D normalTexture;
+layout(set = 1, binding = 2) uniform sampler2D roughnessMetalicTexture;

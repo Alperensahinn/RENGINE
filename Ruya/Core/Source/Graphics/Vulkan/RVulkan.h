@@ -115,6 +115,8 @@ namespace Ruya
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentState1;
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentState2;
 		VkPipelineColorBlendAttachmentState colorBlendAttachmentState3;
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState4;
+		VkPipelineColorBlendAttachmentState colorBlendAttachmentState5;
 		VkPipelineMultisampleStateCreateInfo multisamplingCreateInfo;
 		VkPipelineLayout pipelineLayout;
 		VkPipelineDepthStencilStateCreateInfo depthStencilCreateInfo;
@@ -161,6 +163,8 @@ namespace Ruya
 		RVkAllocatedImage baseColorTexture;
 		RVkAllocatedImage normalTexture;
 		RVkAllocatedImage positionTexture;
+		RVkAllocatedImage roughnessTexture;
+		RVkAllocatedImage metalicTexture;
 		RVkAllocatedImage depthTexture;
 	};
 

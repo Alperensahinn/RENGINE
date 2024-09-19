@@ -12,6 +12,7 @@ void Ruya::PBRMaterial::Init(MaterialResources resources)
 	writer.Clear();
 	writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.albedoTexture.image.imageView, resources.albedoTexture.sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.normalTexture.image.imageView, resources.normalTexture.sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.roughnessMetalicTexture.image.imageView, resources.roughnessMetalicTexture.sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	writer.UpdateDescriptorSets(Engine::GetInstance().GetRenderer().pRVulkan, descriptorSetMaterial);
 }
 
@@ -23,7 +24,7 @@ void Ruya::PBRMaterial::SetResources(MaterialResources resources)
 
 	writer.WriteImage(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.albedoTexture.image.imageView, resources.albedoTexture.sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	writer.WriteImage(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.normalTexture.image.imageView, resources.normalTexture.sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
+	writer.WriteImage(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, resources.roughnessMetalicTexture.image.imageView, resources.roughnessMetalicTexture.sampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	writer.UpdateDescriptorSets(Engine::GetInstance().GetRenderer().pRVulkan, descriptorSetMaterial);
 }
 
@@ -31,6 +32,7 @@ void Ruya::PBRMaterial::Destroy()
 {
 	resources.albedoTexture.Destroy();
 	resources.normalTexture.Destroy();
+	resources.roughnessMetalicTexture.Destroy();
 }
 
 

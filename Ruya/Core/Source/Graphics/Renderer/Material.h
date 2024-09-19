@@ -11,6 +11,7 @@ namespace Ruya
 		{
 			Texture albedoTexture;
 			Texture normalTexture;
+			Texture roughnessMetalicTexture;
 		}resources;
 
 		VkDescriptorSet descriptorSetMaterial;
