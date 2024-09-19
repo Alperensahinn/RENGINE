@@ -69,7 +69,7 @@ void main()
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
     vec3 lightPos = vec3(3.0f, 3.0f, 3.0f);
-    vec3 lightColor = vec3(10, 10, 10);
+    vec3 lightColor = vec3(20, 20, 20);
 
     //pbr calculations
     vec3 Lo = vec3(0.0);

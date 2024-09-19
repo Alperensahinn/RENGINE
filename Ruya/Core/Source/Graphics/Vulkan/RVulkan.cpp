@@ -998,8 +998,8 @@ namespace Ruya
 
 		//Draw Image
 		VkExtent3D drawImageExtent = {
-			1920,
-			1080,
+			1024,
+			1024,
 			1
 		};
 
