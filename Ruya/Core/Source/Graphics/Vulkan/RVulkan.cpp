@@ -2032,6 +2032,7 @@ namespace Ruya
 
 	void RVkFrameData::EndFrame(RVulkan* pRVulkan)
 	{
+		/*
 		VkExtent2D extend;
 		extend.height = pRVulkan->drawImage.imageExtent.height;
 		extend.width = pRVulkan->drawImage.imageExtent.width;
@@ -2040,6 +2041,7 @@ namespace Ruya
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		rvkCopyImageToImage(mainCommandBuffer, pRVulkan->drawImage.image, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], extend, extend);
 		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		*/
 
 		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(mainCommandBuffer));
 	}
