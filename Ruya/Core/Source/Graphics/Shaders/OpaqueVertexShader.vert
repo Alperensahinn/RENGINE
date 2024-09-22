@@ -27,6 +27,8 @@ void main()
         vec2(0.0, 0.0)
     );
 
-    gl_Position = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+    vec4 pos = vec4(positions[gl_VertexIndex], 0.0, 1.0);
+
+    gl_Position = pos;
     outTexCoord = texCoords[gl_VertexIndex];
 }

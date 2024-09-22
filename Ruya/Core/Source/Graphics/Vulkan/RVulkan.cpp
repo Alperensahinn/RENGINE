@@ -113,10 +113,11 @@ namespace Ruya
 
 		VkRenderingAttachmentInfo colorAttachments[5] = { colorAttachment0, colorAttachment1, colorAttachment2, colorAttachment3, colorAttachment4};
 
-		drawExtent.width = drawImage.imageExtent.width;
-		drawExtent.height = drawImage.imageExtent.height;
+		VkExtent2D extend;
+		extend.width = drawImage.imageExtent.width;
+		extend.height = drawImage.imageExtent.height;
 
-		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, colorAttachments, 5, &depthAttachment);
+		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(extend, colorAttachments, 5, &depthAttachment);
 
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
@@ -131,7 +132,7 @@ namespace Ruya
 
 		vkCmdBindDescriptorSets(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pbrPipelineLayout, 0, 2, descriptorSets, 0, nullptr);
 
-		glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)drawExtent.width / (float)drawExtent.height, 0.1f, 100.0f);
+		glm::mat4 proj = glm::perspective(glm::radians(40.0f), (float)drawImage.imageExtent.width / (float)drawImage.imageExtent.height, 0.1f, 100.0f);
 		proj[1][1] *= -1;
 
 		RVkSceneData bufferData;
@@ -209,8 +210,12 @@ namespace Ruya
 		VkCommandBuffer cmdBuffer = GetCurrentFrame().mainCommandBuffer;
 
 		VkRenderingAttachmentInfo drawImageColorAttachment = rvkCreateRenderingAttachmentInfo(drawImage.imageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-		
-		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(drawExtent, &drawImageColorAttachment, 1, nullptr);
+
+		VkExtent2D extend;
+		extend.width = drawImage.imageExtent.width;
+		extend.height = drawImage.imageExtent.height;
+
+		VkRenderingInfo renderInfo = rvkCreateRenderingInfo(extend, &drawImageColorAttachment, 1, nullptr);
 
 		vkCmdBeginRendering(cmdBuffer, &renderInfo);
 
@@ -996,12 +1001,15 @@ namespace Ruya
 				rvkDestroySwapChain(pRVulkan);;
 			});
 
+		int width, height;
+		glfwGetFramebufferSize(&(pRVulkan->window), &width, &height);
+
 		//Draw Image
-		VkExtent3D drawImageExtent = {
-			1024,
-			1024,
-			1
-		};
+		VkExtent3D drawImageExtent = {};
+		drawImageExtent.width = width;
+		drawImageExtent.height = height;
+		drawImageExtent.depth = 1;
+
 
 		pRVulkan->drawImage.imageFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 		pRVulkan->drawImage.imageExtent = drawImageExtent;
@@ -1013,7 +1021,7 @@ namespace Ruya
 		imageUsageFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		imageUsageFlags |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
-		VkImageCreateInfo renderImageCreateInfo = rvkCreateImageCreateInfo(pRVulkan->drawImage.imageFormat, imageUsageFlags, pRVulkan->drawImage.imageExtent);
+		VkImageCreateInfo renderImageCreateInfo = rvkCreateImageCreateInfo(pRVulkan->drawImage.imageFormat, imageUsageFlags, drawImageExtent);
 
 		VmaAllocationCreateInfo rimgAllocCreateInfo = {};
 		rimgAllocCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -1027,7 +1035,7 @@ namespace Ruya
 
 
 		//G Buffer Images
-		VkImageCreateInfo imageCreateInfo = rvkCreateImageCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, imageUsageFlags, pRVulkan->drawImage.imageExtent);
+		VkImageCreateInfo imageCreateInfo = rvkCreateImageCreateInfo(VK_FORMAT_R16G16B16A16_SFLOAT, imageUsageFlags, drawImageExtent);
 
 		VmaAllocationCreateInfo allocationCreateInfo = {};
 		allocationCreateInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
@@ -1060,7 +1068,7 @@ namespace Ruya
 		imageUsageFlags_depth |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		imageUsageFlags_depth |= VK_IMAGE_USAGE_SAMPLED_BIT;
 
-		VkImageCreateInfo imageCreateInfo_depth = rvkCreateImageCreateInfo(VK_FORMAT_D32_SFLOAT, imageUsageFlags_depth, pRVulkan->drawImage.imageExtent);
+		VkImageCreateInfo imageCreateInfo_depth = rvkCreateImageCreateInfo(VK_FORMAT_D32_SFLOAT, imageUsageFlags_depth, drawImageExtent);
 
 		CHECK_VKRESULT(vmaCreateImage(pRVulkan->vmaAllocator, &imageCreateInfo_depth, &allocationCreateInfo, &pRVulkan->gBuffer.depthTexture.image, &pRVulkan->gBuffer.depthTexture.allocation, nullptr));
 
@@ -2024,13 +2032,14 @@ namespace Ruya
 
 	void RVkFrameData::EndFrame(RVulkan* pRVulkan)
 	{
-		/*
-		//drawImageRender
-		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->gBuffer.baseColorTexture.image, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-		rvkCopyImageToImage(mainCommandBuffer, pRVulkan->gBuffer.baseColorTexture.image, pRVulkan->drawImage.image, pRVulkan->drawExtent, pRVulkan->drawExtent);
-		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_GENERAL);
-		*/
+		VkExtent2D extend;
+		extend.height = pRVulkan->drawImage.imageExtent.height;
+		extend.width = pRVulkan->drawImage.imageExtent.width;
+
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->drawImage.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		rvkCopyImageToImage(mainCommandBuffer, pRVulkan->drawImage.image, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], extend, extend);
+		rvkImageLayoutTransition(mainCommandBuffer, pRVulkan->swapChainImages[pRVulkan->currentImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		CHECK_VKRESULT_DEBUG(vkEndCommandBuffer(mainCommandBuffer));
 	}

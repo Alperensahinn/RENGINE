@@ -43,7 +43,6 @@ namespace Ruya
 
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 		ImGui_ImplVulkan_InitInfo initInfo = {};
 		initInfo.Instance = pRenderer->GetRendererBackend()->pInstance;

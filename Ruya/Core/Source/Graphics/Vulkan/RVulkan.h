@@ -199,7 +199,6 @@ namespace Ruya
 		VkExtent2D swapChainExtent;
 
 		RVkAllocatedImage drawImage;
-		VkExtent2D drawExtent;
 		uint32_t currentImageIndex;
 		RVkGBuffer gBuffer;
 
