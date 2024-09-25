@@ -1991,7 +1991,7 @@ namespace Ruya
 		VkCommandBufferBeginInfo cmdBufferbeginInfo = rvkCreateCommandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 		CHECK_VKRESULT_DEBUG(vkBeginCommandBuffer(mainCommandBuffer, &cmdBufferbeginInfo));
 
-		VkClearColorValue clearValue = { { 0.4, 0.7, 0.9, 1.0f } };
+		VkClearColorValue clearValue = { { 0, 0, 0, 1.0f } };
 		VkImageSubresourceRange clearRange = rvkGetImageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
 		
 		//main framebuffer
