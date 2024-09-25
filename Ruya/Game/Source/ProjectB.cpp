@@ -1,5 +1,5 @@
 #include "ProjectB.h"
-#include <Scene/Scene.h>
+#include <GameFramework/Scene.h>
 #include <GameFramework/Actor.h>
 #include <GameFramework/MeshComponent.h>
 #include <Utilities/FileSystem/FileSystem.h>
