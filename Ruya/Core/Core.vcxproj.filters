@@ -157,7 +157,7 @@
     <ClInclude Include="Source\Scene\Camera.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Scene\Scene.h">
+    <ClInclude Include="Source\GameFramework\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utilities\FileSystem\FileSystem.h">
@@ -457,6 +457,7 @@
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameFramework\TransformComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -465,9 +466,6 @@
     <ClCompile Include="Source\Engine.cpp" />
     <ClCompile Include="Source\EngineUI\EngineUI.cpp">
       <Filter>EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameFramework\Actor.cpp">
-      <Filter>GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameFramework\ActorComponent.cpp">
       <Filter>GameFramework</Filter>
@@ -500,9 +498,6 @@
       <Filter>Input</Filter>
     </ClCompile>
     <ClCompile Include="Source\Scene\Camera.cpp">
-      <Filter>Scene</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Scene\Scene.cpp">
       <Filter>Scene</Filter>
     </ClCompile>
     <ClCompile Include="Source\Utilities\FileSystem\FileSystem.cpp">
@@ -542,5 +537,7 @@
       <Filter>Window</Filter>
     </ClCompile>
     <ClCompile Include="Source\VendorDefines.cpp" />
+    <ClCompile Include="Source\GameFramework\Scene.cpp" />
+    <ClCompile Include="Source\GameFramework\TransformComponent.cpp" />
   </ItemGroup>
 </Project>

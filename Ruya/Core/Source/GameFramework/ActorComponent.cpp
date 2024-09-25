@@ -1,42 +1,53 @@
 #include "ActorComponent.h"
 
-Ruya::ActorComponent::ActorComponent() : bCanEverUpdate(true)
+void Ruya::ActorComponent::OnSceneStart()
 {
 }
 
-Ruya::ActorComponent::~ActorComponent()
+void Ruya::ActorComponent::OnSceneUpdate()
 {
 }
 
-void Ruya::ActorComponent::Start()
+void Ruya::ActorComponent::OnSceneDestroy()
 {
 }
 
-void Ruya::ActorComponent::Update()
-{
-
-}
-
-void Ruya::ActorComponent::CleanUp()
+void Ruya::ActorComponent::OnGameStart()
 {
 }
 
-void Ruya::ActorComponent::SetUpdateFunctionEnable(bool b)
+void Ruya::ActorComponent::OnGameUpdate()
 {
-	bCanEverUpdate = b;
 }
 
-bool Ruya::ActorComponent::GetUpdateFunctionEnabled()
+void Ruya::ActorComponent::OnGameDestroy()
 {
-	return bCanEverUpdate;
 }
 
-void Ruya::ActorComponent::SetActor(Actor* actor)
+void Ruya::ActorComponent::SetUpdateType(UpdateType type)
 {
-	this->actor = actor;
 }
 
-Ruya::Actor& Ruya::ActorComponent::GetActor()
+bool Ruya::ActorComponent::GetUpdateType()
 {
-	return *actor;
+	return false;
+}
+
+void Ruya::ActorComponent::SetActorID(ActorID id)
+{
+}
+
+Ruya::ActorID Ruya::ActorComponent::GetActorID()
+{
+	return actorID;
+}
+
+void Ruya::ActorComponent::SetScene(Scene* scene)
+{
+	this->scene = scene;
+}
+
+Ruya::Scene* Ruya::ActorComponent::GetScene()
+{
+	return scene;
 }

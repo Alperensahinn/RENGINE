@@ -1,5 +1,5 @@
 #pragma once
-#include "../Scene/Scene.h"
+#include <GameFramework/Scene.h>
 #include <unordered_map>
 #include <memory>
 
@@ -17,8 +17,13 @@ namespace Ruya
 		RGame& operator=(const RGame&) = delete;
 
 	public:
-		void Start();
-		void Update();
+		void StartScene();
+		void UpdateScene();
+		void DestroyScene();
+
+		void StartGame();
+		void UpdateGame();
+		void DestroyGame();
 
 		void CleanUp();
 	public:

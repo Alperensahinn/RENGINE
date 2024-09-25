@@ -3,31 +3,44 @@
 
 namespace Ruya
 {
-	class Actor;
+	typedef std::uint64_t ActorID;
+	class Scene;
+
+	enum class UpdateType
+	{
+		SceneUpdate,
+		GameUpdate,
+		SceneAndGameUpdate,
+		NoUpdate
+	};
 
 	class ActorComponent
 	{
 	public:
-		ActorComponent();
-		~ActorComponent();
-
-		ActorComponent(const ActorComponent&) = delete;
-		ActorComponent& operator=(const ActorComponent&) = delete;
+		ActorComponent() = default;
+		~ActorComponent() = default;
 
 	public:
-		virtual void Start();
-		virtual void Update();
+		virtual void OnSceneStart();
+		virtual void OnSceneUpdate();
+		virtual void OnSceneDestroy();
 
-		virtual void CleanUp();
+		virtual void OnGameStart();
+		virtual void OnGameUpdate();
+		virtual void OnGameDestroy();
 
-		void SetUpdateFunctionEnable(bool b);
-		bool GetUpdateFunctionEnabled();
+		void SetUpdateType(UpdateType type);
+		bool GetUpdateType();
 
-		void SetActor(Actor* actor);
-		Actor& GetActor();
+		void SetActorID(ActorID id);
+		ActorID GetActorID();
+
+		void SetScene(Scene* scene);
+		Scene* GetScene();
 
 	private:
-		bool bCanEverUpdate;
-		Actor* actor;
+		UpdateType updateType = UpdateType::SceneAndGameUpdate;
+		ActorID actorID;
+		Scene* scene;
 	};
 }

@@ -13,22 +13,19 @@ namespace Ruya
 	class MeshComponent : public ActorComponent
 	{
 	public:
-		MeshComponent();
-		~MeshComponent();
-
-		MeshComponent(const MeshComponent&) = delete;
-		MeshComponent& operator=(const MeshComponent&) = delete;
+		MeshComponent() = default;
+		~MeshComponent() = default;
 
 	public:
-		void Start() override;
-		void Update() override;
-
-		void CleanUp() override;
+		void OnSceneStart() override;
+		void OnSceneUpdate() override;
+		void OnSceneDestroy() override;
 
 		void SetRenderObject(std::shared_ptr<RenderObject> renderObject);
+		void SetIsStaticMesh(bool b);
 
 	private:
-		bool bIsStaticMesh;
+		bool bIsStaticMesh = true;
 		std::shared_ptr<RenderObject> renderObject;
 	};
 }
