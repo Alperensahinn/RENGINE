@@ -39,21 +39,21 @@ namespace Ruya
 			std::type_index typeIdx = typeid(T);
 			auto it = componentPools.find(typeIdx);
 
-			if (it != componentPools.end())
+			if (it == componentPools.end())
 			{
-				it->second.emplace_back(T{}); 
+				std::vector<T> componentVector;
+				componentPools[typeIdx] = std::move(componentVector);
+				it = componentPools.find(typeIdx);
 			}
 
-			else
-			{
-				std::vector<std::any> anyVector;
-				anyVector.emplace_back(T{});
-				componentPools.insert(std::make_pair(typeIdx, anyVector));
-			}
+			auto& componentVector = std::any_cast<std::vector<T>&>(it->second);
 
-			EntityComponent* newComponentPtr = std::any_cast<EntityComponent>(&componentPools[typeIdx].back());
+			componentVector.emplace_back(T{});
+			T* newComponentPtr = &componentVector.back();
+
 			newComponentPtr->parentID = id;
-			return static_cast<T*>(newComponentPtr);
+
+			return newComponentPtr;
 		}
 
 		template<typename T>
@@ -64,37 +64,50 @@ namespace Ruya
 
 			if (it != componentPools.end())
 			{
-				for (auto& component : it->second)
+				auto& componentVector = std::any_cast<std::vector<std::any>&>(it->second);
+
+				for (auto& component : componentVector)
 				{
-					EntityComponent* c = std::any_cast<EntityComponent>(&component);
-					if (c && c->parentID == id)
+					EntityComponent* baseComponent = std::any_cast<EntityComponent>(&component);
+
+					if (baseComponent && baseComponent->parentID == id)
 					{
-						return static_cast<T*>(c);
+						T* specificComponent = std::any_cast<T>(&component);
+
+						if (specificComponent)
+						{
+							return specificComponent;
+						}
+
+						else
+						{
+							throw std::runtime_error("[GameFramework] Component type mismatch for the specified EntityID.");
+						}
 					}
 				}
 			}
 
-			throw std::runtime_error("[GameFramework] Component not found for the specified ActorID.");
+			throw std::runtime_error("[GameFramework] Component not found for the specified EntityID.");
 		}
 
 		template<typename T>
-		std::vector<T>* GetComponents()
+		std::vector<T>& GetComponents() 
 		{
-
 			std::type_index typeIdx = typeid(T);
-
 			if (componentPools.find(typeIdx) == componentPools.end())
 			{
-				componentPools[typeIdx] = std::vector<std::any>();
+				componentPools[typeIdx] = std::vector<T>();
 			}
 
-			return nullptr;
+			auto& typedVector = std::any_cast<std::vector<T>&>(componentPools[typeIdx]);
+
+			return typedVector;
 		}
 
 	private:
 		std::vector<Entity> entities;
 		std::unordered_map<EntityID, Entity*> entityIDs;
-		std::unordered_map<std::type_index, std::vector<std::any>> componentPools;
+		std::unordered_map<std::type_index, std::any> componentPools;
 
 		std::vector<SceneSystem*> sceneSystems;
 	};
