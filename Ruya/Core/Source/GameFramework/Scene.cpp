@@ -11,72 +11,70 @@ Ruya::Scene::~Scene()
 
 void Ruya::Scene::OnSceneStart()
 {
-	for (auto it = componentPools.begin(); it != componentPools.end(); ++it) 
+	for (SceneSystem* system : sceneSystems) 
 	{
-		for (ActorComponent& component : it->second)
-		{
-			component.OnSceneStart();
-		}
+		system->OnSceneStart();
 	}
 }
 
 void Ruya::Scene::OnSceneUpdate()
 {
-	for (auto it = componentPools.begin(); it != componentPools.end(); ++it)
+	for (SceneSystem* system : sceneSystems)
 	{
-		for (ActorComponent& component : it->second)
-		{
-			component.OnSceneUpdate();
-		}
+		system->OnSceneUpdate();
 	}
 }
 
 void Ruya::Scene::OnSceneDestroy()
 {
-	for (auto it = componentPools.begin(); it != componentPools.end(); ++it)
+	for (SceneSystem* system : sceneSystems)
 	{
-		for (ActorComponent& component : it->second)
-		{
-			component.OnSceneDestroy();
-		}
+		system->OnSceneDestroy();
 	}
 }
 
 void Ruya::Scene::OnGameStart()
 {
-	for (auto it = componentPools.begin(); it != componentPools.end(); ++it)
+	for (SceneSystem* system : sceneSystems)
 	{
-		for (ActorComponent& component : it->second)
-		{
-			component.OnGameStart();
-		}
+		system->OnGameStart();
 	}
 }
 
 void Ruya::Scene::OnGameUpdate()
 {
-	for (auto it = componentPools.begin(); it != componentPools.end(); ++it)
+	for (SceneSystem* system : sceneSystems)
 	{
-		for (ActorComponent& component : it->second)
-		{
-			component.OnGameUpdate();
-		}
+		system->OnGameUpdate();
 	}
 }
 
 void Ruya::Scene::OnGameDestroy()
 {
-	for (auto it = componentPools.begin(); it != componentPools.end(); ++it)
+	for (SceneSystem* system : sceneSystems)
 	{
-		for (ActorComponent& component : it->second)
-		{
-			component.OnGameDestroy();
-		}
+		system->OnGameDestroy();
 	}
 }
 
-Ruya::ActorID Ruya::Scene::NewActor()
+Ruya::EntityID Ruya::Scene::NewActor()
 {
-	actors.push_back({ actors.size(), "New Actor"});
-	return ActorID();
+	entities.push_back({ entities.size(), "New Actor"});
+
+	Entity* newEntityRef = &entities.back();
+
+	entityIDs.insert({ newEntityRef->id, newEntityRef });
+
+	return newEntityRef->id;
+}
+
+Ruya::Entity* Ruya::Scene::GetEntity(EntityID id)
+{
+	return &entities[id];
+}
+
+
+std::vector<Ruya::Entity>& Ruya::Scene::GetActors()
+{
+	return entities;
 }

@@ -23,13 +23,13 @@ void REditor::SceneOutliner::RenderSceneOutlinerContent()
 {
     std::shared_ptr<Ruya::RGame> game = Ruya::Engine::GetInstance().GetGame();
 
-    std::vector<std::shared_ptr<Ruya::Actor>> sceneActors;
+    std::vector<Ruya::Actor> sceneActors;
 
     for (const auto& scenePair : game->GetScenes())
     {
-        for (const auto& actorPair : scenePair.second->GetActors())
+        for (const Ruya::Actor& actor : scenePair.second->GetActors())
         {
-            sceneActors.push_back(actorPair.second);
+            sceneActors.push_back(actor);
         }
     }
 
@@ -42,7 +42,7 @@ void REditor::SceneOutliner::RenderSceneOutlinerContent()
             for (int i = 0; i < sceneActors.size(); i++)
             {
                 char label[128];
-                sprintf(label, "%s", sceneActors[i]->name.c_str());
+                sprintf(label, "%s", sceneActors[i].name.c_str());
                 if (ImGui::Selectable(label, selected == i))
                     selected = i;
             }

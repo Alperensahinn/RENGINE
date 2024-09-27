@@ -458,6 +458,9 @@
       <Filter>Window</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameFramework\TransformComponent.h" />
+    <ClInclude Include="Source\GameFramework\Entity.h" />
+    <ClInclude Include="Source\GameFramework\EntityComponent.h" />
+    <ClInclude Include="Source\GameFramework\SceneSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -539,5 +542,6 @@
     <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\GameFramework\Scene.cpp" />
     <ClCompile Include="Source\GameFramework\TransformComponent.cpp" />
+    <ClCompile Include="Source\GameFramework\SceneSystem.cpp" />
   </ItemGroup>
 </Project>

@@ -1,19 +1,11 @@
 #pragma once
+#include <GameFramework/EntityComponent.h>
 #include <Utilities/Math/RMath.h>
-#include <GameFramework/ActorComponent.h>
 
 namespace Ruya
 {
-	class TransformComponent : public ActorComponent
+	struct TransformComponent : public EntityComponent
 	{
-	public:
-		TransformComponent() = default;
-		~TransformComponent() = default;
-
-	public:
-		math::mat4 GetTransformMatrix();
-
-	public:
 		math::vec3 position;
 		math::vec3 rotation;
 		math::vec3 scale;
