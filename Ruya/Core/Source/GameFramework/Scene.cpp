@@ -31,6 +31,11 @@ void Ruya::Scene::OnSceneDestroy()
 	{
 		system->OnSceneDestroy(*this);
 	}
+
+	for (SceneSystem* system : sceneSystems)
+	{
+		delete system;
+	}
 }
 
 void Ruya::Scene::OnGameStart()
@@ -56,6 +61,7 @@ void Ruya::Scene::OnGameDestroy()
 		system->OnGameDestroy(*this);
 	}
 }
+
 
 Ruya::EntityID Ruya::Scene::NewEntity()
 {

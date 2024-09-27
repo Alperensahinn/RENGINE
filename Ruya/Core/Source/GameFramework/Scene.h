@@ -28,13 +28,19 @@ namespace Ruya
 		void OnGameStart();
 		void OnGameUpdate();
 		void OnGameDestroy();
-		
+
 		EntityID NewEntity();
 		Entity* GetEntity(EntityID id);
 		std::vector<Entity>& GetEntities();
 
 		template<typename T>
-		T* AddComponent(EntityID id)
+		void AddSceneSystem()
+		{
+			sceneSystems.push_back(new T());
+		}
+
+		template<typename T>
+		T& AddComponent(EntityID id)
 		{
 			std::type_index typeIdx = typeid(T);
 			auto it = componentPools.find(typeIdx);
@@ -49,40 +55,32 @@ namespace Ruya
 			auto& componentVector = std::any_cast<std::vector<T>&>(it->second);
 
 			componentVector.emplace_back(T{});
-			T* newComponentPtr = &componentVector.back();
+			T& newComponentPtr = componentVector.back();
 
-			newComponentPtr->parentID = id;
+			newComponentPtr.parentID = id;
 
 			return newComponentPtr;
 		}
 
 		template<typename T>
-		T* GetComponent(EntityID id)
+		T& GetComponent(EntityID id)
 		{
 			std::type_index typeIdx = typeid(T);
 			auto it = componentPools.find(typeIdx);
 
 			if (it != componentPools.end())
 			{
-				auto& componentVector = std::any_cast<std::vector<std::any>&>(it->second);
+				auto& componentVector = std::any_cast<std::vector<T>&>(it->second);
 
 				for (auto& component : componentVector)
 				{
-					EntityComponent* baseComponent = std::any_cast<EntityComponent>(&component);
+					EntityComponent* baseComponent = std::any_cast<EntityComponent*>(&component);
 
-					if (baseComponent && baseComponent->parentID == id)
+					if (baseComponent->parentID == id)
 					{
-						T* specificComponent = std::any_cast<T>(&component);
+						T* c = std::any_cast<T*>(&component);
 
-						if (specificComponent)
-						{
-							return specificComponent;
-						}
-
-						else
-						{
-							throw std::runtime_error("[GameFramework] Component type mismatch for the specified EntityID.");
-						}
+						return *c;
 					}
 				}
 			}

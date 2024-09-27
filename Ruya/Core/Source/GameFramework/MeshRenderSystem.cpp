@@ -6,11 +6,11 @@ void Ruya::MeshRenderSystem::OnSceneStart(Scene& scene)
 {
 	for(const MeshComponent& component : scene.GetComponents<MeshComponent>())
 	{
-		TransformComponent* transform = scene.GetComponent<TransformComponent>(component.parentID);
+		TransformComponent& transform = scene.GetComponent<TransformComponent>(component.parentID);
 
 		math::mat4 worldMatrix = math::mat4(1.0f);
-		worldMatrix = glm::translate(worldMatrix, transform->position);
-		worldMatrix = glm::scale(worldMatrix, transform->scale);
+		worldMatrix = glm::translate(worldMatrix, transform.position);
+		worldMatrix = glm::scale(worldMatrix, transform.scale);
 
 		component.renderObject->modelMatrix = worldMatrix;
 	}
@@ -22,11 +22,11 @@ void Ruya::MeshRenderSystem::OnSceneUpdate(Scene& scene)
 	{
 		if (component.bIsStaticMesh == false)
 		{
-			TransformComponent* transform = scene.GetComponent<TransformComponent>(component.parentID);
+			TransformComponent& transform = scene.GetComponent<TransformComponent>(component.parentID);
 
 			math::mat4 worldMatrix = math::mat4(1.0f);
-			worldMatrix = glm::translate(worldMatrix, transform->position);
-			worldMatrix = glm::scale(worldMatrix, transform->scale);
+			worldMatrix = glm::translate(worldMatrix, transform.position);
+			worldMatrix = glm::scale(worldMatrix, transform.scale);
 
 			component.renderObject->modelMatrix = worldMatrix;
 		}
