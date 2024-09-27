@@ -1,5 +1,6 @@
 #pragma once
 #include <GameFramework/Entity.h>
+#include <GameFramework/EntityComponent.h>
 #include <GameFramework/SceneSystem.h>
 
 #include <queue>
@@ -28,7 +29,7 @@ namespace Ruya
 		void OnGameUpdate();
 		void OnGameDestroy();
 		
-		EntityID NewActor();
+		EntityID NewEntity();
 		Entity* GetEntity(EntityID id);
 		std::vector<Entity>& GetEntities();
 
@@ -42,33 +43,33 @@ namespace Ruya
 			{
 				it->second.emplace_back(T{}); 
 			}
+
 			else
 			{
-				componentPools.insert(std::make_pair(typeIdx, std::vector<T>()));
-				componentPools[typeIdx].emplace_back(T{});
+				std::vector<std::any> anyVector;
+				anyVector.emplace_back(T{});
+				componentPools.insert(std::make_pair(typeIdx, anyVector));
 			}
 
-			auto* newComponent = &componentPools[typeIdx].back();
-			newComponent->SetActorID(id);
-			newComponent->SetScene(this);
-
-			return static_cast<T*>(newComponent);
+			EntityComponent* newComponentPtr = std::any_cast<EntityComponent>(&componentPools[typeIdx].back());
+			newComponentPtr->parentID = id;
+			return static_cast<T*>(newComponentPtr);
 		}
 
 		template<typename T>
 		T* GetComponent(EntityID id)
 		{
 			std::type_index typeIdx = typeid(T);
-
 			auto it = componentPools.find(typeIdx);
 
-			if (it != componentPools.end()) 
+			if (it != componentPools.end())
 			{
-				for (const auto& component : it->second) 
+				for (auto& component : it->second)
 				{
-					if (component.GetActorID() == id) 
+					EntityComponent* c = std::any_cast<EntityComponent>(&component);
+					if (c && c->parentID == id)
 					{
-						return static_cast<T*>(component);
+						return static_cast<T*>(c);
 					}
 				}
 			}
@@ -77,16 +78,17 @@ namespace Ruya
 		}
 
 		template<typename T>
-		std::vector<T>& GetComponents()
+		std::vector<T>* GetComponents()
 		{
+
 			std::type_index typeIdx = typeid(T);
 
-			if (componentPools.find(typeIdx) == componentPools.end()) 
+			if (componentPools.find(typeIdx) == componentPools.end())
 			{
-				componentPools[typeIdx] = std::vector<T>();
+				componentPools[typeIdx] = std::vector<std::any>();
 			}
 
-			return std::any_cast<std::vector<T>&>(componentPools[typeIdx]);
+			return nullptr;
 		}
 
 	private:

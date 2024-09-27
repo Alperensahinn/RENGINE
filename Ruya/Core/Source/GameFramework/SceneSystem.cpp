@@ -28,7 +28,7 @@ void Ruya::SceneSystem::SetUpdateType(UpdateType type)
 {
 }
 
-bool Ruya::SceneSystem::GetUpdateType()
+Ruya::UpdateType Ruya::SceneSystem::GetUpdateType()
 {
-	return false;
+	return updateType;
 }

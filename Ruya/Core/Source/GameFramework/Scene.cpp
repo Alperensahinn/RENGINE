@@ -13,7 +13,7 @@ void Ruya::Scene::OnSceneStart()
 {
 	for (SceneSystem* system : sceneSystems) 
 	{
-		system->OnSceneStart();
+		system->OnSceneStart(*this);
 	}
 }
 
@@ -21,7 +21,7 @@ void Ruya::Scene::OnSceneUpdate()
 {
 	for (SceneSystem* system : sceneSystems)
 	{
-		system->OnSceneUpdate();
+		system->OnSceneUpdate(*this);
 	}
 }
 
@@ -29,7 +29,7 @@ void Ruya::Scene::OnSceneDestroy()
 {
 	for (SceneSystem* system : sceneSystems)
 	{
-		system->OnSceneDestroy();
+		system->OnSceneDestroy(*this);
 	}
 }
 
@@ -37,7 +37,7 @@ void Ruya::Scene::OnGameStart()
 {
 	for (SceneSystem* system : sceneSystems)
 	{
-		system->OnGameStart();
+		system->OnGameStart(*this);
 	}
 }
 
@@ -45,7 +45,7 @@ void Ruya::Scene::OnGameUpdate()
 {
 	for (SceneSystem* system : sceneSystems)
 	{
-		system->OnGameUpdate();
+		system->OnGameUpdate(*this);
 	}
 }
 
@@ -53,11 +53,11 @@ void Ruya::Scene::OnGameDestroy()
 {
 	for (SceneSystem* system : sceneSystems)
 	{
-		system->OnGameDestroy();
+		system->OnGameDestroy(*this);
 	}
 }
 
-Ruya::EntityID Ruya::Scene::NewActor()
+Ruya::EntityID Ruya::Scene::NewEntity()
 {
 	entities.push_back({ entities.size(), "New Actor"});
 
@@ -74,7 +74,7 @@ Ruya::Entity* Ruya::Scene::GetEntity(EntityID id)
 }
 
 
-std::vector<Ruya::Entity>& Ruya::Scene::GetActors()
+std::vector<Ruya::Entity>& Ruya::Scene::GetEntities()
 {
 	return entities;
 }

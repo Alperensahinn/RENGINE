@@ -1,6 +1,6 @@
 #include "ProjectB.h"
 #include <GameFramework/Scene.h>
-#include <GameFramework/Actor.h>
+#include <GameFramework/Entity.h>
 #include <GameFramework/MeshComponent.h>
 #include <Utilities/FileSystem/FileSystem.h>
 #include <Graphics/Renderer/RenderObject.h>
@@ -15,8 +15,8 @@ ProjectB::ProjectB()
 {
 	std::shared_ptr<Ruya::Scene> mainScene = AddScene(std::make_shared<Ruya::Scene>());
 
-	Ruya::ActorID monkey = mainScene->NewActor();
-	mainScene->GetActor(monkey)->name = "MandolorianHelmet";
+	Ruya::EntityID monkey = mainScene->NewEntity();
+	mainScene->GetEntity(monkey)->name = "MandolorianHelmet";
 
 	Ruya::MeshComponent* monkeyMeshComponent = mainScene->AddComponent<Ruya::MeshComponent>(monkey);
 
@@ -33,7 +33,7 @@ ProjectB::ProjectB()
 	Ruya::Texture roughnessMetalicTexture = Ruya::LoadTexture(solutionPath.string() + "\\TestMeshes\\MandolorianHelmet\\Mando_Helm_Mat_metallicRoughness.png", VK_FORMAT_R8G8B8A8_UNORM);
 
 	std::shared_ptr<Ruya::RenderObject> renderObject = std::make_shared<Ruya::RenderObject>(Ruya::Engine::GetInstance().GetRenderer().CreateRenderObject(mesh, albedoTexture, normalTexture, roughnessMetalicTexture));
-	monkeyMeshComponent->SetRenderObject(renderObject);
+	monkeyMeshComponent->renderObject = renderObject;
 }
 
 ProjectB::~ProjectB()

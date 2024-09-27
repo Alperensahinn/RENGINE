@@ -154,11 +154,10 @@
     <ClInclude Include="Source\Core\Time.h" />
     <ClInclude Include="Source\Engine.h" />
     <ClInclude Include="Source\EngineUI\EngineUI.h" />
-    <ClInclude Include="Source\GameFramework\Actor.h" />
-    <ClInclude Include="Source\GameFramework\ActorComponent.h" />
     <ClInclude Include="Source\GameFramework\Entity.h" />
     <ClInclude Include="Source\GameFramework\EntityComponent.h" />
     <ClInclude Include="Source\GameFramework\MeshComponent.h" />
+    <ClInclude Include="Source\GameFramework\MeshRenderSystem.h" />
     <ClInclude Include="Source\GameFramework\RGame.h" />
     <ClInclude Include="Source\GameFramework\RObject.h" />
     <ClInclude Include="Source\GameFramework\SceneSystem.h" />
@@ -281,13 +280,11 @@
     <ClCompile Include="Source\Core\Time.cpp" />
     <ClCompile Include="Source\Engine.cpp" />
     <ClCompile Include="Source\EngineUI\EngineUI.cpp" />
-    <ClCompile Include="Source\GameFramework\ActorComponent.cpp" />
-    <ClCompile Include="Source\GameFramework\MeshComponent.cpp" />
+    <ClCompile Include="Source\GameFramework\MeshRenderSystem.cpp" />
     <ClCompile Include="Source\GameFramework\RGame.cpp" />
     <ClCompile Include="Source\GameFramework\RObject.cpp" />
     <ClCompile Include="Source\GameFramework\Scene.cpp" />
     <ClCompile Include="Source\GameFramework\SceneSystem.cpp" />
-    <ClCompile Include="Source\GameFramework\TransformComponent.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\Material.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\RenderQueue.cpp" />
     <ClCompile Include="Source\Graphics\Renderer\Renderer.cpp" />

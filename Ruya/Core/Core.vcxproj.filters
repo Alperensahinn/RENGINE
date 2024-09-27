@@ -103,12 +103,6 @@
     <ClInclude Include="Source\EngineUI\EngineUI.h">
       <Filter>EngineUI</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameFramework\Actor.h">
-      <Filter>GameFramework</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GameFramework\ActorComponent.h">
-      <Filter>GameFramework</Filter>
-    </ClInclude>
     <ClInclude Include="Source\GameFramework\MeshComponent.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
@@ -461,6 +455,7 @@
     <ClInclude Include="Source\GameFramework\Entity.h" />
     <ClInclude Include="Source\GameFramework\EntityComponent.h" />
     <ClInclude Include="Source\GameFramework\SceneSystem.h" />
+    <ClInclude Include="Source\GameFramework\MeshRenderSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -469,12 +464,6 @@
     <ClCompile Include="Source\Engine.cpp" />
     <ClCompile Include="Source\EngineUI\EngineUI.cpp">
       <Filter>EngineUI</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameFramework\ActorComponent.cpp">
-      <Filter>GameFramework</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\GameFramework\MeshComponent.cpp">
-      <Filter>GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameFramework\RGame.cpp">
       <Filter>GameFramework</Filter>
@@ -541,7 +530,7 @@
     </ClCompile>
     <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\GameFramework\Scene.cpp" />
-    <ClCompile Include="Source\GameFramework\TransformComponent.cpp" />
     <ClCompile Include="Source\GameFramework\SceneSystem.cpp" />
+    <ClCompile Include="Source\GameFramework\MeshRenderSystem.cpp" />
   </ItemGroup>
 </Project>

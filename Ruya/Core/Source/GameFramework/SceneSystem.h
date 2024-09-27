@@ -1,8 +1,9 @@
 #pragma once
-#include <GameFramework/Scene.h>
 
 namespace Ruya
 {
+	class Scene;
+
 	enum class UpdateType
 	{
 		SceneUpdate,
@@ -27,7 +28,7 @@ namespace Ruya
 		virtual void OnGameDestroy(Scene& scene);
 
 		void SetUpdateType(UpdateType type);
-		bool GetUpdateType();
+		UpdateType GetUpdateType();
 
 	private:
 		UpdateType updateType = UpdateType::SceneAndGameUpdate;

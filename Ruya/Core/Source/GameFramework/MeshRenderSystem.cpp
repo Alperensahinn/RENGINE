@@ -4,7 +4,7 @@
 
 void Ruya::MeshRenderSystem::OnSceneStart(Scene& scene)
 {
-	for(const MeshComponent& component : scene.GetComponents<MeshComponent>())
+	for(const MeshComponent& component : *scene.GetComponents<MeshComponent>())
 	{
 		TransformComponent* transform = scene.GetComponent<TransformComponent>(component.parentID);
 
@@ -18,7 +18,7 @@ void Ruya::MeshRenderSystem::OnSceneStart(Scene& scene)
 
 void Ruya::MeshRenderSystem::OnSceneUpdate(Scene& scene)
 {
-	for (const MeshComponent& component : scene.GetComponents<MeshComponent>())
+	for (const MeshComponent& component : *scene.GetComponents<MeshComponent>())
 	{
 		if (component.bIsStaticMesh == false)
 		{
@@ -37,7 +37,7 @@ void Ruya::MeshRenderSystem::OnSceneUpdate(Scene& scene)
 
 void Ruya::MeshRenderSystem::OnSceneDestroy(Scene& scene)
 {
-	for (const MeshComponent& component : scene.GetComponents<MeshComponent>())
+	for (const MeshComponent& component : *scene.GetComponents<MeshComponent>())
 	{
 		component.renderObject->Destroy();
 	}
