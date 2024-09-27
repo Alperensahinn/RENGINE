@@ -47,19 +47,19 @@ namespace Ruya
 
 			if (it == componentPools.end())
 			{
-				std::vector<T> componentVector;
-				componentPools[typeIdx] = std::move(componentVector);
+				auto* componentVector = new std::vector<T>();
+				componentPools[typeIdx] = static_cast<void*>(componentVector);
 				it = componentPools.find(typeIdx);
 			}
 
-			auto& componentVector = std::any_cast<std::vector<T>&>(it->second);
+			auto* componentVector = static_cast<std::vector<T>*>(it->second);
 
-			componentVector.emplace_back(T{});
-			T& newComponentPtr = componentVector.back();
+			componentVector->emplace_back(T{});
+			T& newComponent = componentVector->back();
 
-			newComponentPtr.parentID = id;
+			newComponent.parentID = id;
 
-			return newComponentPtr;
+			return newComponent;
 		}
 
 		template<typename T>
@@ -70,17 +70,15 @@ namespace Ruya
 
 			if (it != componentPools.end())
 			{
-				auto& componentVector = std::any_cast<std::vector<T>&>(it->second);
+				auto* componentVector = static_cast<std::vector<T>*>(it->second);
 
-				for (auto& component : componentVector)
+				for (auto& component : *componentVector)
 				{
-					EntityComponent* baseComponent = std::any_cast<EntityComponent*>(&component);
+					EntityComponent* baseComponent = static_cast<EntityComponent*>(&component);
 
 					if (baseComponent->parentID == id)
 					{
-						T* c = std::any_cast<T*>(&component);
-
-						return *c;
+						return component;
 					}
 				}
 			}
@@ -92,20 +90,22 @@ namespace Ruya
 		std::vector<T>& GetComponents() 
 		{
 			std::type_index typeIdx = typeid(T);
+
 			if (componentPools.find(typeIdx) == componentPools.end())
 			{
-				componentPools[typeIdx] = std::vector<T>();
+				auto* componentVector = new std::vector<T>();
+				componentPools[typeIdx] = static_cast<void*>(componentVector);
 			}
 
-			auto& typedVector = std::any_cast<std::vector<T>&>(componentPools[typeIdx]);
+			auto* typedVector = static_cast<std::vector<T>*>(componentPools[typeIdx]);
 
-			return typedVector;
+			return *typedVector;
 		}
 
 	private:
 		std::vector<Entity> entities;
 		std::unordered_map<EntityID, Entity*> entityIDs;
-		std::unordered_map<std::type_index, std::any> componentPools;
+		std::unordered_map<std::type_index, void*> componentPools;
 
 		std::vector<SceneSystem*> sceneSystems;
 	};
