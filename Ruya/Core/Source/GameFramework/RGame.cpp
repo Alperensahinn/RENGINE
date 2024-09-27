@@ -9,21 +9,54 @@ Ruya::RGame::~RGame()
 {
 }
 
-void Ruya::RGame::Start()
+void Ruya::RGame::StartScene()
 {
 	for (const auto& pair : sceneMap)
 	{
-		pair.second->Start();
+		pair.second->OnSceneStart();
 	}
 }
 
-void Ruya::RGame::Update()
+void Ruya::RGame::UpdateScene()
 {
 	for (const auto& pair : sceneMap)
 	{
-		pair.second->Update();
+		pair.second->OnSceneUpdate();
 	}
 }
+
+void Ruya::RGame::DestroyScene()
+{
+	for (const auto& pair : sceneMap)
+	{
+		pair.second->OnSceneDestroy();
+	}
+}
+
+void Ruya::RGame::StartGame()
+{
+	for (const auto& pair : sceneMap)
+	{
+		pair.second->OnGameStart();
+	}
+}
+
+void Ruya::RGame::UpdateGame()
+{
+	for (const auto& pair : sceneMap)
+	{
+		pair.second->OnGameUpdate();
+	}
+}
+
+void Ruya::RGame::DestroyGame()
+{
+	for (const auto& pair : sceneMap)
+	{
+		pair.second->OnGameDestroy();
+	}
+}
+
 
 std::shared_ptr<Ruya::Scene> Ruya::RGame::AddScene(std::shared_ptr<Scene> scene)
 {
@@ -60,7 +93,7 @@ void Ruya::RGame::CleanUp()
 	{
 		if (pair.second) 
 		{
-			pair.second->CleanUp();
+			pair.second->OnSceneDestroy();
 		}
 	}
 }

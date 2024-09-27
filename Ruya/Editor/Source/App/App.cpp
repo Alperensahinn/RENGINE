@@ -10,13 +10,13 @@
 void REditor::App::Run()
 {
 	Init();
-	game->Start();
+	game->StartScene();
 
 	while (!pWindow->RWindowShouldClose())
 	{
 		pWindow->PoolEvents();
 		editorCamera->Update();
-		game->Update();
+		game->UpdateScene();
 
 		Ruya::Engine::GetInstance().ProcessFrame();
 	}
