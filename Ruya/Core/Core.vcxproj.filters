@@ -43,6 +43,54 @@
     <Filter Include="Vendor">
       <UniqueIdentifier>{935FDCD7-7F01-07AE-68BC-1A0254FD8DFE}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Vendor\Vulkan">
+      <UniqueIdentifier>{B3C937F3-1F8A-B329-E8C4-FCA65444F805}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include">
+      <UniqueIdentifier>{065C39BD-72C8-F4B7-3BBC-8C15A7E71620}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\dxc">
+      <UniqueIdentifier>{146E0F33-8030-43BD-C9E0-D14935E21B9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\glslang">
+      <UniqueIdentifier>{FD92CFB6-69AB-B6E0-3258-467A9E2F4B7A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\glslang\Include">
+      <UniqueIdentifier>{50CF8288-BC93-8178-85F9-B142F17C1DAE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\glslang\MachineIndependent">
+      <UniqueIdentifier>{AF82502C-9B2B-B85B-C4C1-D3DAB0C9D29C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\glslang\Public">
+      <UniqueIdentifier>{8B577105-773E-33FD-208F-991A0C55AC63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\glslang\SPIRV">
+      <UniqueIdentifier>{E0A3B093-4C5D-1B3E-D5BC-35184175D1AD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\shaderc">
+      <UniqueIdentifier>{EFBEEB47-5BD7-D271-2484-620B905B670B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\slang">
+      <UniqueIdentifier>{2A24AC35-9631-DA1B-1F18-D6068B24A6D2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\spirv-headers">
+      <UniqueIdentifier>{52AE0A50-BE67-75FA-47C7-8FD4B37F2B6A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\spirv-tools">
+      <UniqueIdentifier>{67CE6DF1-D33C-C370-1C26-7E7088D3B80C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\spirv_cross">
+      <UniqueIdentifier>{52C3DD64-BE31-33E4-071B-EEE373C82880}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\vk_video">
+      <UniqueIdentifier>{2C30B5ED-1856-7F54-019C-0420ED60A420}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\vulkan">
+      <UniqueIdentifier>{E6FAD8F2-D2B5-C89E-7B6D-41E96707132F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vendor\Vulkan\Include\vulkan\utility">
+      <UniqueIdentifier>{49D7B31D-35BE-7515-DE0E-DC32CAD4EE7B}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Vendor\assimp">
       <UniqueIdentifier>{4F27C00C-BBE7-3B43-8422-85C0F0A1801F}</UniqueIdentifier>
     </Filter>
@@ -103,7 +151,16 @@
     <ClInclude Include="Source\EngineUI\EngineUI.h">
       <Filter>EngineUI</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameFramework\Entity.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\EntityComponent.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="Source\GameFramework\MeshComponent.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\MeshRenderSystem.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameFramework\RGame.h">
@@ -112,11 +169,17 @@
     <ClInclude Include="Source\GameFramework\RObject.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameFramework\Scene.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\SceneSystem.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\TransformComponent.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Graphics\Mesh.h">
       <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h">
-      <Filter>Graphics\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Renderer\Material.h">
       <Filter>Graphics\Renderer</Filter>
@@ -151,9 +214,6 @@
     <ClInclude Include="Source\Scene\Camera.h">
       <Filter>Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameFramework\Scene.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Utilities\FileSystem\FileSystem.h">
       <Filter>Utilities\FileSystem</Filter>
     </ClInclude>
@@ -162,6 +222,258 @@
     </ClInclude>
     <ClInclude Include="Source\Utilities\Math\RMath.h">
       <Filter>Utilities\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\dxc\WinAdapter.h">
+      <Filter>Vendor\Vulkan\Include\dxc</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\dxc\dxcapi.h">
+      <Filter>Vendor\Vulkan\Include\dxc</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\ResourceLimits.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\glslang_c_interface.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\glslang_c_shader_types.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\visibility.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Include</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\MachineIndependent\Versions.h">
+      <Filter>Vendor\Vulkan\Include\glslang\MachineIndependent</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Public\ResourceLimits.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Public\ShaderLang.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Public\resource_limits_c.h">
+      <Filter>Vendor\Vulkan\Include\glslang\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\GlslangToSpv.h">
+      <Filter>Vendor\Vulkan\Include\glslang\SPIRV</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\Logger.h">
+      <Filter>Vendor\Vulkan\Include\glslang\SPIRV</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\SPVRemapper.h">
+      <Filter>Vendor\Vulkan\Include\glslang\SPIRV</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\SpvTools.h">
+      <Filter>Vendor\Vulkan\Include\glslang\SPIRV</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\disassemble.h">
+      <Filter>Vendor\Vulkan\Include\glslang\SPIRV</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\build_info.h">
+      <Filter>Vendor\Vulkan\Include\glslang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\env.h">
+      <Filter>Vendor\Vulkan\Include\shaderc</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\shaderc.h">
+      <Filter>Vendor\Vulkan\Include\shaderc</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\status.h">
+      <Filter>Vendor\Vulkan\Include\shaderc</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\visibility.h">
+      <Filter>Vendor\Vulkan\Include\shaderc</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-com-helper.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-com-ptr.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-host-prelude.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-prelude.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-scalar-intrinsics.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-types-core.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-types.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cuda-prelude.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-gfx.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-hlsl-prelude.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-image-format-defs.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-llvm.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-tag-version.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-torch-prelude.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang.h">
+      <Filter>Vendor\Vulkan\Include\slang</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_gcn_shader.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_shader_ballot.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_shader_explicit_vertex_parameter.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_shader_trinary_minmax.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\DebugInfo.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\GLSL.std.450.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticClspvReflection.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticDebugBreak.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticDebugPrintf.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticShaderDebugInfo100.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticVkspReflection.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\OpenCL.std.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\OpenCLDebugInfo100.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\spirv.h">
+      <Filter>Vendor\Vulkan\Include\spirv-headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-tools\libspirv.h">
+      <Filter>Vendor\Vulkan\Include\spirv-tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv_cross\GLSL.std.450.h">
+      <Filter>Vendor\Vulkan\Include\spirv_cross</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv_cross\spirv.h">
+      <Filter>Vendor\Vulkan\Include\spirv_cross</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv_cross\spirv_cross_c.h">
+      <Filter>Vendor\Vulkan\Include\spirv_cross</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_av1std.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_av1std_decode.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h264std.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h264std_decode.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h264std_encode.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h265std.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h265std_decode.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h265std_encode.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codecs_common.h">
+      <Filter>Vendor\Vulkan\Include\vk_video</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\utility\vk_format_utils.h">
+      <Filter>Vendor\Vulkan\Include\vulkan\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_enum_string_helper.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_icd.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_layer.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_platform.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_android.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_beta.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_core.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_directfb.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_fuchsia.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_ggp.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_ios.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_macos.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_metal.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_screen.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_vi.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_wayland.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_win32.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_xcb.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_xlib.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_xlib_xrandr.h">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Source\Vendor\assimp\Include\assimp\AssertHandler.h">
       <Filter>Vendor\assimp\Include\assimp</Filter>
@@ -451,11 +763,6 @@
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameFramework\TransformComponent.h" />
-    <ClInclude Include="Source\GameFramework\Entity.h" />
-    <ClInclude Include="Source\GameFramework\EntityComponent.h" />
-    <ClInclude Include="Source\GameFramework\SceneSystem.h" />
-    <ClInclude Include="Source\GameFramework\MeshRenderSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -465,10 +772,19 @@
     <ClCompile Include="Source\EngineUI\EngineUI.cpp">
       <Filter>EngineUI</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GameFramework\MeshRenderSystem.cpp">
+      <Filter>GameFramework</Filter>
+    </ClCompile>
     <ClCompile Include="Source\GameFramework\RGame.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameFramework\RObject.cpp">
+      <Filter>GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameFramework\Scene.cpp">
+      <Filter>GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameFramework\SceneSystem.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Renderer\Material.cpp">
@@ -498,6 +814,9 @@
     <ClCompile Include="Source\Utilities\Math\RMath.cpp">
       <Filter>Utilities\Math</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Vendor\Vulkan\Include\vulkan\vulkan.cppm">
+      <Filter>Vendor\Vulkan\Include\vulkan</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Vendor\glm\glm\detail\glm.cpp">
       <Filter>Vendor\glm\glm\detail</Filter>
     </ClCompile>
@@ -525,12 +844,9 @@
     <ClCompile Include="Source\Vendor\imgui\imgui_widgets.cpp">
       <Filter>Vendor\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\Window\RWindow.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Source\VendorDefines.cpp" />
-    <ClCompile Include="Source\GameFramework\Scene.cpp" />
-    <ClCompile Include="Source\GameFramework\SceneSystem.cpp" />
-    <ClCompile Include="Source\GameFramework\MeshRenderSystem.cpp" />
   </ItemGroup>
 </Project>

@@ -10,7 +10,7 @@ project "Core"
    includedirs
    {
       "Source",
-      "C:/VulkanSDK/1.3.290.0/Include",
+      "Source/Vendor/Vulkan/Include",
       "Source/Vendor/glm",
       "Source/Vendor/glfw-3.4.WIN64/include",
       "Source/Vendor/assimp/Include",
@@ -19,7 +19,7 @@ project "Core"
 
    libdirs 
    { 
-      "C:/VulkanSDK/1.3.290.0/Lib", 
+      "Source/Vendor/Vulkan/Lib", 
       "Source/Vendor/glfw-3.4.WIN64/lib", 
       "Source/Vendor/assimp/lib" 
    }

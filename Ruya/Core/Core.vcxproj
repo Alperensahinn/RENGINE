@@ -76,7 +76,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;Source\Vendor\Vulkan\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -90,7 +90,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Source\Vendor\Vulkan\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -98,7 +98,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;Source\Vendor\Vulkan\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -118,7 +118,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Source\Vendor\Vulkan\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -126,7 +126,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>Source;C:\VulkanSDK\1.3.290.0\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>Source;Source\Vendor\Vulkan\Include;Source\Vendor\glm;Source\Vendor\glfw-3.4.WIN64\include;Source\Vendor\assimp\Include;Source\Vendor\stb_image;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -146,7 +146,7 @@
     </Link>
     <Lib>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;assimp-vc143-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.3.290.0\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>Source\Vendor\Vulkan\Lib;Source\Vendor\glfw-3.4.WIN64\lib;Source\Vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -160,10 +160,10 @@
     <ClInclude Include="Source\GameFramework\MeshRenderSystem.h" />
     <ClInclude Include="Source\GameFramework\RGame.h" />
     <ClInclude Include="Source\GameFramework\RObject.h" />
+    <ClInclude Include="Source\GameFramework\Scene.h" />
     <ClInclude Include="Source\GameFramework\SceneSystem.h" />
     <ClInclude Include="Source\GameFramework\TransformComponent.h" />
     <ClInclude Include="Source\Graphics\Mesh.h" />
-    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h" />
     <ClInclude Include="Source\Graphics\Renderer\Material.h" />
     <ClInclude Include="Source\Graphics\Renderer\RenderObject.h" />
     <ClInclude Include="Source\Graphics\Renderer\RenderQueue.h" />
@@ -175,10 +175,93 @@
     <ClInclude Include="Source\Graphics\Vulkan\vk_mem_alloc.h" />
     <ClInclude Include="Source\Input\RInput.h" />
     <ClInclude Include="Source\Scene\Camera.h" />
-    <ClInclude Include="Source\GameFramework\Scene.h" />
     <ClInclude Include="Source\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="Source\Utilities\Log\RLog.h" />
     <ClInclude Include="Source\Utilities\Math\RMath.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\dxc\WinAdapter.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\dxc\dxcapi.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\ResourceLimits.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\glslang_c_interface.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\glslang_c_shader_types.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Include\visibility.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\MachineIndependent\Versions.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Public\ResourceLimits.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Public\ShaderLang.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\Public\resource_limits_c.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\GlslangToSpv.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\Logger.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\SPVRemapper.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\SpvTools.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\SPIRV\disassemble.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\glslang\build_info.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\env.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\shaderc.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\status.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\shaderc\visibility.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-com-helper.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-com-ptr.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-host-prelude.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-prelude.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-scalar-intrinsics.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-types-core.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cpp-types.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-cuda-prelude.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-gfx.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-hlsl-prelude.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-image-format-defs.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-llvm.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-tag-version.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang-torch-prelude.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\slang\slang.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_gcn_shader.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_shader_ballot.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_shader_explicit_vertex_parameter.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\AMD_shader_trinary_minmax.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\DebugInfo.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\GLSL.std.450.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticClspvReflection.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticDebugBreak.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticDebugPrintf.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticShaderDebugInfo100.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\NonSemanticVkspReflection.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\OpenCL.std.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\OpenCLDebugInfo100.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-headers\spirv.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv-tools\libspirv.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv_cross\GLSL.std.450.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv_cross\spirv.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\spirv_cross\spirv_cross_c.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_av1std.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_av1std_decode.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h264std.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h264std_decode.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h264std_encode.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h265std.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h265std_decode.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codec_h265std_encode.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vk_video\vulkan_video_codecs_common.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\utility\vk_format_utils.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_enum_string_helper.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_icd.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_layer.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vk_platform.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_android.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_beta.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_core.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_directfb.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_fuchsia.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_ggp.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_ios.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_macos.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_metal.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_screen.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_vi.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_wayland.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_win32.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_xcb.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_xlib.h" />
+    <ClInclude Include="Source\Vendor\Vulkan\Include\vulkan\vulkan_xlib_xrandr.h" />
     <ClInclude Include="Source\Vendor\assimp\Include\assimp\AssertHandler.h" />
     <ClInclude Include="Source\Vendor\assimp\Include\assimp\BaseImporter.h" />
     <ClInclude Include="Source\Vendor\assimp\Include\assimp\Bitmap.h" />
@@ -294,7 +377,7 @@
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Utilities\FileSystem\FileSystem.cpp" />
     <ClCompile Include="Source\Utilities\Math\RMath.cpp" />
-    <ClCompile Include="Source\VendorDefines.cpp" />
+    <ClCompile Include="Source\Vendor\Vulkan\Include\vulkan\vulkan.cppm" />
     <ClCompile Include="Source\Vendor\glm\glm\detail\glm.cpp" />
     <ClCompile Include="Source\Vendor\glm\glm\glm.cppm">
       <ObjectFileName>$(IntDir)\glm1.obj</ObjectFileName>
@@ -306,6 +389,7 @@
     <ClCompile Include="Source\Vendor\imgui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="Source\Vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\Vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\Window\RWindow.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
