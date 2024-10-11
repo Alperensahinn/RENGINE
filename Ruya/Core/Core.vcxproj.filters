@@ -103,7 +103,16 @@
     <ClInclude Include="Source\EngineUI\EngineUI.h">
       <Filter>EngineUI</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameFramework\Entity.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\EntityComponent.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="Source\GameFramework\MeshComponent.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\MeshRenderSystem.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
     <ClInclude Include="Source\GameFramework\RGame.h">
@@ -112,11 +121,17 @@
     <ClInclude Include="Source\GameFramework\RObject.h">
       <Filter>GameFramework</Filter>
     </ClInclude>
+    <ClInclude Include="Source\GameFramework\Scene.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\SceneSystem.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameFramework\TransformComponent.h">
+      <Filter>GameFramework</Filter>
+    </ClInclude>
     <ClInclude Include="Source\Graphics\Mesh.h">
       <Filter>Graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h">
-      <Filter>Graphics\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Source\Graphics\Renderer\Material.h">
       <Filter>Graphics\Renderer</Filter>
@@ -149,9 +164,6 @@
       <Filter>Input</Filter>
     </ClInclude>
     <ClInclude Include="Source\Scene\Camera.h">
-      <Filter>Scene</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\GameFramework\Scene.h">
       <Filter>Scene</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utilities\FileSystem\FileSystem.h">
@@ -451,11 +463,6 @@
     <ClInclude Include="Source\Window\RWindow.h">
       <Filter>Window</Filter>
     </ClInclude>
-    <ClInclude Include="Source\GameFramework\TransformComponent.h" />
-    <ClInclude Include="Source\GameFramework\Entity.h" />
-    <ClInclude Include="Source\GameFramework\EntityComponent.h" />
-    <ClInclude Include="Source\GameFramework\SceneSystem.h" />
-    <ClInclude Include="Source\GameFramework\MeshRenderSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Time.cpp">
@@ -465,10 +472,19 @@
     <ClCompile Include="Source\EngineUI\EngineUI.cpp">
       <Filter>EngineUI</Filter>
     </ClCompile>
+    <ClCompile Include="Source\GameFramework\MeshRenderSystem.cpp">
+      <Filter>GameFramework</Filter>
+    </ClCompile>
     <ClCompile Include="Source\GameFramework\RGame.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="Source\GameFramework\RObject.cpp">
+      <Filter>GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameFramework\Scene.cpp">
+      <Filter>GameFramework</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameFramework\SceneSystem.cpp">
       <Filter>GameFramework</Filter>
     </ClCompile>
     <ClCompile Include="Source\Graphics\Renderer\Material.cpp">
@@ -525,12 +541,9 @@
     <ClCompile Include="Source\Vendor\imgui\imgui_widgets.cpp">
       <Filter>Vendor\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\Window\RWindow.cpp">
       <Filter>Window</Filter>
     </ClCompile>
-    <ClCompile Include="Source\VendorDefines.cpp" />
-    <ClCompile Include="Source\GameFramework\Scene.cpp" />
-    <ClCompile Include="Source\GameFramework\SceneSystem.cpp" />
-    <ClCompile Include="Source\GameFramework\MeshRenderSystem.cpp" />
   </ItemGroup>
 </Project>

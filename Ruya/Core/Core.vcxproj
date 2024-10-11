@@ -160,10 +160,10 @@
     <ClInclude Include="Source\GameFramework\MeshRenderSystem.h" />
     <ClInclude Include="Source\GameFramework\RGame.h" />
     <ClInclude Include="Source\GameFramework\RObject.h" />
+    <ClInclude Include="Source\GameFramework\Scene.h" />
     <ClInclude Include="Source\GameFramework\SceneSystem.h" />
     <ClInclude Include="Source\GameFramework\TransformComponent.h" />
     <ClInclude Include="Source\Graphics\Mesh.h" />
-    <ClInclude Include="Source\Graphics\Renderer\GPUMesh.h" />
     <ClInclude Include="Source\Graphics\Renderer\Material.h" />
     <ClInclude Include="Source\Graphics\Renderer\RenderObject.h" />
     <ClInclude Include="Source\Graphics\Renderer\RenderQueue.h" />
@@ -175,7 +175,6 @@
     <ClInclude Include="Source\Graphics\Vulkan\vk_mem_alloc.h" />
     <ClInclude Include="Source\Input\RInput.h" />
     <ClInclude Include="Source\Scene\Camera.h" />
-    <ClInclude Include="Source\GameFramework\Scene.h" />
     <ClInclude Include="Source\Utilities\FileSystem\FileSystem.h" />
     <ClInclude Include="Source\Utilities\Log\RLog.h" />
     <ClInclude Include="Source\Utilities\Math\RMath.h" />
@@ -294,7 +293,6 @@
     <ClCompile Include="Source\Scene\Camera.cpp" />
     <ClCompile Include="Source\Utilities\FileSystem\FileSystem.cpp" />
     <ClCompile Include="Source\Utilities\Math\RMath.cpp" />
-    <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\Vendor\glm\glm\detail\glm.cpp" />
     <ClCompile Include="Source\Vendor\glm\glm\glm.cppm">
       <ObjectFileName>$(IntDir)\glm1.obj</ObjectFileName>
@@ -306,6 +304,7 @@
     <ClCompile Include="Source\Vendor\imgui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="Source\Vendor\imgui\imgui_tables.cpp" />
     <ClCompile Include="Source\Vendor\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="Source\VendorDefines.cpp" />
     <ClCompile Include="Source\Window\RWindow.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
