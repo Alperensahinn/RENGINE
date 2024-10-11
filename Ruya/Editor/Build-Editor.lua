@@ -12,7 +12,7 @@ project "Editor"
       "Source",
 
 	  -- Include Core
-      "../Core/Source/Vendor/Vulkan/Include",
+      "C:/VulkanSDK/1.3.290.0/Include",
 	  "../Core/Source",
       "../Core/Source/Vendor/glfw-3.4.WIN64/include",
       "../Core/Source/Vendor/glm",
@@ -23,7 +23,7 @@ project "Editor"
 
    libdirs 
    { 
-      "../Core/Source/Vendor/Vulkan/Lib", 
+      "C:/VulkanSDK/1.3.290.0/Lib", 
       "../Core/Source/Vendor/glfw-3.4.WIN64/lib", 
       "../Core/Source/Vendor/assimp/lib" 
    }
